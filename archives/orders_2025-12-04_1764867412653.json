@@ -1,0 +1,258 @@
+{
+  "archivedAt": "2025-12-04T16:56:52.653Z",
+  "date": "2025-12-04",
+  "orders": [
+    {
+      "id": "1764846334793",
+      "slotId": "1",
+      "items": [
+        {
+          "menuId": "1",
+          "quantity": 1,
+          "price": 14,
+          "name": "Margherita",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "1",
+          "quantity": 1,
+          "price": 14,
+          "name": "Margherita",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "2",
+          "quantity": 1,
+          "price": 12,
+          "name": "Pepperoni",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "2",
+          "quantity": 1,
+          "price": 12,
+          "name": "Pepperoni",
+          "modifications": [],
+          "pizzaComments": ""
+        }
+      ],
+      "customer": {
+        "name": "Iain",
+        "email": "iaind.macpherson@gmail.com",
+        "phone": "07878898989"
+      },
+      "comments": "",
+      "total": 52,
+      "status": "confirmed",
+      "createdAt": "2025-12-04T11:05:34.793Z"
+    },
+    {
+      "id": "1764847202730",
+      "slotId": "3",
+      "items": [
+        {
+          "menuId": "1",
+          "quantity": 1,
+          "price": 14,
+          "name": "Margherita",
+          "modifications": [
+            "Gluten Free",
+            "Vegan Cheese"
+          ],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "1",
+          "quantity": 1,
+          "price": 14,
+          "name": "Margherita",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "1",
+          "quantity": 1,
+          "price": 14,
+          "name": "Margherita",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "2",
+          "quantity": 1,
+          "price": 12,
+          "name": "Pepperoni",
+          "modifications": [
+            "Extra Cheese"
+          ],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "2",
+          "quantity": 1,
+          "price": 12,
+          "name": "Pepperoni",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "1763466243312",
+          "quantity": 1,
+          "price": 13,
+          "name": "Weekly Special",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "1763466243312",
+          "quantity": 1,
+          "price": 13,
+          "name": "Weekly Special",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "1763468692941",
+          "quantity": 1,
+          "price": 12,
+          "name": "Veggie Supreme",
+          "modifications": [],
+          "pizzaComments": ""
+        }
+      ],
+      "customer": {
+        "name": "Iain 2",
+        "email": "iaind.macpherson@gmail.com",
+        "phone": "09897823471"
+      },
+      "comments": "",
+      "total": 104,
+      "status": "confirmed",
+      "createdAt": "2025-12-04T11:20:02.730Z"
+    },
+    {
+      "id": "1764847332227",
+      "slotId": "4",
+      "items": [
+        {
+          "menuId": "1",
+          "quantity": 1,
+          "price": 14,
+          "name": "Margherita",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "1763466243312",
+          "quantity": 1,
+          "price": 13,
+          "name": "Weekly Special",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "1763466243312",
+          "quantity": 1,
+          "price": 13,
+          "name": "Weekly Special",
+          "modifications": [
+            "Gluten Free",
+            "Vegan Cheese",
+            "Extra Cheese"
+          ],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "1763466243312",
+          "quantity": 1,
+          "price": 13,
+          "name": "Weekly Special",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "1763466243312",
+          "quantity": 1,
+          "price": 13,
+          "name": "Weekly Special",
+          "modifications": [],
+          "pizzaComments": ""
+        }
+      ],
+      "customer": {
+        "name": "Iain 3",
+        "email": "iaind.macpherson@gmail.com",
+        "phone": "987987987"
+      },
+      "comments": "",
+      "total": 66,
+      "status": "confirmed",
+      "createdAt": "2025-12-04T11:22:12.227Z"
+    },
+    {
+      "id": "1764848628015",
+      "slotId": "5",
+      "items": [
+        {
+          "menuId": "1763468692941",
+          "quantity": 1,
+          "price": 12,
+          "name": "Veggie Supreme",
+          "modifications": [
+            "Vegan Cheese"
+          ],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "1763468692941",
+          "quantity": 1,
+          "price": 12,
+          "name": "Veggie Supreme",
+          "modifications": [
+            "Vegan Cheese"
+          ],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "1763468692941",
+          "quantity": 1,
+          "price": 12,
+          "name": "Veggie Supreme",
+          "modifications": [
+            "Vegan Cheese",
+            "Gluten Free"
+          ],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "3",
+          "quantity": 1,
+          "price": 12,
+          "name": "Canadian Kick",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "3",
+          "quantity": 1,
+          "price": 12,
+          "name": "Canadian Kick",
+          "modifications": [],
+          "pizzaComments": ""
+        }
+      ],
+      "customer": {
+        "name": "Iain vegan",
+        "email": "iaind.macpherson@gmail.com",
+        "phone": "3515421"
+      },
+      "comments": "",
+      "total": 60,
+      "status": "confirmed",
+      "createdAt": "2025-12-04T11:43:48.015Z"
+    }
+  ]
+}

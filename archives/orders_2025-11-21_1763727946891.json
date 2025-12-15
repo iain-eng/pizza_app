@@ -1,0 +1,232 @@
+{
+  "archivedAt": "2025-11-21T12:25:46.891Z",
+  "date": "2025-11-21",
+  "orders": [
+    {
+      "id": "1763466035299",
+      "slotId": "2",
+      "items": [
+        {
+          "menuId": "1",
+          "quantity": 1,
+          "price": 12,
+          "name": "Margherita"
+        },
+        {
+          "menuId": "2",
+          "quantity": 1,
+          "price": 14,
+          "name": "Pepperoni"
+        },
+        {
+          "menuId": "3",
+          "quantity": 1,
+          "price": 13,
+          "name": "Veggie Supreme"
+        }
+      ],
+      "customer": {
+        "name": "Iain MacPherson",
+        "email": "iaind.macpherson@gmail.com",
+        "phone": ""
+      },
+      "total": 39,
+      "status": "completed",
+      "createdAt": "2025-11-18T11:40:35.299Z"
+    },
+    {
+      "id": "1763466324017",
+      "slotId": "3",
+      "items": [
+        {
+          "menuId": "3",
+          "quantity": 2,
+          "price": 12,
+          "name": "Canadian Kick"
+        },
+        {
+          "menuId": "1763466243312",
+          "quantity": 2,
+          "price": 13,
+          "name": "Weekly Special"
+        },
+        {
+          "menuId": "1763466144365",
+          "quantity": 2,
+          "price": 12,
+          "name": "The \"Beastie\""
+        }
+      ],
+      "customer": {
+        "name": "Iain",
+        "email": "iaind.macpherson@gmail.com",
+        "phone": ""
+      },
+      "total": 74,
+      "status": "cancelled",
+      "createdAt": "2025-11-18T11:45:24.017Z"
+    },
+    {
+      "id": "1763468604660",
+      "slotId": "2",
+      "items": [
+        {
+          "menuId": "1",
+          "quantity": 2,
+          "price": 12,
+          "name": "Margherita"
+        },
+        {
+          "menuId": "1763466144365",
+          "quantity": 2,
+          "price": 12,
+          "name": "The \"Beastie\""
+        }
+      ],
+      "customer": {
+        "name": "Iain",
+        "email": "iaind.macpherson@gmail.com",
+        "phone": ""
+      },
+      "total": 48,
+      "status": "ready",
+      "createdAt": "2025-11-18T12:23:24.660Z"
+    },
+    {
+      "id": "1763468649632",
+      "slotId": "4",
+      "items": [
+        {
+          "menuId": "1",
+          "quantity": 2,
+          "price": 12,
+          "name": "Margherita"
+        },
+        {
+          "menuId": "3",
+          "quantity": 2,
+          "price": 12,
+          "name": "Canadian Kick"
+        },
+        {
+          "menuId": "1763466144365",
+          "quantity": 2,
+          "price": 12,
+          "name": "The \"Beastie\""
+        }
+      ],
+      "customer": {
+        "name": "Iain",
+        "email": "iaind.macpherson@gmail.com",
+        "phone": ""
+      },
+      "total": 72,
+      "status": "confirmed",
+      "createdAt": "2025-11-18T12:24:09.632Z"
+    },
+    {
+      "id": "1763484180285",
+      "slotId": "1",
+      "items": [
+        {
+          "menuId": "1",
+          "quantity": 2,
+          "price": 14,
+          "name": "Margherita"
+        },
+        {
+          "menuId": "2",
+          "quantity": 2,
+          "price": 12,
+          "name": "Pepperoni"
+        },
+        {
+          "menuId": "3",
+          "quantity": 2,
+          "price": 12,
+          "name": "Canadian Kick"
+        }
+      ],
+      "customer": {
+        "name": "ian",
+        "email": "iaind.macpherson@gmail.com",
+        "phone": "0q82e0823"
+      },
+      "total": 76,
+      "status": "cancelled",
+      "createdAt": "2025-11-18T16:43:00.285Z"
+    },
+    {
+      "id": "1763634433466",
+      "slotId": "2",
+      "items": [
+        {
+          "menuId": "1",
+          "quantity": 1,
+          "price": 14,
+          "name": "Margherita",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "1",
+          "quantity": 1,
+          "price": 14,
+          "name": "Margherita",
+          "modifications": [
+            "Gluten Free"
+          ],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "3",
+          "quantity": 1,
+          "price": 12,
+          "name": "Canadian Kick",
+          "modifications": [],
+          "pizzaComments": ""
+        },
+        {
+          "menuId": "3",
+          "quantity": 1,
+          "price": 12,
+          "name": "Canadian Kick",
+          "modifications": [],
+          "pizzaComments": ""
+        }
+      ],
+      "customer": {
+        "name": "Iain",
+        "email": "iaind.macpherson@gmail.com",
+        "phone": "090790809"
+      },
+      "comments": "",
+      "total": 52,
+      "status": "confirmed",
+      "createdAt": "2025-11-20T10:27:13.466Z"
+    },
+    {
+      "id": "1763634807501",
+      "slotId": "2",
+      "items": [
+        {
+          "menuId": "1",
+          "quantity": 1,
+          "price": 14,
+          "name": "Margherita",
+          "modifications": [],
+          "pizzaComments": ""
+        }
+      ],
+      "customer": {
+        "name": "fiaehf",
+        "email": "iaind.macpherson@gmail.com",
+        "phone": "08498"
+      },
+      "comments": "",
+      "total": 14,
+      "status": "confirmed",
+      "createdAt": "2025-11-20T10:33:27.501Z"
+    }
+  ]
+}
