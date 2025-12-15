@@ -545,7 +545,7 @@
 <body>
   <div class="container">
     <h1 id="business-name">🍕 Loading...</h1>
-    <p class="subtitle">Fresh. Fast. Delicious.</p>
+    <p class="subtitle">Hot. Happy. Delicious.</p>
     
     <div id="error" class="error"></div>
     
@@ -699,7 +699,6 @@
         
         // Update business name from settings
         document.getElementById('business-name').textContent = `🍕 ${settings.businessName || 'Pizza Paradise'}`;
-        document.title = `Order from ${settings.businessName || 'Pizza Paradise'}`;
         
         renderMenuPreview();
         renderMatrix();
