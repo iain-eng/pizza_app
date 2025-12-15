@@ -7,7 +7,7 @@ const cors = require("cors");
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public")); // Serve frontend files from 'public' folder
+app.use(express.static(__dirname)); // Serve frontend files from 'public' folder
 
 // Data file paths
 const DATA_DIR = path.join(__dirname, "data");
