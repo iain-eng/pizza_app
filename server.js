@@ -353,6 +353,11 @@ app.post("/api/orders/archive", (req, res) => {
   });
 });
 
+// ============= HOMEPAGE ROUTE =============
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "customer.html"));
+});
+
 // ============= START SERVER =============
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
