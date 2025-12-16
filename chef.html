@@ -569,7 +569,11 @@
                 <th>Time</th>
                 <th>Order #</th>
                 <th>Customer</th>
-                <th>Items</th>
+                <th id="pizza-col-1">Pizza 1</th>
+                <th id="pizza-col-2">Pizza 2</th>
+                <th id="pizza-col-3">Pizza 3</th>
+                <th id="pizza-col-4">Pizza 4</th>
+                <th id="pizza-col-5">Pizza 5</th>
                 <th>Total</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -961,7 +965,7 @@
       );
       
       if (activeOrders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#5a5a5a;">No active orders</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:#5a5a5a;">No active orders</td></tr>';
         return;
       }
       
@@ -975,43 +979,49 @@
       });
       
       tbody.innerHTML = sortedOrders.map(order => {
-        const itemsHtml = order.items.map(item => {
-          const basePrice = item.basePrice || item.price;
-          const modPrice = item.modPrice || 0;
-          const totalPrice = item.price;
-          
-          let priceInfo = modPrice > 0 
-            ? `£${basePrice.toFixed(2)} + £${modPrice.toFixed(2)} mods = £${totalPrice.toFixed(2)}`
-            : `£${totalPrice.toFixed(2)}`;
-          
-          const modsText = item.modifications && item.modifications.length > 0 
-            ? ` <span class="order-mods">(${item.modifications.join(', ')})</span>`
-            : '';
-          const pizzaCommentText = item.pizzaComments 
-            ? ` <span class="order-mods">- "${item.pizzaComments}"</span>`
-            : '';
-          return `${item.name} x${item.quantity} [${priceInfo}]${modsText}${pizzaCommentText}`;
-        }).join('<br>');
+        // Create pizza columns (up to 5)
+        const pizzaColumns = [];
+        for (let i = 0; i < 5; i++) {
+          if (i < order.items.length) {
+            const item = order.items[i];
+            const modsHtml = item.modifications && item.modifications.length > 0 
+              ? `<div style="font-size:0.85em;color:#E89B4C;margin-top:5px;">${item.modifications.join(', ')}</div>`
+              : '';
+            const commentHtml = item.pizzaComments 
+              ? `<div style="font-size:0.85em;color:#5a5a5a;font-style:italic;margin-top:3px;">"${item.pizzaComments}"</div>`
+              : '';
+            
+            pizzaColumns.push(`
+              <td style="vertical-align:top;">
+                <div style="font-weight:bold;color:#1a3a3a;">${item.name}</div>
+                <div style="font-size:0.9em;color:#5a5a5a;margin-top:2px;">x${item.quantity}</div>
+                ${modsHtml}
+                ${commentHtml}
+              </td>
+            `);
+          } else {
+            pizzaColumns.push('<td style="background:#f5f5f5;"></td>');
+          }
+        }
         
-        const commentsText = order.comments 
-          ? `<div class="order-comments">💬 ${order.comments}</div>`
+        // General order comments
+        const generalComments = order.comments 
+          ? `<div class="order-comments" style="margin-top:5px;">💬 ${order.comments}</div>`
           : '';
         
         return `
         <tr>
-          <td><strong>${order.slotTime}</strong></td>
-          <td><strong>#${order.id.slice(-6)}</strong></td>
-          <td>
+          <td style="vertical-align:top;"><strong>${order.slotTime}</strong></td>
+          <td style="vertical-align:top;"><strong>#${order.id.slice(-6)}</strong></td>
+          <td style="vertical-align:top;">
             ${order.customer.name}<br>
             <small style="color:#5a5a5a;">${order.customer.phone || order.customer.email}</small>
+            ${generalComments}
           </td>
-          <td>
-            ${itemsHtml}
-            ${commentsText}
-          </td>
-          <td><strong>£${order.total.toFixed(2)}</strong></td>
-          <td><span class="status-badge status-${order.status}">${order.status}</span></td>
-          <td>
+          ${pizzaColumns.join('')}
+          <td style="vertical-align:top;"><strong>£${order.total.toFixed(2)}</strong></td>
+          <td style="vertical-align:top;"><span class="status-badge status-${order.status}">${order.status}</span></td>
+          <td style="vertical-align:top;">
             <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:5px;border:2px solid #1a3a3a;font-family:inherit;">
               <option value="">Update...</option>
               <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
