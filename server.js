@@ -7,7 +7,7 @@ const cors = require("cors");
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public")); // Serve frontend files from 'public' folder
+app.use(express.static(__dirname)); // Serve frontend files from root directory
 
 // Data file paths
 const DATA_DIR = path.join(__dirname, "data");
@@ -47,6 +47,8 @@ initFile(ORDERS_FILE, []);
 
 initFile(SETTINGS_FILE, {
   businessName: "Pizza Paradise",
+  tagline: "Fresh. Fast. Delicious.",
+  logo: "",
   chefPassword: "chef123" // Simple password for demo - change this!
 });
 
@@ -313,6 +315,25 @@ app.get("/api/settings", (req, res) => {
   res.json(publicSettings);
 });
 
+app.put("/api/settings", (req, res) => {
+  const settings = readJSON(SETTINGS_FILE);
+  
+  // Update only allowed fields
+  const updatableFields = ['businessName', 'tagline', 'logo', 'chefPassword'];
+  
+  updatableFields.forEach(field => {
+    if (req.body[field] !== undefined) {
+      settings[field] = req.body[field];
+    }
+  });
+  
+  writeJSON(SETTINGS_FILE, settings);
+  
+  // Don't send password back to frontend
+  const { chefPassword, ...publicSettings } = settings;
+  res.json(publicSettings);
+});
+
 app.post("/api/auth/chef", (req, res) => {
   const settings = readJSON(SETTINGS_FILE);
   if (req.body.password === settings.chefPassword) {
@@ -351,6 +372,11 @@ app.post("/api/orders/archive", (req, res) => {
     archived: orders.length,
     archiveFile: path.basename(archiveFile)
   });
+});
+
+// ============= HOMEPAGE ROUTE =============
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "customer.html"));
 });
 
 // ============= START SERVER =============
