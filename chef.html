@@ -253,7 +253,8 @@
     }
     
     .form-group input,
-    .form-group select {
+    .form-group select,
+    .form-group textarea {
       width: 100%;
       padding: 10px;
       border: 2px solid #1a3a3a;
@@ -262,8 +263,14 @@
       background: #FFF;
     }
     
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    
     .form-group input:focus,
-    .form-group select:focus {
+    .form-group select:focus,
+    .form-group textarea:focus {
       outline: none;
       border-color: #E89B4C;
       box-shadow: 0 0 0 3px rgba(232, 155, 76, 0.2);
@@ -352,6 +359,20 @@
       display: block;
     }
     
+    .success-message {
+      background: #55efc4;
+      color: #1a3a3a;
+      padding: 10px;
+      border: 2px solid #1a3a3a;
+      margin-bottom: 15px;
+      display: none;
+      font-weight: 600;
+    }
+    
+    .success-message.show {
+      display: block;
+    }
+    
     #app {
       display: none;
     }
@@ -404,6 +425,46 @@
       color: #C64C4C;
       font-weight: bold;
       margin: 10px 0;
+    }
+    
+    .settings-preview {
+      background: #FFF;
+      border: 3px solid #1a3a3a;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .settings-preview h3 {
+      font-size: 2em;
+      color: #E89B4C;
+      margin-bottom: 10px;
+    }
+    
+    .settings-preview p {
+      font-size: 1.2em;
+      color: #5a5a5a;
+      font-style: italic;
+      margin-bottom: 15px;
+    }
+    
+    .settings-preview img {
+      max-width: 200px;
+      max-height: 200px;
+      border: 3px solid #1a3a3a;
+    }
+    
+    .info-box {
+      background: #e3f2fd;
+      border: 2px solid #1a3a3a;
+      border-left: 6px solid #74b9ff;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .info-box h4 {
+      margin-bottom: 8px;
+      color: #1a3a3a;
     }
     
     @media (max-width: 768px) {
@@ -492,6 +553,7 @@
         <button class="tab active" onclick="switchTab('orders')">Orders</button>
         <button class="tab" onclick="switchTab('menu')">Menu</button>
         <button class="tab" onclick="switchTab('slots')">Time Slots</button>
+        <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
       </div>
       
       <!-- Orders Tab -->
@@ -562,6 +624,58 @@
           </table>
         </div>
       </div>
+      
+      <!-- Settings Tab -->
+      <div id="settings-tab" class="tab-content">
+        <div class="card">
+          <h2>Business Settings</h2>
+          
+          <div id="settings-success" class="success-message"></div>
+          <div id="settings-error" class="error-message"></div>
+          
+          <div class="info-box">
+            <h4>ℹ️ About Settings</h4>
+            <p>These settings control how your business appears to customers on the ordering page. Changes take effect immediately.</p>
+          </div>
+          
+          <div class="settings-preview" id="settings-preview">
+            <h3 id="preview-name">🍕 Loading...</h3>
+            <p id="preview-tagline">Loading tagline...</p>
+            <img id="preview-logo" style="display:none;" alt="Business Logo">
+          </div>
+          
+          <form onsubmit="saveSettings(event)">
+            <div class="form-group">
+              <label>Business Name *</label>
+              <input type="text" id="settings-name" placeholder="e.g., Pizza Paradise" required>
+              <small style="color:#5a5a5a;">This appears as the main title on your ordering page</small>
+            </div>
+            
+            <div class="form-group">
+              <label>Tagline</label>
+              <input type="text" id="settings-tagline" placeholder="e.g., Fresh. Fast. Delicious.">
+              <small style="color:#5a5a5a;">A short description that appears under your business name</small>
+            </div>
+            
+            <div class="form-group">
+              <label>Logo URL (optional)</label>
+              <input type="url" id="settings-logo" placeholder="https://example.com/logo.png" onchange="previewSettings()">
+              <small style="color:#5a5a5a;">Link to your logo image (leave blank for no logo)</small>
+            </div>
+            
+            <div class="form-group">
+              <label>Chef Password</label>
+              <input type="password" id="settings-password" placeholder="Leave blank to keep current password">
+              <small style="color:#5a5a5a;">Change the password used to access this dashboard</small>
+            </div>
+            
+            <div class="button-group">
+              <button type="submit" class="primary">💾 Save Settings</button>
+              <button type="button" class="secondary" onclick="loadSettings()">↻ Reset</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -630,6 +744,7 @@
     let orders = [];
     let menu = [];
     let slots = [];
+    let settings = {};
     
     // Login
     async function login(e) {
@@ -666,6 +781,7 @@
     // Initialize
     async function init() {
       await loadData();
+      await loadSettings();
       renderStats();
       renderPizzaBreakdown();
       renderOrders();
@@ -696,6 +812,102 @@
         console.error('Failed to load data:', error);
       }
     }
+    
+    // Settings functions
+    async function loadSettings() {
+      try {
+        const response = await fetch(`${API_URL}/settings`);
+        settings = await response.json();
+        
+        document.getElementById('settings-name').value = settings.businessName || '';
+        document.getElementById('settings-tagline').value = settings.tagline || '';
+        document.getElementById('settings-logo').value = settings.logo || '';
+        document.getElementById('settings-password').value = '';
+        
+        previewSettings();
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      }
+    }
+    
+    function previewSettings() {
+      const name = document.getElementById('settings-name').value || 'Your Business Name';
+      const tagline = document.getElementById('settings-tagline').value || 'Your tagline here';
+      const logo = document.getElementById('settings-logo').value;
+      
+      document.getElementById('preview-name').textContent = `🍕 ${name}`;
+      document.getElementById('preview-tagline').textContent = tagline;
+      
+      const logoImg = document.getElementById('preview-logo');
+      if (logo) {
+        logoImg.src = logo;
+        logoImg.style.display = 'block';
+      } else {
+        logoImg.style.display = 'none';
+      }
+    }
+    
+    async function saveSettings(e) {
+      e.preventDefault();
+      
+      const data = {
+        businessName: document.getElementById('settings-name').value,
+        tagline: document.getElementById('settings-tagline').value,
+        logo: document.getElementById('settings-logo').value
+      };
+      
+      const password = document.getElementById('settings-password').value;
+      if (password) {
+        data.chefPassword = password;
+      }
+      
+      try {
+        const response = await fetch(`${API_URL}/settings`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+          settings = await response.json();
+          showSettingsMessage('Settings saved successfully! ✓', 'success');
+          previewSettings();
+        } else {
+          showSettingsMessage('Failed to save settings', 'error');
+        }
+      } catch (error) {
+        showSettingsMessage('Error saving settings: ' + error.message, 'error');
+      }
+    }
+    
+    function showSettingsMessage(msg, type) {
+      const successEl = document.getElementById('settings-success');
+      const errorEl = document.getElementById('settings-error');
+      
+      successEl.classList.remove('show');
+      errorEl.classList.remove('show');
+      
+      if (type === 'success') {
+        successEl.textContent = msg;
+        successEl.classList.add('show');
+        setTimeout(() => successEl.classList.remove('show'), 5000);
+      } else {
+        errorEl.textContent = msg;
+        errorEl.classList.add('show');
+        setTimeout(() => errorEl.classList.remove('show'), 5000);
+      }
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    // Update preview when typing
+    document.addEventListener('DOMContentLoaded', function() {
+      const nameInput = document.getElementById('settings-name');
+      const taglineInput = document.getElementById('settings-tagline');
+      
+      if (nameInput) nameInput.addEventListener('input', previewSettings);
+      if (taglineInput) taglineInput.addEventListener('input', previewSettings);
+    });
     
     function renderStats() {
       const today = new Date().toISOString().split('T')[0];
@@ -881,6 +1093,12 @@
     }
     
     function openAddMenu() {
+      document.getElementById('menu-modal-title').textContent = 'Add Pizza';
+      document.getElementById('menu-id').value = '';
+      document.getElementById('menu-name').value = '';
+      document.getElementById('menu-desc').value = '';
+      document.getElementById('menu-price').value = '';
+      document.getElementById('menu-image').value = '';
       document.getElementById('menu-available').checked = true;
       document.getElementById('image-preview').classList.remove('show');
       openModal('menu-modal');
@@ -1277,10 +1495,4 @@
     }
   </script>
 </body>
-</html>modal-title').textContent = 'Add Pizza';
-      document.getElementById('menu-id').value = '';
-      document.getElementById('menu-name').value = '';
-      document.getElementById('menu-desc').value = '';
-      document.getElementById('menu-price').value = '';
-      document.getElementById('menu-image').value = '';
-      document.getElementById('menu-
+</html>
