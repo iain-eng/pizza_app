@@ -563,17 +563,13 @@
             <h2 style="margin: 0; border: none;">Orders (Sorted by Time Slot)</h2>
             <button class="secondary" onclick="downloadKitchenTickets()">📄 Download Kitchen Tickets</button>
           </div>
-          <table>
+          <table id="orders-table">
             <thead>
               <tr>
                 <th>Time</th>
                 <th>Order #</th>
                 <th>Customer</th>
-                <th id="pizza-col-1">Pizza 1</th>
-                <th id="pizza-col-2">Pizza 2</th>
-                <th id="pizza-col-3">Pizza 3</th>
-                <th id="pizza-col-4">Pizza 4</th>
-                <th id="pizza-col-5">Pizza 5</th>
+                <!-- Pizza columns will be dynamically generated -->
                 <th>Total</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -960,12 +956,29 @@
     
     function renderOrders() {
       const tbody = document.getElementById('orders-list');
+      const table = document.getElementById('orders-table');
+      const thead = table.querySelector('thead tr');
+      
       const activeOrders = orders.filter(o => 
         o.status !== 'completed' && o.status !== 'cancelled'
       );
       
+      // Get unique pizza types from menu
+      const availableMenu = menu.filter(item => item.available);
+      
+      // Rebuild table headers with pizza columns
+      thead.innerHTML = `
+        <th>Time</th>
+        <th>Order #</th>
+        <th>Customer</th>
+        ${availableMenu.map(pizza => `<th style="min-width:120px;">${pizza.name}</th>`).join('')}
+        <th>Total</th>
+        <th>Status</th>
+        <th>Actions</th>
+      `;
+      
       if (activeOrders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:#5a5a5a;">No active orders</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${3 + availableMenu.length + 3}" style="text-align:center;padding:30px;color:#5a5a5a;">No active orders</td></tr>`;
         return;
       }
       
@@ -979,34 +992,57 @@
       });
       
       tbody.innerHTML = sortedOrders.map(order => {
-        // Create pizza columns (up to 5)
-        const pizzaColumns = [];
-        for (let i = 0; i < 5; i++) {
-          if (i < order.items.length) {
-            const item = order.items[i];
-            const modsHtml = item.modifications && item.modifications.length > 0 
-              ? `<div style="font-size:0.85em;color:#E89B4C;margin-top:5px;">${item.modifications.join(', ')}</div>`
-              : '';
-            const commentHtml = item.pizzaComments 
-              ? `<div style="font-size:0.85em;color:#5a5a5a;font-style:italic;margin-top:3px;">"${item.pizzaComments}"</div>`
-              : '';
-            
-            pizzaColumns.push(`
-              <td style="vertical-align:top;">
-                <div style="font-weight:bold;color:#1a3a3a;">${item.name}</div>
-                <div style="font-size:0.9em;color:#5a5a5a;margin-top:2px;">x${item.quantity}</div>
-                ${modsHtml}
-                ${commentHtml}
-              </td>
-            `);
-          } else {
-            pizzaColumns.push('<td style="background:#f5f5f5;"></td>');
+        // Group items by pizza name
+        const pizzaCounts = {};
+        
+        order.items.forEach(item => {
+          if (!pizzaCounts[item.name]) {
+            pizzaCounts[item.name] = [];
           }
-        }
+          pizzaCounts[item.name].push({
+            quantity: item.quantity,
+            mods: item.modifications || [],
+            comments: item.pizzaComments || ''
+          });
+        });
+        
+        // Create a column for each menu pizza
+        const pizzaColumns = availableMenu.map(menuPizza => {
+          const orderedPizzas = pizzaCounts[menuPizza.name];
+          
+          if (!orderedPizzas || orderedPizzas.length === 0) {
+            // Empty cell - no pizzas of this type ordered
+            return '<td style="background:#f5f5f5;text-align:center;color:#ccc;">—</td>';
+          }
+          
+          // Build content for this pizza type
+          const totalQty = orderedPizzas.reduce((sum, p) => sum + p.quantity, 0);
+          
+          const pizzaDetails = orderedPizzas.map(pizza => {
+            let details = [];
+            
+            if (pizza.mods.length > 0) {
+              details.push(`<div style="font-size:0.85em;color:#E89B4C;margin-top:3px;">${pizza.mods.join(', ')}</div>`);
+            }
+            
+            if (pizza.comments) {
+              details.push(`<div style="font-size:0.85em;color:#5a5a5a;font-style:italic;margin-top:2px;">"${pizza.comments}"</div>`);
+            }
+            
+            return details.join('');
+          }).join('');
+          
+          return `
+            <td style="vertical-align:top;background:#fff;">
+              <div style="font-weight:bold;font-size:1.3em;color:#1a3a3a;">${totalQty}</div>
+              ${pizzaDetails}
+            </td>
+          `;
+        }).join('');
         
         // General order comments
         const generalComments = order.comments 
-          ? `<div class="order-comments" style="margin-top:5px;">💬 ${order.comments}</div>`
+          ? `<div class="order-comments" style="margin-top:5px;font-size:0.85em;">💬 ${order.comments}</div>`
           : '';
         
         return `
@@ -1014,11 +1050,11 @@
           <td style="vertical-align:top;"><strong>${order.slotTime}</strong></td>
           <td style="vertical-align:top;"><strong>#${order.id.slice(-6)}</strong></td>
           <td style="vertical-align:top;">
-            ${order.customer.name}<br>
+            <strong>${order.customer.name}</strong><br>
             <small style="color:#5a5a5a;">${order.customer.phone || order.customer.email}</small>
             ${generalComments}
           </td>
-          ${pizzaColumns.join('')}
+          ${pizzaColumns}
           <td style="vertical-align:top;"><strong>£${order.total.toFixed(2)}</strong></td>
           <td style="vertical-align:top;"><span class="status-badge status-${order.status}">${order.status}</span></td>
           <td style="vertical-align:top;">
