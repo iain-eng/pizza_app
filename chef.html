@@ -566,13 +566,12 @@
           <table id="orders-table">
             <thead>
               <tr>
-                <th>Time</th>
-                <th>Order #</th>
-                <th>Customer</th>
+                <th style="width:50px;">Time</th>
+                <th style="width:60px;">Order</th>
+                <th style="width:100px;">Customer</th>
                 <!-- Pizza columns will be dynamically generated -->
-                <th>Total</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th style="width:60px;">Total</th>
+                <th style="width:80px;">Pager</th>
               </tr>
             </thead>
             <tbody id="orders-list"></tbody>
@@ -968,17 +967,16 @@
       
       // Rebuild table headers with pizza columns
       thead.innerHTML = `
-        <th>Time</th>
-        <th>Order #</th>
-        <th>Customer</th>
-        ${availableMenu.map(pizza => `<th style="min-width:120px;">${pizza.name}</th>`).join('')}
-        <th>Total</th>
-        <th>Status</th>
-        <th>Actions</th>
+        <th style="width:50px;font-size:0.85em;">Time</th>
+        <th style="width:60px;font-size:0.85em;">Order</th>
+        <th style="width:100px;font-size:0.85em;">Customer</th>
+        ${availableMenu.map(pizza => `<th style="min-width:100px;font-size:0.85em;">${pizza.name}</th>`).join('')}
+        <th style="width:60px;font-size:0.85em;">Total</th>
+        <th style="width:80px;font-size:0.85em;">Pager</th>
       `;
       
       if (activeOrders.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${3 + availableMenu.length + 3}" style="text-align:center;padding:30px;color:#5a5a5a;">No active orders</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${3 + availableMenu.length + 2}" style="text-align:center;padding:30px;color:#5a5a5a;">No active orders</td></tr>`;
         return;
       }
       
@@ -1012,7 +1010,7 @@
           
           if (!orderedPizzas || orderedPizzas.length === 0) {
             // Empty cell - no pizzas of this type ordered
-            return '<td style="background:#f5f5f5;text-align:center;color:#ccc;">—</td>';
+            return '<td style="background:#f5f5f5;text-align:center;color:#ccc;font-size:0.9em;">—</td>';
           }
           
           // Build content for this pizza type
@@ -1022,19 +1020,19 @@
             let details = [];
             
             if (pizza.mods.length > 0) {
-              details.push(`<div style="font-size:0.85em;color:#E89B4C;margin-top:3px;">${pizza.mods.join(', ')}</div>`);
+              details.push(`<div style="font-size:0.75em;color:#E89B4C;margin-top:2px;">${pizza.mods.join(', ')}</div>`);
             }
             
             if (pizza.comments) {
-              details.push(`<div style="font-size:0.85em;color:#5a5a5a;font-style:italic;margin-top:2px;">"${pizza.comments}"</div>`);
+              details.push(`<div style="font-size:0.7em;color:#5a5a5a;font-style:italic;margin-top:2px;">"${pizza.comments}"</div>`);
             }
             
             return details.join('');
           }).join('');
           
           return `
-            <td style="vertical-align:top;background:#fff;">
-              <div style="font-weight:bold;font-size:1.3em;color:#1a3a3a;">${totalQty}</div>
+            <td style="vertical-align:top;background:#fff;padding:8px;">
+              <div style="font-weight:bold;font-size:1.4em;color:#1a3a3a;">${totalQty}</div>
               ${pizzaDetails}
             </td>
           `;
@@ -1042,34 +1040,48 @@
         
         // General order comments
         const generalComments = order.comments 
-          ? `<div class="order-comments" style="margin-top:5px;font-size:0.85em;">💬 ${order.comments}</div>`
+          ? `<div style="margin-top:3px;font-size:0.7em;color:#E89B4C;">💬 ${order.comments}</div>`
           : '';
+        
+        // Get pager number from order or generate random for demo
+        const pagerNumber = order.pagerNumber || Math.floor(10 + Math.random() * 90);
         
         return `
         <tr>
-          <td style="vertical-align:top;"><strong>${order.slotTime}</strong></td>
-          <td style="vertical-align:top;"><strong>#${order.id.slice(-6)}</strong></td>
-          <td style="vertical-align:top;">
-            <strong>${order.customer.name}</strong><br>
-            <small style="color:#5a5a5a;">${order.customer.phone || order.customer.email}</small>
+          <td style="vertical-align:top;font-size:0.9em;padding:8px;"><strong>${order.slotTime}</strong></td>
+          <td style="vertical-align:top;font-size:0.7em;padding:8px;color:#5a5a5a;">#${order.id.slice(-6)}</td>
+          <td style="vertical-align:top;padding:8px;">
+            <div style="font-weight:600;font-size:0.85em;">${order.customer.name}</div>
+            <div style="font-size:0.7em;color:#5a5a5a;">${order.customer.phone || order.customer.email}</div>
             ${generalComments}
           </td>
           ${pizzaColumns}
-          <td style="vertical-align:top;"><strong>£${order.total.toFixed(2)}</strong></td>
-          <td style="vertical-align:top;"><span class="status-badge status-${order.status}">${order.status}</span></td>
-          <td style="vertical-align:top;">
-            <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:5px;border:2px solid #1a3a3a;font-family:inherit;">
-              <option value="">Update...</option>
-              <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
-              <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>Preparing</option>
-              <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>Ready</option>
-              <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
-              <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+          <td style="vertical-align:top;padding:8px;font-size:0.9em;"><strong>£${order.total.toFixed(2)}</strong></td>
+          <td style="vertical-align:top;padding:8px;">
+            <select onchange="updatePager('${order.id}', this.value)" style="padding:4px;border:2px solid #1a3a3a;font-family:inherit;font-size:0.85em;width:100%;">
+              <option value="">Set #</option>
+              ${Array.from({length: 99}, (_, i) => i + 1).map(num => 
+                `<option value="${num}" ${pagerNumber == num ? 'selected' : ''}>${num}</option>`
+              ).join('')}
             </select>
           </td>
         </tr>
       `;
       }).join('');
+    }
+    
+    async function updatePager(orderId, pagerNumber) {
+      if (!pagerNumber) return;
+      
+      // For now, just store in memory - you could add a pagerNumber field to orders
+      console.log(`Order ${orderId} assigned pager #${pagerNumber}`);
+      
+      // Optional: Show confirmation
+      const orderIndex = orders.findIndex(o => o.id === orderId);
+      if (orderIndex !== -1) {
+        orders[orderIndex].pagerNumber = pagerNumber;
+        renderOrders(); // Re-render to show the saved pager number
+      }
     }
     
     async function updateOrderStatus(orderId, status) {
