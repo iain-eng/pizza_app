@@ -96,60 +96,128 @@
       font-size: 1.4em;
       font-weight: bold;
     }
-    
-    .matrix-container {
-      overflow-x: auto;
+
+    /* Time slot navigation */
+    .time-navigation {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 20px;
-    }
-    
-    .matrix-table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 600px;
-      background: #FFF;
+      padding: 15px;
+      background: #1a3a3a;
       border: 3px solid #1a3a3a;
     }
-    
-    .matrix-table th,
-    .matrix-table td {
-      padding: 12px;
-      text-align: center;
-      border: 2px solid #1a3a3a;
-    }
-    
-    .matrix-table thead th {
-      background: #1a3a3a;
-      color: #F5EFE6;
-      font-weight: 700;
-    }
-    
-    .matrix-table tbody th {
-      background: #E8DCC4;
-      font-weight: 700;
+
+    .time-nav-button {
+      background: #E89B4C;
       color: #1a3a3a;
-      text-align: left;
+      border: 3px solid #E89B4C;
+      padding: 10px 20px;
+      font-size: 1.1em;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+      font-family: inherit;
     }
-    
-    .matrix-cell {
-      background: white;
-      position: relative;
+
+    .time-nav-button:hover:not(:disabled) {
+      background: #F5EFE6;
+      border-color: #F5EFE6;
     }
-    
-    .matrix-cell.disabled {
-      background: #d0d0d0;
+
+    .time-nav-button:disabled {
+      background: #5a5a5a;
+      border-color: #5a5a5a;
+      color: #888;
+      cursor: not-allowed;
       opacity: 0.5;
     }
-    
-    .slot-full {
-      color: #C64C4C;
-      font-size: 0.85em;
+
+    .current-time-range {
+      color: #E89B4C;
+      font-size: 1.5em;
       font-weight: bold;
+      text-align: center;
+      flex: 1;
+    }
+
+    .time-slots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .time-slot-card {
+      background: #FFF;
+      border: 3px solid #1a3a3a;
+      padding: 20px;
+      position: relative;
+    }
+
+    .time-slot-card.full {
+      opacity: 0.5;
+      background: #d0d0d0;
+    }
+
+    .slot-time {
+      font-size: 2em;
+      font-weight: bold;
+      color: #E89B4C;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .slot-capacity {
+      text-align: center;
+      font-size: 0.9em;
+      color: #5a5a5a;
+      margin-bottom: 15px;
+    }
+
+    .slot-capacity.low {
+      color: #C64C4C;
+      font-weight: bold;
+    }
+
+    .slot-full {
+      text-align: center;
+      color: #C64C4C;
+      font-size: 1.2em;
+      font-weight: bold;
+      padding: 20px;
+    }
+
+    .pizza-selector {
+      border-top: 2px solid #E8DCC4;
+      padding-top: 15px;
+    }
+
+    .pizza-select-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      margin-bottom: 8px;
+      background: #F5EFE6;
+      border: 2px solid #E8DCC4;
+    }
+
+    .pizza-select-name {
+      font-weight: 600;
+      color: #1a3a3a;
+      flex: 1;
+    }
+
+    .pizza-select-price {
+      color: #E89B4C;
+      font-weight: bold;
+      margin-right: 15px;
     }
     
     .quantity-controls {
       display: flex;
       align-items: center;
-      justify-content: center;
       gap: 8px;
     }
     
@@ -180,17 +248,7 @@
       font-weight: bold;
       color: #1a3a3a;
       min-width: 25px;
-    }
-    
-    .slot-capacity {
-      font-size: 0.8em;
-      color: #5a5a5a;
-      margin-top: 4px;
-    }
-    
-    .slot-capacity.low {
-      color: #C64C4C;
-      font-weight: bold;
+      text-align: center;
     }
     
     .modifications-section {
@@ -531,21 +589,29 @@
       background: #1a3a3a;
       color: #E89B4C;
     }
+
+    .no-slots-message {
+      text-align: center;
+      padding: 40px;
+      color: #5a5a5a;
+      font-size: 1.1em;
+    }
     
     @media (max-width: 768px) {
       h1 { font-size: 2em; }
       .menu-preview { grid-template-columns: 1fr; }
       .form-row { grid-template-columns: 1fr; }
-      .matrix-table { font-size: 0.9em; }
-      .matrix-table th, .matrix-table td { padding: 8px; }
       .step-indicator { flex-direction: column; gap: 10px; }
+      .time-slots-grid { grid-template-columns: 1fr; }
+      .time-navigation { flex-direction: column; gap: 10px; }
+      .time-nav-button { width: 100%; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1 id="business-name">🍕 Loading...</h1>
-    <p class="subtitle">Hot. Happy. Delicious.</p>
+    <p class="subtitle" id="business-tagline">Loading...</p>
     
     <div id="error" class="error"></div>
     
@@ -565,7 +631,7 @@
       </div>
     </div>
     
-    <!-- Step 1: Menu & Matrix -->
+    <!-- Step 1: Menu & Time Slots -->
     <div id="selection-section">
       <!-- Menu Preview -->
       <div class="card">
@@ -573,13 +639,20 @@
         <div id="menu-preview" class="menu-preview"></div>
       </div>
       
-      <!-- Selection Matrix -->
+      <!-- Time Slot Selection -->
       <div class="card">
-        <h2>Select Pizza & Time</h2>
-        <p style="color: #5a5a5a; margin-bottom: 15px;">Choose how many of each pizza you'd like for each time slot:</p>
-        <div class="matrix-container">
-          <table id="matrix" class="matrix-table"></table>
+        <h2>Select Your Pizzas & Pickup Time</h2>
+        <p style="color: #5a5a5a; margin-bottom: 20px;">Browse available time slots and select pizzas for each time you'd like to pick up:</p>
+        
+        <!-- Time Navigation -->
+        <div class="time-navigation">
+          <button class="time-nav-button" id="prev-hour" onclick="changeHour(-1)">← Previous</button>
+          <div class="current-time-range" id="current-hour-range">Loading...</div>
+          <button class="time-nav-button" id="next-hour" onclick="changeHour(1)">Next →</button>
         </div>
+        
+        <!-- Time Slots Display -->
+        <div id="time-slots-display" class="time-slots-grid"></div>
       </div>
       
       <button id="next-to-mods" class="button" disabled>Next: Customize Pizzas</button>
@@ -671,6 +744,8 @@
     let settings = {};
     
     let currentStep = 1;
+    let currentHourIndex = 0;
+    let hourRanges = [];
     
     // Modification prices
     const MOD_PRICES = {
@@ -682,6 +757,28 @@
     function calculateModPrice(mods) {
       if (!mods || mods.length === 0) return 0;
       return mods.reduce((total, mod) => total + (MOD_PRICES[mod] || 0), 0);
+    }
+    
+    // Group slots by hour
+    function groupSlotsByHour() {
+      const grouped = {};
+      
+      slots.forEach(slot => {
+        const hour = parseInt(slot.time.split(':')[0]);
+        if (!grouped[hour]) {
+          grouped[hour] = [];
+        }
+        grouped[hour].push(slot);
+      });
+      
+      // Create hour ranges
+      hourRanges = Object.keys(grouped).sort((a, b) => a - b).map(hour => ({
+        hour: parseInt(hour),
+        label: `${hour}:00 - ${hour}:59`,
+        slots: grouped[hour]
+      }));
+      
+      return hourRanges;
     }
     
     // Load data
@@ -697,11 +794,13 @@
         slots = await slotsRes.json();
         settings = await settingsRes.json();
         
-        // Update business name from settings
+        // Update business name and tagline
         document.getElementById('business-name').textContent = `🍕 ${settings.businessName || 'Pizza Paradise'}`;
+        document.getElementById('business-tagline').textContent = settings.tagline || 'Fresh. Fast. Delicious.';
         
+        groupSlotsByHour();
         renderMenuPreview();
-        renderMatrix();
+        renderCurrentHourSlots();
         updateStepIndicator();
       } catch (error) {
         showError('Failed to load menu. Please refresh the page.');
@@ -721,53 +820,73 @@
       `).join('');
     }
     
-    function renderMatrix() {
-      const table = document.getElementById('matrix');
+    function renderCurrentHourSlots() {
+      if (hourRanges.length === 0) {
+        document.getElementById('time-slots-display').innerHTML = '<div class="no-slots-message">No time slots available</div>';
+        document.getElementById('current-hour-range').textContent = 'No slots available';
+        document.getElementById('prev-hour').disabled = true;
+        document.getElementById('next-hour').disabled = true;
+        return;
+      }
+      
+      const currentRange = hourRanges[currentHourIndex];
+      document.getElementById('current-hour-range').textContent = currentRange.label;
+      
+      // Update navigation buttons
+      document.getElementById('prev-hour').disabled = currentHourIndex === 0;
+      document.getElementById('next-hour').disabled = currentHourIndex === hourRanges.length - 1;
+      
+      // Render slots for this hour
+      const display = document.getElementById('time-slots-display');
       const availableMenu = menu.filter(item => item.available);
       
-      let html = '<thead><tr><th>Pizza / Time</th>';
-      slots.forEach(slot => {
-        const remaining = slot.remaining;
-        const isLow = remaining <= 2;
-        html += `<th>
-          <div>${slot.time}</div>
-          <div class="slot-capacity ${isLow ? 'low' : ''}">${remaining > 0 ? remaining + ' left' : 'Full'}</div>
-        </th>`;
-      });
-      html += '</tr></thead><tbody>';
-      
-      availableMenu.forEach(pizza => {
-        html += `<tr><th>${pizza.name}<br><small style="color:#5a5a5a;">£${pizza.price.toFixed(2)}</small></th>`;
+      display.innerHTML = currentRange.slots.map(slot => {
+        const isFull = slot.remaining <= 0;
+        const isLow = slot.remaining <= 2 && slot.remaining > 0;
         
-        slots.forEach(slot => {
-          const key = `${slot.id}-${pizza.id}`;
-          const qty = cart[key] ? cart[key].quantity : 0;
-          const isFull = slot.remaining <= 0;
-          const slotTotal = getSlotTotal(slot.id);
-          const canAdd = !isFull && slotTotal < slot.remaining;
-          
-          html += `<td class="matrix-cell ${isFull ? 'disabled' : ''}">`;
-          
-          if (isFull) {
-            html += '<span class="slot-full">Full</span>';
-          } else {
-            html += `
-              <div class="quantity-controls">
-                <button onclick="changeQuantity('${slot.id}', '${pizza.id}', -1)" ${qty === 0 ? 'disabled' : ''}>−</button>
-                <span class="qty">${qty}</span>
-                <button onclick="changeQuantity('${slot.id}', '${pizza.id}', 1)" ${!canAdd ? 'disabled' : ''}>+</button>
-              </div>
-            `;
-          }
-          
-          html += '</td>';
-        });
+        if (isFull) {
+          return `
+            <div class="time-slot-card full">
+              <div class="slot-time">${slot.time}</div>
+              <div class="slot-full">❌ Fully Booked</div>
+            </div>
+          `;
+        }
         
-        html += '</tr>';
-      });
-      
-      html += '</tbody>';
-      table.innerHTML = html;
+        return `
+          <div class="time-slot-card">
+            <div class="slot-time">${slot.time}</div>
+            <div class="slot-capacity ${isLow ? 'low' : ''}">
+              ${slot.remaining} of ${slot.capacity} pizzas available
+            </div>
+            <div class="pizza-selector">
+              ${availableMenu.map(pizza => {
+                const key = `${slot.id}-${pizza.id}`;
+                const qty = cart[key] ? cart[key].quantity : 0;
+                const slotTotal = getSlotTotal(slot.id);
+                const canAdd = slotTotal < slot.remaining;
+                
+                return `
+                  <div class="pizza-select-item">
+                    <div class="pizza-select-name">${pizza.name}</div>
+                    <div class="pizza-select-price">£${pizza.price.toFixed(2)}</div>
+                    <div class="quantity-controls">
+                      <button onclick="changeQuantity('${slot.id}', '${pizza.id}', -1)" ${qty === 0 ? 'disabled' : ''}>−</button>
+                      <span class="qty">${qty}</span>
+                      <button onclick="changeQuantity('${slot.id}', '${pizza.id}', 1)" ${!canAdd ? 'disabled' : ''}>+</button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function changeHour(delta) {
+      currentHourIndex = Math.max(0, Math.min(hourRanges.length - 1, currentHourIndex + delta));
+      renderCurrentHourSlots();
     }
     
     function getSlotTotal(slotId) {
@@ -814,7 +933,7 @@
         };
       }
       
-      renderMatrix();
+      renderCurrentHourSlots();
       updateNextButton();
     }
     
