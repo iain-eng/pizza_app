@@ -447,9 +447,9 @@
     
     .success-message {
       position: fixed;
-      top: 50%;
+      top: 5%;
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translateX(-50%);
       background: #F5EFE6;
       padding: 40px;
       border: 4px solid #1a3a3a;
@@ -458,6 +458,9 @@
       z-index: 1000;
       max-width: 600px;
       width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       display: none;
     }
     
@@ -656,10 +659,39 @@
       }
       .success-message {
         width: 95%;
-        padding: 25px;
+        padding: 20px;
+        max-height: 90vh;
+        overflow-y: auto;
+        top: 5%;
+        left: 2.5%;
+        transform: none;
+        box-shadow: 6px 6px 0 #1a3a3a;
       }
       .success-message h2 {
-        font-size: 2em;
+        font-size: 1.8em;
+        margin-bottom: 10px;
+      }
+      
+      .success-message p {
+        font-size: 1em;
+        margin: 8px 0;
+      }
+      
+      /* Ensure modal buttons are accessible */
+      .success-message .button {
+        margin: 10px 5px;
+        font-size: 1em;
+        padding: 12px;
+      }
+      
+      .order-summary-box {
+        max-height: none;
+        text-align: left;
+      }
+      
+      .contact-note {
+        font-size: 0.9em;
+        padding: 12px;
       }
       
       /* Ensure form sections have proper spacing */
@@ -875,14 +907,17 @@
     async function init() {
       try {
         const [menuRes, slotsRes, settingsRes] = await Promise.all([
-          fetch(`${API_URL}/menu`),
-          fetch(`${API_URL}/slots`),
-          fetch(`${API_URL}/settings`)
+          fetch(`${API_URL}/menu`, { cache: 'no-store' }),
+          fetch(`${API_URL}/slots`, { cache: 'no-store' }),
+          fetch(`${API_URL}/settings`, { cache: 'no-store' })
         ]);
         
         menu = await menuRes.json();
         slots = await slotsRes.json();
         settings = await settingsRes.json();
+        
+        console.log('Loaded menu:', menu);
+        console.log('Loaded slots:', slots);
         
         // Update business name and tagline
         document.getElementById('business-name').textContent = `🍕 ${settings.businessName || 'Pizza Paradise'}`;
@@ -1340,6 +1375,9 @@
       
       document.getElementById('overlay').classList.add('show');
       document.getElementById('success').classList.add('show');
+      
+      // Scroll modal to top when opened
+      document.getElementById('success').scrollTop = 0;
     }
     
     function closeSuccessModal() {
