@@ -477,11 +477,11 @@
       }
       
       table {
-        font-size: 0.9em;
+        font-size: 0.85em;
       }
       
       th, td {
-        padding: 10px;
+        padding: 8px 4px;
       }
       
       .pizza-breakdown {
@@ -490,6 +490,55 @@
       
       .card {
         box-shadow: 4px 4px 0 #1a3a3a;
+        padding: 15px;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .header h1 {
+        font-size: 1.5em;
+      }
+      
+      /* Make orders table scroll horizontally on mobile */
+      #orders-table {
+        font-size: 0.75em;
+      }
+      
+      #orders-table th,
+      #orders-table td {
+        padding: 6px 3px;
+        white-space: nowrap;
+      }
+      
+      /* Smaller font sizes for mobile */
+      #orders-table .customer-name {
+        font-size: 0.9em;
+      }
+      
+      /* Ensure pager dropdown is usable on mobile */
+      #orders-table select {
+        font-size: 0.9em;
+        padding: 3px;
+      }
+    }
+    
+    /* Tablet adjustments */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      table {
+        font-size: 0.9em;
+      }
+      
+      th, td {
+        padding: 10px 6px;
+      }
+    }
+    
+    /* Ensure horizontal scroll works smoothly */
+    @media (max-width: 1024px) {
+      .card {
+        overflow-x: visible;
       }
     }
   </style>
@@ -559,23 +608,27 @@
       <!-- Orders Tab -->
       <div id="orders-tab" class="tab-content active">
         <div class="card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <h2 style="margin: 0; border: none;">Orders (Sorted by Time Slot)</h2>
             <button class="secondary" onclick="downloadKitchenTickets()">📄 Download Kitchen Tickets</button>
           </div>
-          <table id="orders-table">
-            <thead>
-              <tr>
-                <th style="width:50px;">Time</th>
-                <th style="width:60px;">Order</th>
-                <th style="width:100px;">Customer</th>
-                <!-- Pizza columns will be dynamically generated -->
-                <th style="width:60px;">Total</th>
-                <th style="width:80px;">Pager</th>
-              </tr>
-            </thead>
-            <tbody id="orders-list"></tbody>
-          </table>
+          
+          <!-- Responsive table wrapper -->
+          <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+            <table id="orders-table" style="min-width: 600px;">
+              <thead>
+                <tr>
+                  <th style="width:50px;font-size:0.85em;">Time</th>
+                  <th style="width:60px;font-size:0.85em;">Order</th>
+                  <th style="width:100px;font-size:0.85em;">Customer</th>
+                  <!-- Pizza columns will be dynamically generated -->
+                  <th style="width:60px;font-size:0.85em;">Total</th>
+                  <th style="width:80px;font-size:0.85em;">Pager</th>
+                </tr>
+              </thead>
+              <tbody id="orders-list"></tbody>
+            </table>
+          </div>
         </div>
       </div>
       
