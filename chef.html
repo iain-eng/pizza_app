@@ -621,10 +621,11 @@
       
       <!-- Archive Section -->
       <div class="archive-section">
-        <h3>🗄️ Start New Day</h3>
-        <p>Archive today's orders and start fresh for a new service day.</p>
-        <p class="archive-warning">⚠️ This will clear all current orders and save them to archives.</p>
-        <button class="danger" onclick="confirmArchive()" style="margin-top: 10px;">Start New Day & Archive Orders</button>
+        <h3>🗄️ Archive Completed Services</h3>
+        <p>Archive orders from past service dates to keep your dashboard clean.</p>
+        <div id="archive-options" style="margin-top: 15px;">
+          <!-- Archive options will be populated by JavaScript -->
+        </div>
       </div>
       
       <!-- Tabs -->
@@ -914,6 +915,7 @@
       renderOrders();
       renderMenu();
       renderSlots();
+      populateArchiveOptions();
       
       // Refresh orders every 10 seconds
       setInterval(async () => {
@@ -922,6 +924,7 @@
         renderPizzaBreakdown();
         renderOverview();
         renderOrdersForAllServiceDates();
+        populateArchiveOptions();
       }, 10000);
     }
     
@@ -1456,15 +1459,195 @@
       }
     }
     
-    function confirmArchive() {
-      if (!confirm('Are you sure you want to archive all current orders and start a new day?\n\nThis will:\n• Save all orders to an archive file\n• Clear the current orders list\n• Keep your menu and time slots\n\nThis cannot be undone!')) {
+    function populateArchiveOptions() {
+      const archiveDiv = document.getElementById('archive-options');
+      
+      if (!settings.serviceSchedule || settings.serviceSchedule.length === 0) {
+        // Legacy mode - archive all
+        archiveDiv.innerHTML = `
+          <p class="archive-warning">⚠️ Archive all completed and cancelled orders</p>
+          <button class="danger" onclick="archiveAllOrders()" style="margin-top: 10px;">Archive All Orders</button>
+        `;
         return;
       }
       
-      archiveOrders();
+      // Group orders by service date
+      const ordersByDate = {};
+      orders.forEach(order => {
+        if (!order.serviceDate) return;
+        if (!ordersByDate[order.serviceDate]) {
+          ordersByDate[order.serviceDate] = {
+            total: 0,
+            completed: 0,
+            cancelled: 0,
+            active: 0
+          };
+        }
+        ordersByDate[order.serviceDate].total++;
+        if (order.status === 'completed') ordersByDate[order.serviceDate].completed++;
+        else if (order.status === 'cancelled') ordersByDate[order.serviceDate].cancelled++;
+        else ordersByDate[order.serviceDate].active++;
+      });
+      
+      // Get current and past service dates
+      const now = new Date();
+      const archivableServices = settings.serviceSchedule.filter(schedule => {
+        const serviceDate = new Date(schedule.serviceDate);
+        serviceDate.setHours(23, 59, 59);
+        return serviceDate < now; // Service date has passed
+      }).sort((a, b) => new Date(b.serviceDate) - new Date(a.serviceDate));
+      
+      if (archivableServices.length === 0) {
+        archiveDiv.innerHTML = '<p style="color:#5a5a5a;font-style:italic;">No past service dates to archive yet.</p>';
+        return;
+      }
+      
+      archiveDiv.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;">';
+      
+      archivableServices.forEach(schedule => {
+        const dateStr = new Date(schedule.serviceDate).toLocaleDateString('en-GB', { 
+          weekday: 'long', 
+          day: 'numeric', 
+          month: 'long' 
+        });
+        const stats = ordersByDate[schedule.serviceDate] || { total: 0, completed: 0, cancelled: 0, active: 0 };
+        
+        archiveDiv.innerHTML += `
+          <div style="background:#F5EFE6;border:2px solid #1a3a3a;padding:15px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <strong style="font-size:1.1em;">${dateStr}</strong><br>
+              <small style="color:#5a5a5a;">
+                ${stats.total} orders: 
+                ${stats.completed} completed, 
+                ${stats.cancelled} cancelled
+                ${stats.active > 0 ? `, <span style="color:#E89B4C;font-weight:600;">${stats.active} still active</span>` : ''}
+              </small>
+            </div>
+            <button class="secondary" onclick="archiveServiceDate('${schedule.serviceDate}')" style="min-width:100px;">
+              🗄️ Archive
+            </button>
+          </div>
+        `;
+      });
+      
+      archiveDiv.innerHTML += '</div>';
+      
+      // Add "archive all" option at bottom
+      const totalArchivable = archivableServices.reduce((sum, s) => {
+        const stats = ordersByDate[s.serviceDate] || { total: 0 };
+        return sum + stats.total;
+      }, 0);
+      
+      if (totalArchivable > 0) {
+        archiveDiv.innerHTML += `
+          <div style="margin-top:20px;padding-top:20px;border-top:2px solid #1a3a3a;">
+            <button class="danger" onclick="archiveAllPastServices()" style="width:100%;">
+              🗄️ Archive All Past Services (${totalArchivable} orders)
+            </button>
+          </div>
+        `;
+      }
     }
     
-    async function archiveOrders() {
+    async function archiveServiceDate(serviceDate) {
+      const dateStr = new Date(serviceDate).toLocaleDateString('en-GB', { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long' 
+      });
+      
+      const ordersToArchive = orders.filter(o => o.serviceDate === serviceDate);
+      const activeOrders = ordersToArchive.filter(o => 
+        o.status !== 'completed' && o.status !== 'cancelled'
+      );
+      
+      let confirmMessage = `Archive orders from ${dateStr}?\n\n`;
+      confirmMessage += `${ordersToArchive.length} total orders\n`;
+      
+      if (activeOrders.length > 0) {
+        confirmMessage += `\n⚠️ WARNING: ${activeOrders.length} orders are still ACTIVE (not completed/cancelled).\n\n`;
+        confirmMessage += `Are you sure you want to archive them?`;
+      }
+      
+      if (!confirm(confirmMessage)) return;
+      
+      try {
+        // Archive by filtering on backend
+        const response = await fetch(`${API_URL}/orders/archive`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ serviceDate })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          alert(`✅ Archived ${result.archived} orders from ${dateStr}!\n\nArchive file: ${result.archiveFile}`);
+          await loadData();
+          renderStats();
+          renderPizzaBreakdown();
+          renderOverview();
+          renderOrdersForAllServiceDates();
+          populateArchiveOptions();
+        } else {
+          alert('Failed to archive orders');
+        }
+      } catch (error) {
+        alert('Error archiving orders: ' + error.message);
+      }
+    }
+    
+    async function archiveAllPastServices() {
+      const now = new Date();
+      const pastServices = settings.serviceSchedule.filter(schedule => {
+        const serviceDate = new Date(schedule.serviceDate);
+        serviceDate.setHours(23, 59, 59);
+        return serviceDate < now;
+      });
+      
+      if (pastServices.length === 0) {
+        alert('No past services to archive');
+        return;
+      }
+      
+      const totalOrders = orders.filter(o => 
+        pastServices.some(s => s.serviceDate === o.serviceDate)
+      ).length;
+      
+      if (!confirm(`Archive ALL orders from ${pastServices.length} past service date(s)?\n\nThis will archive ${totalOrders} orders.`)) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_URL}/orders/archive`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            serviceDates: pastServices.map(s => s.serviceDate)
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          alert(`✅ Archived ${result.archived} orders from ${pastServices.length} service date(s)!\n\nArchive file: ${result.archiveFile}`);
+          await loadData();
+          renderStats();
+          renderPizzaBreakdown();
+          renderOverview();
+          renderOrdersForAllServiceDates();
+          populateArchiveOptions();
+        } else {
+          alert('Failed to archive orders');
+        }
+      } catch (error) {
+        alert('Error archiving orders: ' + error.message);
+      }
+    }
+    
+    async function archiveAllOrders() {
+      if (!confirm('Archive ALL completed and cancelled orders?\n\nThis will clear them from the dashboard.')) {
+        return;
+      }
+      
       try {
         const response = await fetch(`${API_URL}/orders/archive`, {
           method: 'POST',
@@ -1472,11 +1655,13 @@
         
         if (response.ok) {
           const result = await response.json();
-          alert(`✅ Success!\n\n${result.archived} orders archived.\nArchive file: ${result.archiveFile}\n\nStarting fresh for a new day!`);
+          alert(`✅ Success!\n\n${result.archived} orders archived.\nArchive file: ${result.archiveFile}`);
           await loadData();
           renderStats();
           renderPizzaBreakdown();
-          renderOrders();
+          renderOverview();
+          renderOrdersForAllServiceDates();
+          populateArchiveOptions();
         } else {
           alert('Failed to archive orders');
         }
