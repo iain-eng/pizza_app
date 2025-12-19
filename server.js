@@ -290,6 +290,7 @@ app.post("/api/orders", (req, res) => {
     comments: comments || "",
     total,
     status: "confirmed",
+    serviceDate: req.body.serviceDate || null, // Track which service date this order is for
     createdAt: new Date().toISOString()
   };
   
