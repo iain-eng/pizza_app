@@ -918,10 +918,17 @@
         
         console.log('Loaded menu:', menu);
         console.log('Loaded slots:', slots);
+        console.log('Loaded settings:', settings);
         
         // Update business name and tagline
         document.getElementById('business-name').textContent = `🍕 ${settings.businessName || 'Pizza Paradise'}`;
         document.getElementById('business-tagline').textContent = settings.tagline || 'Fresh. Fast. Delicious.';
+        
+        // Check if ordering is available
+        if (!checkOrderingAvailable()) {
+          showOrderingClosedMessage();
+          return;
+        }
         
         groupSlotsByHour();
         renderMenuPreview();
@@ -931,6 +938,69 @@
         showError('Failed to load menu. Please refresh the page.');
         console.error(error);
       }
+    }
+    
+    function checkOrderingAvailable() {
+      if (!settings.serviceSchedule || settings.serviceSchedule.length === 0) {
+        // No schedule set = always open (backward compatibility)
+        return true;
+      }
+      
+      const now = new Date();
+      
+      // Find any enabled service date where orders are open
+      const availableService = settings.serviceSchedule.find(schedule => {
+        if (!schedule.enabled) return false;
+        
+        const ordersOpenAt = new Date(schedule.ordersOpenAt);
+        const serviceDate = new Date(schedule.serviceDate);
+        serviceDate.setHours(23, 59, 59); // End of service day
+        
+        // Orders open if current time is between ordersOpenAt and end of service day
+        return now >= ordersOpenAt && now <= serviceDate;
+      });
+      
+      return !!availableService;
+    }
+    
+    function showOrderingClosedMessage() {
+      const container = document.querySelector('.container');
+      
+      // Find next opening time
+      let nextOpening = null;
+      if (settings.serviceSchedule && settings.serviceSchedule.length > 0) {
+        const now = new Date();
+        const futureSchedules = settings.serviceSchedule
+          .filter(s => s.enabled && new Date(s.ordersOpenAt) > now)
+          .sort((a, b) => new Date(a.ordersOpenAt) - new Date(b.ordersOpenAt));
+        
+        if (futureSchedules.length > 0) {
+          nextOpening = futureSchedules[0];
+        }
+      }
+      
+      let message = '<h2 style="text-align:center;color:#C64C4C;margin-top:50px;">Orders Are Currently Closed</h2>';
+      message += '<p style="text-align:center;font-size:1.2em;margin-top:20px;">We\'re not currently accepting orders.</p>';
+      
+      if (nextOpening) {
+        const openDate = new Date(nextOpening.ordersOpenAt);
+        const serviceDate = new Date(nextOpening.serviceDate);
+        message += `
+          <div style="background:#F5EFE6;border:3px solid #1a3a3a;padding:30px;margin:30px auto;max-width:600px;text-align:center;">
+            <h3 style="color:#E89B4C;margin-bottom:15px;">Next Service:</h3>
+            <p style="font-size:1.3em;margin-bottom:10px;"><strong>${serviceDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</strong></p>
+            <p style="color:#5a5a5a;margin-top:10px;">Orders open: ${openDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at ${openDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
+          </div>
+        `;
+      }
+      
+      message += '<p style="text-align:center;color:#5a5a5a;margin-top:30px;">Check back soon!</p>';
+      
+      container.innerHTML = `
+        <h1>${settings.businessName || 'Pizza Paradise'}</h1>
+        <p class="subtitle">${settings.tagline || 'Fresh. Fast. Delicious.'}</p>
+        <div class="card">${message}</div>
+      `;
     }
     
     function renderMenuPreview() {
