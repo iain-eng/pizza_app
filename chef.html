@@ -467,12 +467,42 @@
       color: #1a3a3a;
     }
     
+    .schedule-item {
+      background: #FFF;
+      border: 3px solid #1a3a3a;
+      padding: 20px;
+      margin-bottom: 15px;
+    }
+    
+    .schedule-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .schedule-item-title {
+      font-weight: 600;
+      font-size: 1.1em;
+      color: #1a3a3a;
+    }
+    
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
     @media (max-width: 768px) {
       .tabs {
         flex-direction: column;
       }
       
       .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .schedule-grid {
         grid-template-columns: 1fr;
       }
       
@@ -721,6 +751,19 @@
               <small style="color:#5a5a5a;">Change the password used to access this dashboard</small>
             </div>
             
+            <h3 style="margin-top: 30px; margin-bottom: 15px; color: #1a3a3a; border-bottom: 2px solid #E89B4C; padding-bottom: 10px;">📅 Service Schedule</h3>
+            
+            <div class="info-box">
+              <h4>ℹ️ About Service Schedule</h4>
+              <p>Control when customers can place orders. Add service dates and set when orders open for each date.</p>
+            </div>
+            
+            <div id="schedule-list" style="margin-bottom: 20px;">
+              <!-- Schedule items will be rendered here -->
+            </div>
+            
+            <button type="button" class="secondary" onclick="addScheduleItem()" style="width: 100%; margin-bottom: 20px;">+ Add Service Date</button>
+            
             <div class="button-group">
               <button type="submit" class="primary">💾 Save Settings</button>
               <button type="button" class="secondary" onclick="loadSettings()">↻ Reset</button>
@@ -876,9 +919,97 @@
         document.getElementById('settings-logo').value = settings.logo || '';
         document.getElementById('settings-password').value = '';
         
+        // Load service schedule
+        if (!settings.serviceSchedule) {
+          settings.serviceSchedule = [];
+        }
+        renderSchedule();
+        
         previewSettings();
       } catch (error) {
         console.error('Failed to load settings:', error);
+      }
+    }
+    
+    function renderSchedule() {
+      const scheduleList = document.getElementById('schedule-list');
+      
+      if (settings.serviceSchedule.length === 0) {
+        scheduleList.innerHTML = '<p style="color:#5a5a5a;text-align:center;padding:20px;">No service dates scheduled. Add one below!</p>';
+        return;
+      }
+      
+      scheduleList.innerHTML = settings.serviceSchedule.map((schedule, index) => {
+        const serviceDate = new Date(schedule.serviceDate);
+        const ordersOpenDate = new Date(schedule.ordersOpenAt);
+        
+        return `
+          <div class="schedule-item">
+            <div class="schedule-item-header">
+              <div class="schedule-item-title">
+                ${schedule.enabled ? '✅' : '❌'} Service: ${serviceDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </div>
+              <button type="button" class="small danger" onclick="removeScheduleItem(${index})">Delete</button>
+            </div>
+            
+            <div class="schedule-grid">
+              <div class="form-group">
+                <label>Service Date</label>
+                <input type="date" value="${schedule.serviceDate}" onchange="updateScheduleItem(${index}, 'serviceDate', this.value)">
+              </div>
+              
+              <div class="form-group">
+                <label>Orders Open At</label>
+                <input type="datetime-local" value="${schedule.ordersOpenAt.slice(0, 16)}" onchange="updateScheduleItem(${index}, 'ordersOpenAt', this.value)">
+                <small style="color:#5a5a5a;">When customers can start ordering</small>
+              </div>
+            </div>
+            
+            <div class="form-group" style="margin-top: 10px;">
+              <label>
+                <input type="checkbox" ${schedule.enabled ? 'checked' : ''} onchange="updateScheduleItem(${index}, 'enabled', this.checked)">
+                Enable this service date
+              </label>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function addScheduleItem() {
+      // Default to next Friday, orders open Tuesday 10am
+      const today = new Date();
+      const daysUntilFriday = (5 - today.getDay() + 7) % 7 || 7;
+      const nextFriday = new Date(today);
+      nextFriday.setDate(today.getDate() + daysUntilFriday);
+      
+      const tuesdayBefore = new Date(nextFriday);
+      tuesdayBefore.setDate(nextFriday.getDate() - 3);
+      tuesdayBefore.setHours(10, 0, 0, 0);
+      
+      settings.serviceSchedule.push({
+        serviceDate: nextFriday.toISOString().split('T')[0],
+        ordersOpenAt: tuesdayBefore.toISOString().slice(0, 16),
+        enabled: true
+      });
+      
+      renderSchedule();
+    }
+    
+    function updateScheduleItem(index, field, value) {
+      if (field === 'ordersOpenAt') {
+        // Convert datetime-local to ISO format
+        settings.serviceSchedule[index][field] = value + ':00';
+      } else {
+        settings.serviceSchedule[index][field] = value;
+      }
+      renderSchedule();
+    }
+    
+    function removeScheduleItem(index) {
+      if (confirm('Remove this service date?')) {
+        settings.serviceSchedule.splice(index, 1);
+        renderSchedule();
       }
     }
     
@@ -905,7 +1036,8 @@
       const data = {
         businessName: document.getElementById('settings-name').value,
         tagline: document.getElementById('settings-tagline').value,
-        logo: document.getElementById('settings-logo').value
+        logo: document.getElementById('settings-logo').value,
+        serviceSchedule: settings.serviceSchedule
       };
       
       const password = document.getElementById('settings-password').value;
@@ -924,6 +1056,7 @@
           settings = await response.json();
           showSettingsMessage('Settings saved successfully! ✓', 'success');
           previewSettings();
+          renderSchedule();
         } else {
           showSettingsMessage('Failed to save settings', 'error');
         }
