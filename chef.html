@@ -629,14 +629,44 @@
       
       <!-- Tabs -->
       <div class="tabs">
-        <button class="tab active" onclick="switchTab('orders')">Orders</button>
+        <button class="tab active" onclick="switchTab('overview')">Overview</button>
+        <div id="service-date-tabs">
+          <!-- Service date tabs will be dynamically added here -->
+        </div>
         <button class="tab" onclick="switchTab('menu')">Menu</button>
         <button class="tab" onclick="switchTab('slots')">Time Slots</button>
         <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
       </div>
       
-      <!-- Orders Tab -->
-      <div id="orders-tab" class="tab-content active">
+      <!-- Overview Tab (replaces old single Orders tab) -->
+      <div id="overview-tab" class="tab-content active">
+        <div class="card">
+          <h2>All Active Orders</h2>
+          <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+            <table id="overview-table" style="min-width: 600px;">
+              <thead>
+                <tr>
+                  <th style="width:50px;font-size:0.85em;">Date</th>
+                  <th style="width:50px;font-size:0.85em;">Time</th>
+                  <th style="width:60px;font-size:0.85em;">Order</th>
+                  <th style="width:100px;font-size:0.85em;">Customer</th>
+                  <th style="width:60px;font-size:0.85em;">Total</th>
+                  <th style="width:80px;font-size:0.85em;">Status</th>
+                </tr>
+              </thead>
+              <tbody id="overview-list"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Dynamic Service Date Order Tabs (created by JavaScript) -->
+      <div id="service-date-order-tabs">
+        <!-- Each service date gets its own tab with full order table -->
+      </div>
+      
+      <!-- Orders Tab (legacy/fallback when no service dates) -->
+      <div id="orders-tab" class="tab-content">
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <h2 style="margin: 0; border: none;">Orders (Sorted by Time Slot)</h2>
@@ -877,8 +907,10 @@
     async function init() {
       await loadData();
       await loadSettings();
+      createServiceDateTabs();
       renderStats();
       renderPizzaBreakdown();
+      renderOverview();
       renderOrders();
       renderMenu();
       renderSlots();
@@ -888,8 +920,165 @@
         await loadData();
         renderStats();
         renderPizzaBreakdown();
-        renderOrders();
+        renderOverview();
+        renderOrdersForAllServiceDates();
       }, 10000);
+    }
+    
+    function createServiceDateTabs() {
+      const tabContainer = document.getElementById('service-date-tabs');
+      const contentContainer = document.getElementById('service-date-order-tabs');
+      
+      if (!settings.serviceSchedule || settings.serviceSchedule.length === 0) {
+        // No service schedule - hide service date tabs
+        tabContainer.innerHTML = '';
+        return;
+      }
+      
+      // Create a tab for each service date
+      settings.serviceSchedule.forEach((schedule, index) => {
+        const date = new Date(schedule.serviceDate);
+        const dateStr = date.toLocaleDateString('en-GB', { 
+          weekday: 'short', 
+          day: 'numeric', 
+          month: 'short'
+        });
+        const tabId = `service-date-${schedule.serviceDate}`;
+        
+        // Create tab button
+        const tabButton = document.createElement('button');
+        tabButton.className = 'tab';
+        tabButton.textContent = `📅 ${dateStr}`;
+        tabButton.onclick = () => switchTab(tabId);
+        tabContainer.appendChild(tabButton);
+        
+        // Create tab content with its own orders table
+        const tabContent = document.createElement('div');
+        tabContent.id = `${tabId}-tab`;
+        tabContent.className = 'tab-content';
+        tabContent.innerHTML = `
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+              <h2 style="margin: 0; border: none;">${date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} Orders</h2>
+              <button class="secondary" onclick="downloadKitchenTicketsForDate('${schedule.serviceDate}')">📄 Download Kitchen Tickets</button>
+            </div>
+            
+            <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+              <table id="orders-table-${schedule.serviceDate}" class="service-date-orders-table" style="min-width: 600px;">
+                <thead>
+                  <tr>
+                    <th style="width:50px;font-size:0.85em;">Time</th>
+                    <th style="width:60px;font-size:0.85em;">Order</th>
+                    <th style="width:100px;font-size:0.85em;">Customer</th>
+                    <th style="width:60px;font-size:0.85em;">Total</th>
+                    <th style="width:80px;font-size:0.85em;">Pager</th>
+                  </tr>
+                </thead>
+                <tbody id="orders-list-${schedule.serviceDate}"></tbody>
+              </table>
+            </div>
+          </div>
+        `;
+        contentContainer.appendChild(tabContent);
+      });
+      
+      // Render orders for all service dates initially
+      renderOrdersForAllServiceDates();
+    }
+    
+    function renderOverview() {
+      const tbody = document.getElementById('overview-list');
+      const activeOrders = orders.filter(o => 
+        o.status !== 'completed' && o.status !== 'cancelled'
+      );
+      
+      if (activeOrders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#5a5a5a;">No active orders</td></tr>';
+        return;
+      }
+      
+      // Sort by service date, then time
+      const sortedOrders = activeOrders.sort((a, b) => {
+        // Sort by service date first
+        const dateA = a.serviceDate || '9999-99-99';
+        const dateB = b.serviceDate || '9999-99-99';
+        if (dateA !== dateB) return dateA.localeCompare(dateB);
+        
+        // Then by slot time
+        const slotA = slots.find(s => s.id === a.slotId);
+        const slotB = slots.find(s => s.id === b.slotId);
+        const timeA = slotA ? slotA.time : '99:99';
+        const timeB = slotB ? slotB.time : '99:99';
+        return timeA.localeCompare(timeB);
+      });
+      
+      tbody.innerHTML = sortedOrders.map(order => {
+        const serviceDateStr = order.serviceDate 
+          ? new Date(order.serviceDate).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+          : '—';
+        
+        return `
+        <tr>
+          <td style="vertical-align:top;font-size:0.9em;padding:8px;">${serviceDateStr}</td>
+          <td style="vertical-align:top;font-size:0.9em;padding:8px;"><strong>${order.slotTime}</strong></td>
+          <td style="vertical-align:top;font-size:0.7em;padding:8px;color:#5a5a5a;">#${order.id.slice(-6)}</td>
+          <td style="vertical-align:top;padding:8px;">
+            <div style="font-weight:600;font-size:0.85em;">${order.customer.name}</div>
+          </td>
+          <td style="vertical-align:top;padding:8px;font-size:0.9em;"><strong>£${order.total.toFixed(2)}</strong></td>
+          <td style="vertical-align:top;"><span class="status-badge status-${order.status}">${order.status}</span></td>
+        </tr>
+      `;
+      }).join('');
+    }
+    
+    function renderOrdersForAllServiceDates() {
+      if (!settings.serviceSchedule || settings.serviceSchedule.length === 0) {
+        // No service schedule, use legacy rendering
+        renderOrders();
+        return;
+      }
+      
+      settings.serviceSchedule.forEach(schedule => {
+        renderOrdersForServiceDate(schedule.serviceDate);
+      });
+    }
+    
+    function renderOrdersForServiceDate(serviceDate) {
+      const tbody = document.getElementById(`orders-list-${serviceDate}`);
+      const table = document.getElementById(`orders-table-${serviceDate}`);
+      
+      if (!tbody || !table) return;
+      
+      const thead = table.querySelector('thead tr');
+      
+      // Filter orders for this service date
+      const dateOrders = orders.filter(o => 
+        o.serviceDate === serviceDate && 
+        o.status !== 'completed' && 
+        o.status !== 'cancelled'
+      );
+      
+      // Get unique pizza types from menu
+      const availableMenu = menu.filter(item => item.available);
+      
+      // Rebuild table headers with pizza columns
+      thead.innerHTML = `
+        <th style="width:50px;font-size:0.85em;">Time</th>
+        <th style="width:60px;font-size:0.85em;">Order</th>
+        <th style="width:100px;font-size:0.85em;">Customer</th>
+        ${availableMenu.map(pizza => `<th style="min-width:100px;font-size:0.85em;">${pizza.name}</th>`).join('')}
+        <th style="width:60px;font-size:0.85em;">Total</th>
+        <th style="width:80px;font-size:0.85em;">Pager</th>
+      `;
+      
+      if (dateOrders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${3 + availableMenu.length + 2}" style="text-align:center;padding:30px;color:#5a5a5a;">No orders for this date</td></tr>`;
+        return;
+      }
+      
+      // Render using existing renderOrders logic but with filtered orders
+      renderOrdersTable(tbody, dateOrders, availableMenu);
     }
     
     async function loadData() {
@@ -1140,34 +1329,13 @@
     }
     
     function renderOrders() {
-      const tbody = document.getElementById('orders-list');
-      const table = document.getElementById('orders-table');
-      const thead = table.querySelector('thead tr');
-      
-      const activeOrders = orders.filter(o => 
-        o.status !== 'completed' && o.status !== 'cancelled'
-      );
-      
-      // Get unique pizza types from menu
-      const availableMenu = menu.filter(item => item.available);
-      
-      // Rebuild table headers with pizza columns
-      thead.innerHTML = `
-        <th style="width:50px;font-size:0.85em;">Time</th>
-        <th style="width:60px;font-size:0.85em;">Order</th>
-        <th style="width:100px;font-size:0.85em;">Customer</th>
-        ${availableMenu.map(pizza => `<th style="min-width:100px;font-size:0.85em;">${pizza.name}</th>`).join('')}
-        <th style="width:60px;font-size:0.85em;">Total</th>
-        <th style="width:80px;font-size:0.85em;">Pager</th>
-      `;
-      
-      if (activeOrders.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${3 + availableMenu.length + 2}" style="text-align:center;padding:30px;color:#5a5a5a;">No active orders</td></tr>`;
-        return;
-      }
-      
+      // Legacy function - now just calls renderOrdersForAllServiceDates
+      renderOrdersForAllServiceDates();
+    }
+    
+    function renderOrdersTable(tbody, ordersToRender, availableMenu) {
       // Sort by slot time
-      const sortedOrders = activeOrders.sort((a, b) => {
+      const sortedOrders = ordersToRender.sort((a, b) => {
         const slotA = slots.find(s => s.id === a.slotId);
         const slotB = slots.find(s => s.id === b.slotId);
         const timeA = slotA ? slotA.time : '99:99';
@@ -1533,6 +1701,72 @@
     
     // Download kitchen tickets
     function downloadKitchenTickets() {
+      downloadKitchenTicketsForDate(null);
+    }
+    
+    function downloadKitchenTicketsForDate(serviceDate) {
+      let ordersToDownload = orders.filter(o => 
+        o.status !== 'completed' && o.status !== 'cancelled'
+      );
+      
+      // Filter by service date if specified
+      if (serviceDate) {
+        ordersToDownload = ordersToDownload.filter(o => o.serviceDate === serviceDate);
+      }
+      
+      if (ordersToDownload.length === 0) {
+        alert('No active orders to download');
+        return;
+      }
+      
+      // Sort by time
+      ordersToDownload.sort((a, b) => {
+        const slotA = slots.find(s => s.id === a.slotId);
+        const slotB = slots.find(s => s.id === b.slotId);
+        return (slotA?.time || '').localeCompare(slotB?.time || '');
+      });
+      
+      let text = serviceDate 
+        ? `KITCHEN TICKETS - ${new Date(serviceDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}\n`
+        : 'KITCHEN TICKETS - ALL ORDERS\n';
+      text += '='.repeat(50) + '\n\n';
+      
+      ordersToDownload.forEach(order => {
+        text += `ORDER #${order.id.slice(-6)} | ${order.slotTime}\n`;
+        if (order.serviceDate) {
+          text += `Service Date: ${new Date(order.serviceDate).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}\n`;
+        }
+        text += `Customer: ${order.customer.name} | ${order.customer.phone || order.customer.email}\n`;
+        text += '-'.repeat(50) + '\n';
+        
+        order.items.forEach(item => {
+          text += `${item.quantity}x ${item.name} - £${item.price.toFixed(2)}\n`;
+          if (item.modifications && item.modifications.length > 0) {
+            text += `  Mods: ${item.modifications.join(', ')}\n`;
+          }
+          if (item.pizzaComments) {
+            text += `  Note: ${item.pizzaComments}\n`;
+          }
+        });
+        
+        if (order.comments) {
+          text += `\nOrder Comments: ${order.comments}\n`;
+        }
+        
+        text += `\nTOTAL: £${order.total.toFixed(2)}\n`;
+        text += '='.repeat(50) + '\n\n';
+      });
+      
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const filename = serviceDate 
+        ? `kitchen-tickets-${serviceDate}.txt`
+        : `kitchen-tickets-${new Date().toISOString().split('T')[0]}.txt`;
+      a.download = filename;
+      a.click();
+    }
       const activeOrders = orders.filter(o => 
         o.status !== 'completed' && o.status !== 'cancelled'
       );
