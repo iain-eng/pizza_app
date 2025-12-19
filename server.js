@@ -356,6 +356,7 @@ app.post("/api/auth/chef", (req, res) => {
 // ============= ARCHIVE & RESET =============
 app.post("/api/orders/archive", (req, res) => {
   const orders = readJSON(ORDERS_FILE);
+  const { serviceDate, serviceDates } = req.body || {};
   const ARCHIVE_DIR = path.join(DATA_DIR, "archives");
   
   // Create archives directory if it doesn't exist
@@ -363,23 +364,50 @@ app.post("/api/orders/archive", (req, res) => {
     fs.mkdirSync(ARCHIVE_DIR);
   }
   
+  let ordersToArchive;
+  let ordersToKeep;
+  
+  if (serviceDate) {
+    // Archive specific service date
+    ordersToArchive = orders.filter(o => o.serviceDate === serviceDate);
+    ordersToKeep = orders.filter(o => o.serviceDate !== serviceDate);
+  } else if (serviceDates && Array.isArray(serviceDates)) {
+    // Archive multiple service dates
+    ordersToArchive = orders.filter(o => serviceDates.includes(o.serviceDate));
+    ordersToKeep = orders.filter(o => !serviceDates.includes(o.serviceDate));
+  } else {
+    // Archive all (legacy behavior)
+    ordersToArchive = orders;
+    ordersToKeep = [];
+  }
+  
+  if (ordersToArchive.length === 0) {
+    return res.json({ 
+      success: true, 
+      archived: 0,
+      archiveFile: null
+    });
+  }
+  
   // Create archive file with today's date
   const today = new Date().toISOString().split('T')[0];
   const archiveFile = path.join(ARCHIVE_DIR, `orders_${today}_${Date.now()}.json`);
   
-  // Save current orders to archive
+  // Save orders to archive
   writeJSON(archiveFile, {
     archivedAt: new Date().toISOString(),
     date: today,
-    orders: orders
+    serviceDate: serviceDate || null,
+    serviceDates: serviceDates || null,
+    orders: ordersToArchive
   });
   
-  // Clear orders
-  writeJSON(ORDERS_FILE, []);
+  // Update orders file with remaining orders
+  writeJSON(ORDERS_FILE, ordersToKeep);
   
   res.json({ 
     success: true, 
-    archived: orders.length,
+    archived: ordersToArchive.length,
     archiveFile: path.basename(archiveFile)
   });
 });
