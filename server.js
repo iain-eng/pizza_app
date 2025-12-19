@@ -49,7 +49,16 @@ initFile(SETTINGS_FILE, {
   businessName: "Pizza Paradise",
   tagline: "Fresh. Fast. Delicious.",
   logo: "",
-  chefPassword: "chef123" // Simple password for demo - change this!
+  chefPassword: "chef123", // Simple password for demo - change this!
+  serviceSchedule: [
+    // Example: Service on Friday, orders open Tuesday 10am
+    // {
+    //   serviceDate: "2024-12-20", // ISO date
+    //   serviceDayName: "Friday",
+    //   ordersOpenAt: "2024-12-17T10:00:00", // ISO datetime
+    //   enabled: true
+    // }
+  ]
 });
 
 // Helper functions
@@ -319,7 +328,7 @@ app.put("/api/settings", (req, res) => {
   const settings = readJSON(SETTINGS_FILE);
   
   // Update only allowed fields
-  const updatableFields = ['businessName', 'tagline', 'logo', 'chefPassword'];
+  const updatableFields = ['businessName', 'tagline', 'logo', 'chefPassword', 'serviceSchedule'];
   
   updatableFields.forEach(field => {
     if (req.body[field] !== undefined) {
@@ -374,13 +383,14 @@ app.post("/api/orders/archive", (req, res) => {
   });
 });
 
-// ============= HOMEPAGE ROUTE =============
+// ============= START SERVER =============
+const PORT = process.env.PORT || 3001;
+
+// ============= HOMEPAGE ROUTE (must be last) =============
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "customer.html"));
 });
 
-// ============= START SERVER =============
-const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🍕 Pizza Pre-Order Backend running on http://localhost:${PORT}`);
   console.log(`📂 Data stored in: ${DATA_DIR}`);
