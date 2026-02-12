@@ -1869,11 +1869,22 @@
     }
     
     function switchTab(tab) {
+      // Remove active from all tabs and content
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       
-      event.target.classList.add('active');
-      document.getElementById(`${tab}-tab`).classList.add('active');
+      // Add active to the clicked tab (find by checking onclick attribute)
+      document.querySelectorAll('.tab').forEach(t => {
+        if (t.getAttribute('onclick') && t.getAttribute('onclick').includes(`'${tab}'`)) {
+          t.classList.add('active');
+        }
+      });
+      
+      // Show the selected tab content
+      const tabContent = document.getElementById(`${tab}-tab`);
+      if (tabContent) {
+        tabContent.classList.add('active');
+      }
     }
     
     function openModal(id) {
