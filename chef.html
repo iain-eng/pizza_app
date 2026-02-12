@@ -1359,8 +1359,75 @@
     }
     
     function renderOrders() {
-      // Legacy function - now just calls renderOrdersForAllServiceDates
-      renderOrdersForAllServiceDates();
+      const tbody = document.getElementById('orders-list');
+      const activeOrders = orders.filter(o => 
+        o.status !== 'completed' && o.status !== 'cancelled'
+      );
+      
+      if (activeOrders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#5a5a5a;">No active orders</td></tr>';
+        return;
+      }
+      
+      // Sort by slot time
+      const sortedOrders = activeOrders.sort((a, b) => {
+        const slotA = slots.find(s => s.id === a.slotId);
+        const slotB = slots.find(s => s.id === b.slotId);
+        const timeA = slotA ? slotA.time : '99:99';
+        const timeB = slotB ? slotB.time : '99:99';
+        return timeA.localeCompare(timeB);
+      });
+      
+      tbody.innerHTML = sortedOrders.map(order => {
+        const itemsHtml = order.items.map(item => {
+          const basePrice = item.basePrice || item.price;
+          const modPrice = item.modPrice || 0;
+          const totalPrice = item.price;
+          
+          let priceInfo = modPrice > 0 
+            ? `£${basePrice.toFixed(2)} + £${modPrice.toFixed(2)} mods = £${totalPrice.toFixed(2)}`
+            : `£${totalPrice.toFixed(2)}`;
+          
+          const modsText = item.modifications && item.modifications.length > 0 
+            ? ` <span class="order-mods">(${item.modifications.join(', ')})</span>`
+            : '';
+          const pizzaCommentText = item.pizzaComments 
+            ? ` <span class="order-mods">- "${item.pizzaComments}"</span>`
+            : '';
+          return `${item.name} x${item.quantity} [${priceInfo}]${modsText}${pizzaCommentText}`;
+        }).join('<br>');
+        
+        const commentsText = order.comments 
+          ? `<div class="order-comments">💬 ${order.comments}</div>`
+          : '';
+        
+        return `
+        <tr>
+          <td><strong>${order.slotTime}</strong></td>
+          <td><strong>#${order.id.slice(-6)}</strong></td>
+          <td>
+            ${order.customer.name}<br>
+            <small style="color:#5a5a5a;">${order.customer.phone || order.customer.email}</small>
+          </td>
+          <td>
+            ${itemsHtml}
+            ${commentsText}
+          </td>
+          <td><strong>£${order.total.toFixed(2)}</strong></td>
+          <td><span class="status-badge status-${order.status}">${order.status}</span></td>
+          <td>
+            <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:5px;border:2px solid #1a3a3a;font-family:inherit;">
+              <option value="">Update...</option>
+              <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+              <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>Preparing</option>
+              <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>Ready</option>
+              <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
+              <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+            </select>
+          </td>
+        </tr>
+      `;
+      }).join('');
     }
     
     function renderOrdersTable(tbody, ordersToRender, availableMenu) {
