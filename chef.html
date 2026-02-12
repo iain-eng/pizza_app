@@ -801,6 +801,27 @@
             </div>
           </form>
         </div>
+        
+        <!-- Reset to Defaults Section -->
+        <div class="card" style="margin-top: 20px;">
+          <h2>🔄 Reset to Defaults</h2>
+          
+          <div class="info-box">
+            <h4>⚠️ Reset Menu & Time Slots</h4>
+            <p>This will replace your current menu and time slots with default values. Your orders and settings will NOT be affected.</p>
+          </div>
+          
+          <div style="background: #fff9e6; border: 2px solid #E89B4C; padding: 15px; margin-bottom: 15px;">
+            <strong>Default Menu (3 pizzas):</strong><br>
+            • Margherita - £12<br>
+            • Pepperoni - £14<br>
+            • Veggie Supreme - £13<br><br>
+            <strong>Default Time Slots (6 slots, capacity 8 each):</strong><br>
+            • 17:00, 17:30, 18:00, 18:30, 19:00, 19:30
+          </div>
+          
+          <button class="danger" onclick="resetToDefaults()" style="width: 100%;">Reset Menu & Time Slots to Defaults</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1095,6 +1116,12 @@
         orders = await ordersRes.json();
         menu = await menuRes.json();
         slots = await slotsRes.json();
+        
+        console.log('=== DATA LOADED ===');
+        console.log('Orders:', orders.length);
+        console.log('Menu items:', menu.length, menu);
+        console.log('Slots:', slots.length, slots);
+        console.log('==================');
       } catch (error) {
         console.error('Failed to load data:', error);
       }
@@ -1671,7 +1698,16 @@
     }
     
     function renderMenu() {
+      console.log('renderMenu() called. Menu array:', menu);
       const tbody = document.getElementById('menu-list');
+      console.log('menu-list tbody element:', tbody);
+      
+      if (!menu || menu.length === 0) {
+        console.warn('Menu is empty or undefined!');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#5a5a5a;">No menu items found. Click "+ Add Pizza" to create one.</td></tr>';
+        return;
+      }
+      
       tbody.innerHTML = menu.map(item => `
         <tr>
           <td>
@@ -1687,6 +1723,7 @@
           </td>
         </tr>
       `).join('');
+      console.log('Menu rendered successfully');
     }
     
     function openAddMenu() {
@@ -1783,7 +1820,16 @@
     }
     
     function renderSlots() {
+      console.log('renderSlots() called. Slots array:', slots);
       const tbody = document.getElementById('slots-list');
+      console.log('slots-list tbody element:', tbody);
+      
+      if (!slots || slots.length === 0) {
+        console.warn('Slots is empty or undefined!');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#5a5a5a;">No time slots found. Click "+ Add Slot" to create one.</td></tr>';
+        return;
+      }
+      
       const sortedSlots = [...slots].sort((a, b) => a.time.localeCompare(b.time));
       
       tbody.innerHTML = sortedSlots.map(slot => `
@@ -1798,6 +1844,7 @@
           </td>
         </tr>
       `).join('');
+      console.log('Slots rendered successfully');
     }
     
     function openAddSlot() {
@@ -1874,6 +1921,69 @@
       
       event.target.classList.add('active');
       document.getElementById(`${tab}-tab`).classList.add('active');
+    }
+    
+    async function resetToDefaults() {
+      if (!confirm('Are you sure you want to reset menu and time slots to defaults?\n\nThis will DELETE all current menu items and time slots!\n\nYour orders and settings will NOT be affected.')) {
+        return;
+      }
+      
+      try {
+        // Default menu items
+        const defaultMenu = [
+          { name: "Margherita", description: "Classic tomato & mozzarella", price: 12, available: true, image: "" },
+          { name: "Pepperoni", description: "Spicy pepperoni & cheese", price: 14, available: true, image: "" },
+          { name: "Veggie Supreme", description: "Bell peppers, mushrooms, olives", price: 13, available: true, image: "" }
+        ];
+        
+        // Default time slots
+        const defaultSlots = [
+          { time: "17:00", capacity: 8 },
+          { time: "17:30", capacity: 8 },
+          { time: "18:00", capacity: 8 },
+          { time: "18:30", capacity: 8 },
+          { time: "19:00", capacity: 8 },
+          { time: "19:30", capacity: 8 }
+        ];
+        
+        // Delete all existing menu items
+        for (const item of menu) {
+          await fetch(`${API_URL}/menu/${item.id}`, { method: 'DELETE' });
+        }
+        
+        // Delete all existing slots
+        for (const slot of slots) {
+          await fetch(`${API_URL}/slots/${slot.id}`, { method: 'DELETE' });
+        }
+        
+        // Create default menu items
+        for (const item of defaultMenu) {
+          await fetch(`${API_URL}/menu`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        }
+        
+        // Create default slots
+        for (const slot of defaultSlots) {
+          await fetch(`${API_URL}/slots`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(slot)
+          });
+        }
+        
+        // Reload data and re-render
+        await loadData();
+        renderMenu();
+        renderSlots();
+        
+        alert('✅ Reset complete!\n\nMenu and time slots have been restored to defaults.');
+        
+      } catch (error) {
+        alert('Error resetting to defaults: ' + error.message);
+      }
     }
     
     function openModal(id) {
