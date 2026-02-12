@@ -1672,12 +1672,6 @@
     
     function renderMenu() {
       const tbody = document.getElementById('menu-list');
-      
-      if (!menu || menu.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#5a5a5a;">No menu items yet. Click "+ Add Pizza" to create your first pizza!</td></tr>';
-        return;
-      }
-      
       tbody.innerHTML = menu.map(item => `
         <tr>
           <td>
@@ -1790,12 +1784,6 @@
     
     function renderSlots() {
       const tbody = document.getElementById('slots-list');
-      
-      if (!slots || slots.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#5a5a5a;">No time slots yet. Click "+ Add Slot" to create your first time slot!</td></tr>';
-        return;
-      }
-      
       const sortedSlots = [...slots].sort((a, b) => a.time.localeCompare(b.time));
       
       tbody.innerHTML = sortedSlots.map(slot => `
@@ -1881,22 +1869,11 @@
     }
     
     function switchTab(tab) {
-      // Remove active from all tabs and content
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       
-      // Add active to the clicked tab (find by checking onclick attribute)
-      document.querySelectorAll('.tab').forEach(t => {
-        if (t.getAttribute('onclick') && t.getAttribute('onclick').includes(`'${tab}'`)) {
-          t.classList.add('active');
-        }
-      });
-      
-      // Show the selected tab content
-      const tabContent = document.getElementById(`${tab}-tab`);
-      if (tabContent) {
-        tabContent.classList.add('active');
-      }
+      event.target.classList.add('active');
+      document.getElementById(`${tab}-tab`).classList.add('active');
     }
     
     function openModal(id) {
