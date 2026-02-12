@@ -1672,6 +1672,12 @@
     
     function renderMenu() {
       const tbody = document.getElementById('menu-list');
+      
+      if (!menu || menu.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#5a5a5a;">No menu items yet. Click "+ Add Pizza" to create your first pizza!</td></tr>';
+        return;
+      }
+      
       tbody.innerHTML = menu.map(item => `
         <tr>
           <td>
@@ -1784,6 +1790,12 @@
     
     function renderSlots() {
       const tbody = document.getElementById('slots-list');
+      
+      if (!slots || slots.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#5a5a5a;">No time slots yet. Click "+ Add Slot" to create your first time slot!</td></tr>';
+        return;
+      }
+      
       const sortedSlots = [...slots].sort((a, b) => a.time.localeCompare(b.time));
       
       tbody.innerHTML = sortedSlots.map(slot => `
