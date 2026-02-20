@@ -253,30 +253,6 @@
       border-radius: 3px; display: none; font-size: 0.9rem;
     }
     .error.show { display: block; }
-
-    /* Success overlay */
-    .overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(28,25,23,0.6); z-index: 999; display: none;
-    }
-    .overlay.show { display: block; }
-    .success-message {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: var(--warm-white); padding: 2.5rem; text-align: center;
-      z-index: 1000; max-width: 560px; width: 92%;
-      max-height: 90vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
-      display: none; border-radius: 4px; box-shadow: 0 25px 50px rgba(0,0,0,0.2);
-    }
-    .success-message.show { display: block; animation: fadeUp 0.35s ease; }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translate(-50%, -48%); }
-      to   { opacity: 1; transform: translate(-50%, -50%); }
-    }
-    .success-message h2 {
-      font-family: var(--serif); color: var(--ink);
-      font-size: 2.25rem; margin-bottom: 0.75rem; border: none; letter-spacing: -0.5px;
-    }
-    .success-message p { color: var(--ink-light); font-size: 1rem; margin: 0.625rem 0; line-height: 1.6; }
     .order-summary-box {
       background: var(--cream); border: 1px solid var(--stone); border-radius: 4px;
       padding: 1.25rem; margin: 1.25rem 0; text-align: left;
@@ -312,7 +288,7 @@
     /* Responsive */
     @media (max-width: 768px) {
       .site-header h1 { font-size: 2rem; }
-      body { padding-bottom: 150px; }
+      body { padding-bottom: 100px; }
       .menu-preview { grid-template-columns: 1fr; }
       .form-row { grid-template-columns: 1fr; }
       .time-slots-grid { grid-template-columns: 1fr; }
@@ -320,7 +296,6 @@
       .step-divider { width: 20px; }
       .time-navigation { flex-direction: column; gap: 0.75rem; }
       .time-nav-button { width: 100%; padding: 0.75rem; }
-      .success-message { top: 5%; left: 4%; transform: none; width: 92%; animation: none; }
     }
     @media (hover: none) and (pointer: coarse) {
       .quantity-controls button { width: 38px; height: 38px; font-size: 1.2rem; }
@@ -445,19 +420,30 @@
     </div>
   </div>
 
-  <!-- Success Modal -->
-  <div id="overlay" class="overlay"></div>
-  <div id="success" class="success-message">
-    <h2>Order Confirmed</h2>
-    <p id="success-main-text"></p>
-    <div id="success-order-summary" class="order-summary-box"></div>
-    <div class="contact-note">
-      <strong>Need to change something?</strong><br>
-      Please contact us as soon as possible. We'll do our best to accommodate changes before we start preparing your pizzas.
+  <!-- Success Page -->
+  <div id="success-page" style="display: none;">
+    <div class="site-header">
+      <h1 id="success-business-name"></h1>
+      <p class="subtitle">Order confirmed</p>
     </div>
-    <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; justify-content: center; flex-wrap: wrap;">
-      <button onclick="location.reload()" class="button" style="width: auto; padding: 0.75rem 2rem;">Place Another Order</button>
-      <button onclick="closeSuccessModal()" class="button secondary" style="width: auto; padding: 0.75rem 2rem;">Close</button>
+
+    <div class="container">
+      <div class="card" style="max-width: 640px; margin: 3rem auto; text-align: center; padding: 3rem 2rem;">
+        <h2 style="font-size: 2.25rem; margin-bottom: 1rem; border: none; padding: 0;">Thank you for your order</h2>
+        
+        <div id="success-main-text" style="color: var(--ink-light); margin: 1.5rem 0; font-size: 1rem; line-height: 1.7;"></div>
+
+        <div id="success-order-summary" class="order-summary-box" style="margin: 2rem 0; text-align: left;"></div>
+
+        <div class="contact-note" style="text-align: left;">
+          <strong>Need to change something?</strong><br>
+          Please contact us as soon as possible. We'll do our best to accommodate changes before we start preparing your pizzas.
+        </div>
+
+        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--stone);">
+          <a href="javascript:location.reload()" style="color: var(--ink-faint); font-size: 0.875rem; text-decoration: none; border-bottom: 1px solid var(--stone-dark); padding-bottom: 1px; transition: all 0.15s;">Place another order</a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -872,13 +858,13 @@
       if (selectedServiceDate) {
         const serviceDate = new Date(selectedServiceDate);
         const dateStr = serviceDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-        serviceDateHtml = `<p><strong>Service Date:</strong> ${dateStr}</p>`;
+        serviceDateHtml = `<p><strong>Service date:</strong> ${dateStr}</p>`;
       }
       document.getElementById('success-main-text').innerHTML = `
-        <p>Order <strong>#${orders[0].id.slice(-6)}</strong></p>
+        <p>Your order <strong>#${orders[0].id.slice(-6)}</strong> has been confirmed.</p>
         ${serviceDateHtml}
-        <p>Pick up at <strong>${slotTimes}</strong></p>
-        <p>Confirmation sent to ${orders[0].customer.email}</p>`;
+        <p><strong>Pick up at ${slotTimes}</strong></p>
+        <p>A confirmation has been sent to ${orders[0].customer.email}</p>`;
 
       let summaryHtml = '<h3>Order Summary</h3>';
       orders.forEach(order => {
@@ -895,15 +881,19 @@
       }
       summaryHtml += `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--stone);text-align:right;"><strong style="font-family:var(--serif);font-size:1.4rem;">Total: £${totalAmount.toFixed(2)}</strong></div>`;
       document.getElementById('success-order-summary').innerHTML = summaryHtml;
+      
+      // Set business name in success page header
+      document.getElementById('success-business-name').textContent = settings.businessName || 'Pizza Paradise';
 
-      document.getElementById('overlay').classList.add('show');
-      document.getElementById('success').classList.add('show');
-      document.getElementById('success').scrollTop = 0;
+      // Hide ordering flow, show success page
+      document.querySelector('.container').style.display = 'none';
+      document.querySelector('.site-header').style.display = 'none';
+      document.getElementById('success-page').style.display = 'block';
+      window.scrollTo({ top: 0 });
     }
 
     function closeSuccessModal() {
-      document.getElementById('overlay').classList.remove('show');
-      document.getElementById('success').classList.remove('show');
+      // No longer needed
     }
 
     function showError(message) {
