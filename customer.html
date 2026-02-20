@@ -494,6 +494,12 @@
           fetch(`${API_URL}/slots`, { cache: 'no-store' }),
           fetch(`${API_URL}/settings`, { cache: 'no-store' })
         ]);
+        
+        // Check if responses are OK
+        if (!menuRes.ok || !slotsRes.ok || !settingsRes.ok) {
+          throw new Error('Failed to load data from server');
+        }
+        
         menu = await menuRes.json();
         slots = await slotsRes.json();
         settings = await settingsRes.json();
@@ -515,8 +521,8 @@
         renderCurrentHourSlots();
         updateStepIndicator();
       } catch (error) {
+        console.error('Init error:', error);
         showError('Failed to load menu. Please refresh the page.');
-        console.error(error);
       }
     }
 
@@ -842,12 +848,22 @@
         });
         const responses = await Promise.all(orderPromises);
         for (const response of responses) {
-          if (!response.ok) { const error = await response.json(); throw new Error(error.error || 'Failed to place order'); }
+          if (!response.ok) { 
+            let errorMsg = 'Failed to place order';
+            try {
+              const error = await response.json();
+              errorMsg = error.error || errorMsg;
+            } catch (e) {
+              // Response wasn't JSON, use generic message
+            }
+            throw new Error(errorMsg);
+          }
         }
         const orders = await Promise.all(responses.map(r => r.json()));
         showSuccess(orders);
       } catch (error) {
-        showError(error.message);
+        console.error('Order error:', error);
+        showError(error.message || 'Failed to place order. Please try again.');
       }
     }
 
