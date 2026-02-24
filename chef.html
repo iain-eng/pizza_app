@@ -664,23 +664,32 @@
         <button class="tab" onclick="switchTab('settings')">Settings</button>
       </div>
       
-      <!-- Overview Tab (replaces old single Orders tab) -->
+      <!-- Overview Tab - Service Schedule -->
       <div id="overview-tab" class="tab-content active">
         <div class="card">
-          <h2>All Active Orders</h2>
+          <h2>Upcoming Service Dates</h2>
+          <p style="color: var(--ink-light); margin-bottom: 1.5rem; font-size: 0.875rem;">
+            Manage your scheduled service dates. Click individual date tabs above to view orders for that service.
+          </p>
           <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-            <table id="overview-table" style="min-width: 600px;">
+            <table id="service-schedule-table" style="min-width: 600px;">
               <thead>
                 <tr>
-                  <th style="width:50px;font-size:0.85em;">Date</th>
-                  <th style="width:50px;font-size:0.85em;">Time</th>
-                  <th style="width:60px;font-size:0.85em;">Order</th>
-                  <th style="width:100px;font-size:0.85em;">Customer</th>
-                  <th style="width:60px;font-size:0.85em;">Total</th>
-                  <th style="width:80px;font-size:0.85em;">Status</th>
+                  <th>Service Date</th>
+                  <th>Status</th>
+                  <th>Orders Open</th>
+                  <th>Orders Close</th>
+                  <th>Orders</th>
+                  <th>Revenue</th>
                 </tr>
               </thead>
-              <tbody id="overview-list"></tbody>
+              <tbody id="service-schedule-list">
+                <tr>
+                  <td colspan="6" style="text-align: center; color: var(--ink-faint); padding: 2rem;">
+                    Loading service schedule...
+                  </td>
+                </tr>
+              </tbody>
             </table>
           </div>
         </div>
@@ -785,7 +794,7 @@
           <form onsubmit="saveSettings(event)">
             <div class="form-group">
               <label>Business Name *</label>
-              <input type="text" id="settings-name" placeholder="e.g., Pizza Truck" required>
+              <input type="text" id="settings-name" placeholder="e.g., Pizza Trucker" required>
               <small style="color:#5a5a5a;">This appears as the main title on your ordering page</small>
             </div>
             
@@ -1036,48 +1045,94 @@
     }
     
     function renderOverview() {
-      const tbody = document.getElementById('overview-list');
-      const activeOrders = orders.filter(o => 
-        o.status !== 'completed' && o.status !== 'cancelled'
-      );
+      const tbody = document.getElementById('service-schedule-list');
       
-      if (activeOrders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:#5a5a5a;">No active orders</td></tr>';
+      if (!settings.serviceSchedule || settings.serviceSchedule.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--ink-faint);">No service dates scheduled. Add them in Settings → Service Schedule.</td></tr>';
         return;
       }
       
-      // Sort by service date, then time
-      const sortedOrders = activeOrders.sort((a, b) => {
-        // Sort by service date first
-        const dateA = a.serviceDate || '9999-99-99';
-        const dateB = b.serviceDate || '9999-99-99';
-        if (dateA !== dateB) return dateA.localeCompare(dateB);
-        
-        // Then by slot time
-        const slotA = slots.find(s => s.id === a.slotId);
-        const slotB = slots.find(s => s.id === b.slotId);
-        const timeA = slotA ? slotA.time : '99:99';
-        const timeB = slotB ? slotB.time : '99:99';
-        return timeA.localeCompare(timeB);
-      });
+      const now = new Date();
       
-      tbody.innerHTML = sortedOrders.map(order => {
-        const serviceDateStr = order.serviceDate 
-          ? new Date(order.serviceDate).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
-          : '—';
+      // Sort service dates chronologically
+      const sortedSchedule = [...settings.serviceSchedule].sort((a, b) => 
+        new Date(a.serviceDate) - new Date(b.serviceDate)
+      );
+      
+      tbody.innerHTML = sortedSchedule.map(schedule => {
+        const serviceDate = new Date(schedule.serviceDate);
+        const ordersOpenAt = new Date(schedule.ordersOpenAt);
+        
+        // Determine status
+        let statusBadge, statusClass;
+        if (!schedule.enabled) {
+          statusBadge = 'Disabled';
+          statusClass = 'status-cancelled';
+        } else if (now < ordersOpenAt) {
+          statusBadge = 'Scheduled';
+          statusClass = 'status-confirmed';
+        } else if (now >= ordersOpenAt && now <= serviceDate) {
+          statusBadge = 'Open';
+          statusClass = 'status-ready';
+        } else {
+          statusBadge = 'Closed';
+          statusClass = 'status-completed';
+        }
+        
+        // Calculate orders and revenue for this service date
+        const dateOrders = orders.filter(o => 
+          o.serviceDate === schedule.serviceDate &&
+          o.status !== 'completed' && 
+          o.status !== 'cancelled'
+        );
+        const orderCount = dateOrders.length;
+        const revenue = dateOrders.reduce((sum, o) => sum + o.total, 0);
+        
+        // Format dates
+        const serviceDateStr = serviceDate.toLocaleDateString('en-GB', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+        
+        const ordersOpenStr = ordersOpenAt.toLocaleDateString('en-GB', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short'
+        }) + ' at ' + ordersOpenAt.toLocaleTimeString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        const ordersCloseStr = serviceDate.toLocaleDateString('en-GB', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short'
+        }) + ' 23:59';
         
         return `
-        <tr>
-          <td style="vertical-align:top;font-size:0.9em;padding:8px;">${serviceDateStr}</td>
-          <td style="vertical-align:top;font-size:0.9em;padding:8px;"><strong>${order.slotTime}</strong></td>
-          <td style="vertical-align:top;font-size:0.7em;padding:8px;color:#5a5a5a;">#${order.id.slice(-6)}</td>
-          <td style="vertical-align:top;padding:8px;">
-            <div style="font-weight:600;font-size:0.85em;">${order.customer.name}</div>
-          </td>
-          <td style="vertical-align:top;padding:8px;font-size:0.9em;"><strong>£${order.total.toFixed(2)}</strong></td>
-          <td style="vertical-align:top;"><span class="status-badge status-${order.status}">${order.status}</span></td>
-        </tr>
-      `;
+          <tr>
+            <td style="padding: 0.875rem;">
+              <div style="font-weight: 600; font-size: 0.95rem; color: var(--ink);">${serviceDateStr}</div>
+            </td>
+            <td style="padding: 0.875rem;">
+              <span class="status-badge ${statusClass}">${statusBadge}</span>
+            </td>
+            <td style="padding: 0.875rem; font-size: 0.875rem; color: var(--ink-light);">
+              ${ordersOpenStr}
+            </td>
+            <td style="padding: 0.875rem; font-size: 0.875rem; color: var(--ink-light);">
+              ${ordersCloseStr}
+            </td>
+            <td style="padding: 0.875rem; text-align: center;">
+              <span style="font-weight: 600; font-size: 0.95rem;">${orderCount}</span>
+            </td>
+            <td style="padding: 0.875rem; text-align: right; font-weight: 600; font-size: 0.95rem;">
+              ${revenue > 0 ? `£${revenue.toFixed(2)}` : '—'}
+            </td>
+          </tr>
+        `;
       }).join('');
     }
     
