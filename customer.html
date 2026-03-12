@@ -24,268 +24,100 @@
       --sans:          'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    body {
-      font-family: var(--sans);
-      background: var(--cream);
-      color: var(--ink);
-      min-height: 100vh;
-      padding-bottom: 120px;
-    }
+    body { font-family: var(--sans); background: var(--cream); color: var(--ink); min-height: 100vh; padding-bottom: 120px; }
 
-    /* Header */
-    .site-header {
-      background: var(--warm-white);
-      border-bottom: 1px solid var(--stone);
-      padding: 2.5rem 1.5rem 2rem;
-      text-align: center;
-    }
-    .site-header h1 {
-      font-family: var(--serif);
-      font-size: 2.75rem;
-      font-weight: 700;
-      color: var(--ink);
-      letter-spacing: -0.5px;
-      line-height: 1.1;
-      margin-bottom: 0.5rem;
-    }
-    .site-header .subtitle {
-      font-family: var(--serif);
-      font-style: italic;
-      font-size: 1.1rem;
-      color: var(--ink-light);
-    }
+    .site-header { background: var(--warm-white); border-bottom: 1px solid var(--stone); padding: 2.5rem 1.5rem 2rem; text-align: center; }
+    .site-header h1 { font-family: var(--serif); font-size: 2.75rem; font-weight: 700; color: var(--ink); letter-spacing: -0.5px; line-height: 1.1; margin-bottom: 0.5rem; }
+    .site-header .subtitle { font-family: var(--serif); font-style: italic; font-size: 1.1rem; color: var(--ink-light); }
 
-    /* Container */
     .container { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem; }
 
-    /* Step indicator */
-    .step-indicator {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 2.5rem;
-    }
-    .step {
-      display: flex; align-items: center; gap: 0.625rem;
-      color: var(--ink-faint); font-size: 0.85rem; font-weight: 500;
-    }
-    .step.active  { color: var(--ink); }
+    .step-indicator { display: flex; justify-content: center; align-items: center; margin-bottom: 2.5rem; }
+    .step { display: flex; align-items: center; gap: 0.625rem; color: var(--ink-faint); font-size: 0.85rem; font-weight: 500; }
+    .step.active { color: var(--ink); }
     .step.completed { color: var(--terracotta); }
-    .step-number {
-      width: 28px; height: 28px;
-      border: 1.5px solid currentColor; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.8rem; font-weight: 600; flex-shrink: 0;
-    }
-    .step.completed .step-number {
-      background: var(--terracotta) !important; border-color: var(--terracotta); color: #ffffff !important;
-    }
+    .step-number { width: 28px; height: 28px; border: 1.5px solid currentColor; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; flex-shrink: 0; }
+    .step.completed .step-number { background: var(--terracotta) !important; border-color: var(--terracotta); color: #ffffff !important; }
     .step-divider { width: 40px; height: 1px; background: var(--stone-dark); margin: 0 0.5rem; }
 
-    /* Headings */
-    h2 {
-      font-family: var(--serif); font-size: 1.75rem; font-weight: 700;
-      color: var(--ink); margin-bottom: 1.25rem; letter-spacing: -0.3px;
-    }
+    h2 { font-family: var(--serif); font-size: 1.75rem; font-weight: 700; color: var(--ink); margin-bottom: 1.25rem; letter-spacing: -0.3px; }
 
-    /* Card */
-    .card {
-      background: var(--warm-white); border: 1px solid var(--stone);
-      border-radius: 4px; padding: 2rem; margin-bottom: 1.5rem;
-    }
+    .card { background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px; padding: 2rem; margin-bottom: 1.5rem; }
 
-    /* Menu preview */
-    .menu-preview {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem; margin-bottom: 2rem;
-    }
-    .pizza-card {
-      border: 1px solid var(--stone); border-radius: 4px;
-      padding: 1.25rem; text-align: center; background: var(--warm-white);
-    }
-    .pizza-image {
-      width: 100%; height: 140px; object-fit: cover;
-      margin-bottom: 0.875rem; background: var(--stone); border-radius: 2px;
-    }
-    .pizza-card h3 {
-      font-family: var(--serif); color: var(--ink);
-      font-size: 1.2rem; margin-bottom: 0.375rem; font-weight: 600;
-    }
-    .pizza-card .description {
-      color: var(--ink-light); font-size: 0.875rem; margin-bottom: 0.625rem;
-      font-style: italic; font-family: var(--serif);
-    }
+    .menu-preview { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .pizza-card { border: 1px solid var(--stone); border-radius: 4px; padding: 1.25rem; text-align: center; background: var(--warm-white); }
+    .pizza-image { width: 100%; height: 140px; object-fit: cover; margin-bottom: 0.875rem; background: var(--stone); border-radius: 2px; }
+    .pizza-card h3 { font-family: var(--serif); color: var(--ink); font-size: 1.2rem; margin-bottom: 0.375rem; font-weight: 600; }
+    .pizza-card .description { color: var(--ink-light); font-size: 0.875rem; margin-bottom: 0.625rem; font-style: italic; font-family: var(--serif); }
     .pizza-card .price { color: var(--terracotta); font-size: 1.25rem; font-weight: 600; }
 
-    /* Time navigation */
-    .time-navigation {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 1.25rem; padding: 1rem 1.25rem;
-      background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px;
-    }
-    .time-nav-button {
-      background: var(--ink) !important; color: #ffffff !important; border: none;
-      padding: 0.5rem 1.25rem; font-size: 0.9rem; cursor: pointer;
-      font-weight: 500; transition: background 0.15s; font-family: var(--sans); border-radius: 3px;
-    }
+    .time-navigation { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding: 1rem 1.25rem; background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px; }
+    .time-nav-button { background: var(--ink) !important; color: #ffffff !important; border: none; padding: 0.5rem 1.25rem; font-size: 0.9rem; cursor: pointer; font-weight: 500; transition: background 0.15s; font-family: var(--sans); border-radius: 3px; }
     .time-nav-button:hover:not(:disabled) { background: #2d2926 !important; }
     .time-nav-button:disabled { background: var(--stone) !important; color: var(--ink-faint) !important; cursor: not-allowed; }
-    .current-time-range {
-      font-family: var(--serif); color: var(--ink);
-      font-size: 1.3rem; font-weight: 600; text-align: center; flex: 1;
-    }
+    .current-time-range { font-family: var(--serif); color: var(--ink); font-size: 1.3rem; font-weight: 600; text-align: center; flex: 1; }
 
-    /* Time slot cards */
-    .time-slots-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1rem; margin-bottom: 1.5rem;
-    }
-    .time-slot-card {
-      background: var(--warm-white); border: 1px solid var(--stone);
-      border-radius: 4px; padding: 1.5rem; position: relative;
-      transition: border-color 0.15s;
-    }
+    .time-slots-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .time-slot-card { background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px; padding: 1.5rem; position: relative; transition: border-color 0.15s; }
     .time-slot-card:not(.full):hover { border-color: var(--stone-dark); }
     .time-slot-card.full { opacity: 0.45; background: var(--cream); }
-    .slot-time {
-      font-family: var(--serif); font-size: 2rem; font-weight: 700;
-      color: var(--ink); margin-bottom: 0.375rem; text-align: center;
-    }
+    .slot-time { font-family: var(--serif); font-size: 2rem; font-weight: 700; color: var(--ink); margin-bottom: 0.375rem; text-align: center; }
     .slot-capacity { text-align: center; font-size: 0.85rem; color: var(--ink-light); margin-bottom: 1rem; }
     .slot-capacity.low { color: var(--terracotta); font-weight: 600; }
     .slot-full { text-align: center; color: var(--ink-faint); font-size: 0.95rem; padding: 1rem 0; }
 
-    /* Pizza selector inside slots */
     .pizza-selector { border-top: 1px solid var(--stone); padding-top: 1rem; }
-    .pizza-select-item {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0.625rem 0.75rem; margin-bottom: 0.5rem;
-      background: var(--cream); border: 1px solid var(--stone); border-radius: 3px;
-    }
+    .pizza-select-item { display: flex; justify-content: space-between; align-items: center; padding: 0.625rem 0.75rem; margin-bottom: 0.5rem; background: var(--cream); border: 1px solid var(--stone); border-radius: 3px; }
     .pizza-select-name { font-weight: 500; color: var(--ink); flex: 1; font-size: 0.875rem; }
     .pizza-select-price { color: var(--terracotta); font-weight: 600; margin-right: 1rem; font-size: 0.875rem; }
     .quantity-controls { display: flex; align-items: center; gap: 0.625rem; }
-    .quantity-controls button {
-      background: var(--ink) !important; color: #ffffff !important; border: none;
-      width: 28px; height: 28px; font-size: 1rem; cursor: pointer;
-      transition: background 0.15s; font-weight: 500; border-radius: 2px;
-      display: flex; align-items: center; justify-content: center; font-family: var(--sans);
-    }
+    .quantity-controls button { background: var(--ink) !important; color: #ffffff !important; border: none; width: 28px; height: 28px; font-size: 1rem; cursor: pointer; transition: background 0.15s; font-weight: 500; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-family: var(--sans); }
     .quantity-controls button:hover:not(:disabled) { background: #2d2926 !important; }
     .quantity-controls button:disabled { background: var(--stone) !important; color: var(--ink-faint) !important; cursor: not-allowed; }
     .quantity-controls .qty { font-weight: 600; color: var(--ink); min-width: 22px; text-align: center; font-size: 0.9rem; }
 
-    /* Modifications */
     .modifications-section { display: none; }
     .modifications-section.show { display: block; }
-    .pizza-mod-item {
-      background: var(--warm-white); border: 1px solid var(--stone);
-      border-radius: 4px; padding: 1.5rem; margin-bottom: 1rem;
-    }
-    .pizza-mod-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 1rem; padding-bottom: 0.875rem; border-bottom: 1px solid var(--stone);
-    }
+    .pizza-mod-item { background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px; padding: 1.5rem; margin-bottom: 1rem; }
+    .pizza-mod-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.875rem; border-bottom: 1px solid var(--stone); }
     .pizza-mod-title { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; color: var(--ink); }
     .pizza-mod-slot { font-size: 0.85rem; color: var(--ink-faint); }
     .checkbox-group { display: flex; flex-wrap: wrap; gap: 0.625rem; margin-bottom: 1rem; }
-    .checkbox-group label {
-      display: flex; align-items: center; gap: 0.5rem; cursor: pointer;
-      padding: 0.5rem 0.875rem; background: var(--cream); border: 1px solid var(--stone);
-      border-radius: 3px; transition: border-color 0.15s; font-size: 0.875rem;
-    }
+    .checkbox-group label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.875rem; background: var(--cream); border: 1px solid var(--stone); border-radius: 3px; transition: border-color 0.15s; font-size: 0.875rem; }
     .checkbox-group label:hover { border-color: var(--ink); }
     .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--terracotta); }
 
-    /* Customer form */
     .customer-form { display: grid; gap: 1rem; margin-bottom: 1.5rem; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .form-group label { display: block; color: var(--ink); font-weight: 500; margin-bottom: 0.375rem; font-size: 0.875rem; }
-    .form-group input, .form-group textarea {
-      width: 100%; padding: 0.75rem 0.875rem;
-      border: 1px solid var(--stone-dark); border-radius: 3px;
-      font-size: 0.9rem; transition: border-color 0.15s;
-      font-family: var(--sans); background: var(--warm-white); color: var(--ink);
-    }
+    .form-group input, .form-group textarea { width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--stone-dark); border-radius: 3px; font-size: 0.9rem; transition: border-color 0.15s; font-family: var(--sans); background: var(--warm-white); color: var(--ink); }
     .form-group textarea { resize: vertical; min-height: 80px; }
     .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--ink); }
 
-    /* Cart */
-    .cart-summary {
-      background: var(--ink); color: white;
-      padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 4px;
-    }
-    .cart-summary h3 {
-      font-family: var(--serif); margin-bottom: 1rem;
-      font-size: 1.4rem; color: white; font-weight: 600;
-    }
+    .cart-summary { background: var(--ink); color: white; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 4px; }
+    .cart-summary h3 { font-family: var(--serif); margin-bottom: 1rem; font-size: 1.4rem; color: white; font-weight: 600; }
     .cart-items { margin-bottom: 1rem; max-height: 300px; overflow-y: auto; }
-    .cart-item {
-      display: flex; justify-content: space-between;
-      padding: 0.625rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;
-    }
-    .cart-item-mods { font-size: 0.8rem; opacity: 0.6; margin-top: 0.125rem; font-style: italic; }
-    .cart-total {
-      font-family: var(--serif); font-size: 1.75rem; font-weight: 700;
-      text-align: right; margin-top: 1rem; padding-top: 1rem;
-      border-top: 1px solid rgba(255,255,255,0.15); color: white;
-    }
+    .cart-item { display: flex; justify-content: space-between; padding: 0.625rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; }
+    .cart-total { font-family: var(--serif); font-size: 1.75rem; font-weight: 700; text-align: right; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.15); color: white; }
 
-    /* Buttons */
-    .button {
-      width: 100%; padding: 1rem 1.5rem;
-      background: var(--ink) !important; color: #ffffff !important; border: none; border-radius: 3px;
-      font-size: 0.95rem; font-weight: 600; cursor: pointer;
-      transition: background 0.15s; font-family: var(--sans); letter-spacing: 0.3px;
-    }
+    .button { width: 100%; padding: 1rem 1.5rem; background: var(--ink) !important; color: #ffffff !important; border: none; border-radius: 3px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: var(--sans); letter-spacing: 0.3px; }
     .button:hover:not(:disabled) { background: #2d2926 !important; }
     .button:disabled { background: var(--stone) !important; color: var(--ink-faint) !important; cursor: not-allowed; }
-    .button.secondary {
-      background: var(--warm-white) !important; color: var(--ink) !important;
-      border: 1px solid var(--stone-dark);
-    }
+    .button.secondary { background: var(--warm-white) !important; color: var(--ink) !important; border: 1px solid var(--stone-dark); }
     .button.secondary:hover:not(:disabled) { background: var(--cream) !important; border-color: var(--ink); }
 
-    /* Error */
-    .error {
-      background: #fef2f2; color: #991b1b; padding: 1rem; margin-bottom: 1.5rem;
-      border: 1px solid #fecaca; border-left: 3px solid #ef4444;
-      border-radius: 3px; display: none; font-size: 0.9rem;
-    }
+    .error { background: #fef2f2; color: #991b1b; padding: 1rem; margin-bottom: 1.5rem; border: 1px solid #fecaca; border-left: 3px solid #ef4444; border-radius: 3px; display: none; font-size: 0.9rem; }
     .error.show { display: block; }
-    .order-summary-box {
-      background: var(--cream); border: 1px solid var(--stone); border-radius: 4px;
-      padding: 1.25rem; margin: 1.25rem 0; text-align: left;
-    }
-    .order-summary-box h3 {
-      font-family: var(--serif); margin-bottom: 0.875rem; color: var(--ink);
-      border-bottom: 1px solid var(--stone); padding-bottom: 0.625rem; font-size: 1.1rem;
-    }
-    .order-summary-item {
-      padding: 0.5rem 0; border-bottom: 1px solid var(--stone);
-      font-size: 0.9rem; color: var(--ink-light);
-    }
+    .order-summary-box { background: var(--cream); border: 1px solid var(--stone); border-radius: 4px; padding: 1.25rem; margin: 1.25rem 0; text-align: left; }
+    .order-summary-box h3 { font-family: var(--serif); margin-bottom: 0.875rem; color: var(--ink); border-bottom: 1px solid var(--stone); padding-bottom: 0.625rem; font-size: 1.1rem; }
+    .order-summary-item { padding: 0.5rem 0; border-bottom: 1px solid var(--stone); font-size: 0.9rem; color: var(--ink-light); }
     .order-summary-item:last-child { border-bottom: none; }
-    .contact-note {
-      background: var(--terra-light); border-left: 3px solid var(--terracotta);
-      padding: 0.875rem 1rem; margin: 1.25rem 0; border-radius: 0 3px 3px 0;
-      font-size: 0.875rem; color: var(--ink-light); text-align: left;
-    }
+    .contact-note { background: var(--terra-light); border-left: 3px solid var(--terracotta); padding: 0.875rem 1rem; margin: 1.25rem 0; border-radius: 0 3px 3px 0; font-size: 0.875rem; color: var(--ink-light); text-align: left; }
     .contact-note strong { color: var(--terracotta); }
-    .no-slots-message {
-      text-align: center; padding: 3rem; color: var(--ink-faint);
-      font-style: italic; font-family: var(--serif); font-size: 1.1rem;
-    }
+    .no-slots-message { text-align: center; padding: 3rem; color: var(--ink-faint); font-style: italic; font-family: var(--serif); font-size: 1.1rem; }
 
-    /* Service date select */
-    #service-date-select {
-      width: 100%; padding: 0.75rem 0.875rem;
-      border: 1px solid var(--stone-dark); border-radius: 3px;
-      font-size: 0.9rem; font-family: var(--sans);
-      background: var(--warm-white); color: var(--ink);
-    }
+    #service-date-select { width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--stone-dark); border-radius: 3px; font-size: 0.9rem; font-family: var(--sans); background: var(--warm-white); color: var(--ink); }
 
-    /* Responsive */
     @media (max-width: 768px) {
       .site-header h1 { font-size: 2rem; }
       body { padding-bottom: 100px; }
@@ -318,25 +150,15 @@
   <div class="container">
     <div id="error" class="error"></div>
 
-    <!-- Step Indicator -->
     <div class="step-indicator">
-      <div class="step active" id="step-1">
-        <span class="step-number">1</span>
-        <span>Choose pizzas</span>
-      </div>
+      <div class="step active" id="step-1"><span class="step-number">1</span><span>Choose pizzas</span></div>
       <div class="step-divider"></div>
-      <div class="step" id="step-2">
-        <span class="step-number">2</span>
-        <span>Customise</span>
-      </div>
+      <div class="step" id="step-2"><span class="step-number">2</span><span>Customise</span></div>
       <div class="step-divider"></div>
-      <div class="step" id="step-3">
-        <span class="step-number">3</span>
-        <span>Your details</span>
-      </div>
+      <div class="step" id="step-3"><span class="step-number">3</span><span>Your details</span></div>
     </div>
 
-    <!-- Step 1: Menu & Time Slots -->
+    <!-- Step 1 -->
     <div id="selection-section">
       <div class="card">
         <h2>Our Pizzas</h2>
@@ -345,20 +167,16 @@
 
       <div class="card">
         <h2>Choose Your Pickup Time</h2>
-
         <div id="service-date-selector" style="display:none; margin-bottom: 1.5rem;">
           <label style="display:block; font-weight:500; margin-bottom:0.5rem; font-size:0.875rem;">Select Service Date</label>
           <select id="service-date-select" onchange="changeServiceDate()"></select>
         </div>
-
         <p style="color: var(--ink-light); margin-bottom: 1.25rem; font-size:0.9rem;">Select a time slot and add pizzas below:</p>
-
         <div class="time-navigation">
           <button class="time-nav-button" id="prev-hour" onclick="changeHour(-1)">← Previous</button>
           <div class="current-time-range" id="current-hour-range">Loading...</div>
           <button class="time-nav-button" id="next-hour" onclick="changeHour(1)">Next →</button>
         </div>
-
         <div id="time-slots-display" class="time-slots-grid"></div>
       </div>
 
@@ -377,29 +195,17 @@
       </div>
     </div>
 
-    <!-- Step 3: Customer Details -->
+    <!-- Step 3: Checkout -->
     <div id="checkout-section" class="modifications-section">
       <div class="card">
         <h2>Your Details</h2>
         <div class="customer-form">
           <div class="form-row">
-            <div class="form-group">
-              <label for="name">Name *</label>
-              <input type="text" id="name" placeholder="Your name" required>
-            </div>
-            <div class="form-group">
-              <label for="phone">Phone *</label>
-              <input type="tel" id="phone" placeholder="+44 7..." required>
-            </div>
+            <div class="form-group"><label for="name">Name *</label><input type="text" id="name" placeholder="Your name" required></div>
+            <div class="form-group"><label for="phone">Phone *</label><input type="tel" id="phone" placeholder="+44 7..." required></div>
           </div>
-          <div class="form-group">
-            <label for="email">Email *</label>
-            <input type="email" id="email" placeholder="you@example.com" required>
-          </div>
-          <div class="form-group">
-            <label for="comments">Additional Instructions (Optional)</label>
-            <textarea id="comments" placeholder="Any other requests or special instructions..."></textarea>
-          </div>
+          <div class="form-group"><label for="email">Email *</label><input type="email" id="email" placeholder="you@example.com" required></div>
+          <div class="form-group"><label for="comments">Additional Instructions (Optional)</label><textarea id="comments" placeholder="Any other requests or special instructions..."></textarea></div>
         </div>
 
         <div class="cart-summary">
@@ -426,22 +232,17 @@
       <h1 id="success-business-name"></h1>
       <p class="subtitle">Order confirmed</p>
     </div>
-
     <div class="container">
       <div class="card" style="max-width: 640px; margin: 3rem auto; text-align: center; padding: 3rem 2rem;">
         <h2 style="font-size: 2.25rem; margin-bottom: 1rem; border: none; padding: 0;">Thank you for your order</h2>
-        
         <div id="success-main-text" style="color: var(--ink-light); margin: 1.5rem 0; font-size: 1rem; line-height: 1.7;"></div>
-
         <div id="success-order-summary" class="order-summary-box" style="margin: 2rem 0; text-align: left;"></div>
-
         <div class="contact-note" style="text-align: left;">
           <strong>Need to change something?</strong><br>
           Please contact us as soon as possible. We'll do our best to accommodate changes before we start preparing your pizzas.
         </div>
-
         <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--stone);">
-          <a href="javascript:location.reload()" style="color: var(--ink-faint); font-size: 0.875rem; text-decoration: none; border-bottom: 1px solid var(--stone-dark); padding-bottom: 1px; transition: all 0.15s;">Place another order</a>
+          <a href="javascript:location.reload()" style="color: var(--ink-faint); font-size: 0.875rem; text-decoration: none; border-bottom: 1px solid var(--stone-dark); padding-bottom: 1px;">Place another order</a>
         </div>
       </div>
     </div>
@@ -449,9 +250,9 @@
 
   <script>
     const API_URL = '/api';
-
     let menu = [];
     let slots = [];
+    let extras = []; // loaded dynamically from server
     let cart = {};
     let pizzaModifications = {};
     let settings = {};
@@ -461,15 +262,12 @@
     let availableServiceDates = [];
     let selectedServiceDate = null;
 
-    const MOD_PRICES = {
-      "Gluten Free": 2,
-      "Vegan Cheese": 1,
-      "Extra Cheese": 1
-    };
-
     function calculateModPrice(mods) {
       if (!mods || mods.length === 0) return 0;
-      return mods.reduce((total, mod) => total + (MOD_PRICES[mod] || 0), 0);
+      return mods.reduce((total, modName) => {
+        const extra = extras.find(e => e.name === modName && e.available);
+        return total + (extra ? extra.price : 0);
+      }, 0);
     }
 
     function groupSlotsByHour() {
@@ -489,20 +287,21 @@
 
     async function init() {
       try {
-        const [menuRes, slotsRes, settingsRes] = await Promise.all([
+        const [menuRes, slotsRes, settingsRes, extrasRes] = await Promise.all([
           fetch(`${API_URL}/menu`, { cache: 'no-store' }),
           fetch(`${API_URL}/slots`, { cache: 'no-store' }),
-          fetch(`${API_URL}/settings`, { cache: 'no-store' })
+          fetch(`${API_URL}/settings`, { cache: 'no-store' }),
+          fetch(`${API_URL}/extras`, { cache: 'no-store' })
         ]);
-        
-        // Check if responses are OK
-        if (!menuRes.ok || !slotsRes.ok || !settingsRes.ok) {
+
+        if (!menuRes.ok || !slotsRes.ok || !settingsRes.ok || !extrasRes.ok) {
           throw new Error('Failed to load data from server');
         }
-        
+
         menu = await menuRes.json();
         slots = await slotsRes.json();
         settings = await settingsRes.json();
+        extras = await extrasRes.json();
 
         document.getElementById('business-name').textContent = settings.businessName || 'Pizza Paradise';
         document.getElementById('business-tagline').textContent = settings.tagline || 'Fresh. Fast. Delicious.';
@@ -580,11 +379,9 @@
           .sort((a, b) => new Date(a.ordersOpenAt) - new Date(b.ordersOpenAt));
         if (futureSchedules.length > 0) nextOpening = futureSchedules[0];
       }
-
       let html = `<div class="card" style="text-align:center; padding: 3rem;">
         <h2 style="font-size:2rem; margin-bottom:1rem;">Orders are currently closed</h2>
         <p style="color: var(--ink-light); font-family: var(--serif); font-style:italic; font-size:1.1rem; margin-bottom:1.5rem;">We're not currently taking orders.</p>`;
-
       if (nextOpening) {
         const openDate = new Date(nextOpening.ordersOpenAt);
         const serviceDate = new Date(nextOpening.serviceDate);
@@ -594,7 +391,6 @@
           <p style="color:var(--ink-light); font-size:0.875rem;">Orders open ${openDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at ${openDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
         </div>`;
       }
-
       html += `<p style="color:var(--ink-faint); margin-top:2rem; font-size:0.875rem;">Check back soon.</p></div>`;
       container.innerHTML = html;
     }
@@ -713,7 +509,16 @@
 
     function renderModifications() {
       const modList = document.getElementById('modifications-list');
+      const availableExtras = extras.filter(e => e.available);
       let html = '';
+
+      // If no extras configured, show a simple message
+      if (availableExtras.length === 0) {
+        html = `<p style="color:var(--ink-faint); text-align:center; padding: 1rem;">No customisation options available. Click Next to continue.</p>`;
+        modList.innerHTML = html;
+        return;
+      }
+
       Object.keys(cart).forEach(key => {
         const item = cart[key];
         for (let i = 0; i < item.quantity; i++) {
@@ -727,9 +532,12 @@
               <div class="pizza-mod-slot">Pickup ${item.slotTime} &middot; £${totalPrice.toFixed(2)}</div>
             </div>
             <div class="checkbox-group">
-              <label><input type="checkbox" value="Gluten Free" onchange="updateModification('${uniqueId}', this)" ${mods.mods.includes('Gluten Free') ? 'checked' : ''}><span>Gluten Free Base (+£${MOD_PRICES['Gluten Free'].toFixed(2)})</span></label>
-              <label><input type="checkbox" value="Vegan Cheese" onchange="updateModification('${uniqueId}', this)" ${mods.mods.includes('Vegan Cheese') ? 'checked' : ''}><span>Vegan Cheese (+£${MOD_PRICES['Vegan Cheese'].toFixed(2)})</span></label>
-              <label><input type="checkbox" value="Extra Cheese" onchange="updateModification('${uniqueId}', this)" ${mods.mods.includes('Extra Cheese') ? 'checked' : ''}><span>Extra Cheese (+£${MOD_PRICES['Extra Cheese'].toFixed(2)})</span></label>
+              ${availableExtras.map(extra => `
+                <label>
+                  <input type="checkbox" value="${extra.name}" onchange="updateModification('${uniqueId}', this)" ${mods.mods.includes(extra.name) ? 'checked' : ''}>
+                  <span>${extra.name} (+£${extra.price.toFixed(2)})</span>
+                </label>
+              `).join('')}
             </div>
             <div class="form-group">
               <label>Special instructions for this pizza</label>
@@ -743,8 +551,11 @@
 
     function updateModification(uniqueId, checkbox) {
       if (!pizzaModifications[uniqueId]) pizzaModifications[uniqueId] = { mods: [], comments: '' };
-      if (checkbox.checked) { if (!pizzaModifications[uniqueId].mods.includes(checkbox.value)) pizzaModifications[uniqueId].mods.push(checkbox.value); }
-      else { pizzaModifications[uniqueId].mods = pizzaModifications[uniqueId].mods.filter(m => m !== checkbox.value); }
+      if (checkbox.checked) {
+        if (!pizzaModifications[uniqueId].mods.includes(checkbox.value)) pizzaModifications[uniqueId].mods.push(checkbox.value);
+      } else {
+        pizzaModifications[uniqueId].mods = pizzaModifications[uniqueId].mods.filter(m => m !== checkbox.value);
+      }
       renderModifications();
     }
 
@@ -848,21 +659,15 @@
         });
         const responses = await Promise.all(orderPromises);
         for (const response of responses) {
-          if (!response.ok) { 
+          if (!response.ok) {
             let errorMsg = 'Failed to place order';
-            try {
-              const error = await response.json();
-              errorMsg = error.error || errorMsg;
-            } catch (e) {
-              // Response wasn't JSON, use generic message
-            }
+            try { const error = await response.json(); errorMsg = error.error || errorMsg; } catch (e) {}
             throw new Error(errorMsg);
           }
         }
         const orders = await Promise.all(responses.map(r => r.json()));
         showSuccess(orders);
       } catch (error) {
-        console.error('Order error:', error);
         showError(error.message || 'Failed to place order. Please try again.');
       }
     }
@@ -897,19 +702,12 @@
       }
       summaryHtml += `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--stone);text-align:right;"><strong style="font-family:var(--serif);font-size:1.4rem;">Total: £${totalAmount.toFixed(2)}</strong></div>`;
       document.getElementById('success-order-summary').innerHTML = summaryHtml;
-      
-      // Set business name in success page header
       document.getElementById('success-business-name').textContent = settings.businessName || 'Pizza Paradise';
 
-      // Hide ordering flow, show success page
       document.querySelector('.container').style.display = 'none';
       document.querySelector('.site-header').style.display = 'none';
       document.getElementById('success-page').style.display = 'block';
       window.scrollTo({ top: 0 });
-    }
-
-    function closeSuccessModal() {
-      // No longer needed
     }
 
     function showError(message) {
