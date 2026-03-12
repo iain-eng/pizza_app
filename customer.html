@@ -303,7 +303,7 @@
         settings = await settingsRes.json();
         extras = await extrasRes.json();
 
-        document.getElementById('business-name').textContent = settings.businessName || 'Pizza Paradise';
+        document.getElementById('business-name').textContent = settings.businessName || 'Pizza Truck no.1';
         document.getElementById('business-tagline').textContent = settings.tagline || 'Fresh. Fast. Delicious.';
         document.title = settings.businessName || 'Order Pizza';
 
@@ -702,7 +702,7 @@
       }
       summaryHtml += `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--stone);text-align:right;"><strong style="font-family:var(--serif);font-size:1.4rem;">Total: £${totalAmount.toFixed(2)}</strong></div>`;
       document.getElementById('success-order-summary').innerHTML = summaryHtml;
-      document.getElementById('success-business-name').textContent = settings.businessName || 'Pizza Paradise';
+      document.getElementById('success-business-name').textContent = settings.businessName || 'Pizza Truck no.1';
 
       document.querySelector('.container').style.display = 'none';
       document.querySelector('.site-header').style.display = 'none';
