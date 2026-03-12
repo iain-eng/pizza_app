@@ -1,5 +1,12 @@
 {
-  "businessName": "Pizza Truck no.1",
-
-  "chefPassword": "chef123"
+  "businessName": "Your Business Name",
+  "tagline": "Your tagline here",
+  "logo": "",
+  "extras": [
+    { "id": "1", "name": "Gluten Free Base", "price": 2, "available": true },
+    { "id": "2", "name": "Vegan Cheese", "price": 1, "available": true },
+    { "id": "3", "name": "Extra Cheese", "price": 1, "available": true }
+  ],
+  "chefPassword": "chef123",
+  "serviceSchedule": []
 }
