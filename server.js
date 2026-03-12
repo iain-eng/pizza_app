@@ -42,7 +42,7 @@ initFile(SLOTS_FILE, [
 initFile(ORDERS_FILE, []);
 
 initFile(SETTINGS_FILE, {
-  businessName: "Pizza Paradise",
+  businessName: "Pizza Truck no.1",
   tagline: "Fresh. Fast. Delicious.",
   logo: "",
   chefPassword: "chef123",
