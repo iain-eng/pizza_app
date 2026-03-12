@@ -7,7 +7,7 @@ const cors = require("cors");
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname)); // Serve frontend files from root directory
+app.use(express.static(__dirname));
 
 // Data file paths
 const DATA_DIR = path.join(__dirname, "data");
@@ -16,12 +16,8 @@ const SLOTS_FILE = path.join(DATA_DIR, "slots.json");
 const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
 const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
 
-// Ensure data directory and files exist
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR);
-}
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 
-// Initialize default data files if they don't exist
 const initFile = (filepath, defaultData) => {
   if (!fs.existsSync(filepath)) {
     fs.writeFileSync(filepath, JSON.stringify(defaultData, null, 2));
@@ -49,35 +45,34 @@ initFile(SETTINGS_FILE, {
   businessName: "Pizza Paradise",
   tagline: "Fresh. Fast. Delicious.",
   logo: "",
-  chefPassword: "chef123", // Simple password for demo - change this!
-  serviceSchedule: [
-    // Example: Service on Friday, orders open Tuesday 10am
-    // {
-    //   serviceDate: "2024-12-20", // ISO date
-    //   serviceDayName: "Friday",
-    //   ordersOpenAt: "2024-12-17T10:00:00", // ISO datetime
-    //   enabled: true
-    // }
-  ]
+  chefPassword: "chef123",
+  extras: [
+    { id: "1", name: "Gluten Free Base", price: 2, available: true },
+    { id: "2", name: "Vegan Cheese", price: 1, available: true },
+    { id: "3", name: "Extra Cheese", price: 1, available: true }
+  ],
+  serviceSchedule: []
 });
 
 // Helper functions
 const readJSON = (filepath) => JSON.parse(fs.readFileSync(filepath, "utf8"));
 const writeJSON = (filepath, data) => fs.writeFileSync(filepath, JSON.stringify(data, null, 2));
 
-// Modification pricing
-const MOD_PRICES = {
-  "Gluten Free": 2,
-  "Vegan Cheese": 1,
-  "Extra Cheese": 1
+// Get extras from settings (with fallback)
+const getExtras = () => {
+  const settings = readJSON(SETTINGS_FILE);
+  return settings.extras || [];
 };
 
 const calculateModificationPrice = (modifications) => {
   if (!modifications || modifications.length === 0) return 0;
-  return modifications.reduce((total, mod) => total + (MOD_PRICES[mod] || 0), 0);
+  const extras = getExtras();
+  return modifications.reduce((total, modName) => {
+    const extra = extras.find(e => e.name === modName && e.available);
+    return total + (extra ? extra.price : 0);
+  }, 0);
 };
 
-// Calculate how many pizzas are ordered in a slot
 const getSlotOrderCount = (slotId) => {
   const orders = readJSON(ORDERS_FILE);
   return orders
@@ -86,10 +81,7 @@ const getSlotOrderCount = (slotId) => {
 };
 
 // ============= MENU ROUTES =============
-app.get("/api/menu", (req, res) => {
-  const menu = readJSON(MENU_FILE);
-  res.json(menu);
-});
+app.get("/api/menu", (req, res) => res.json(readJSON(MENU_FILE)));
 
 app.post("/api/menu", (req, res) => {
   const menu = readJSON(MENU_FILE);
@@ -110,7 +102,6 @@ app.put("/api/menu/:id", (req, res) => {
   const menu = readJSON(MENU_FILE);
   const index = menu.findIndex(item => item.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: "Menu item not found" });
-  
   menu[index] = {
     ...menu[index],
     name: req.body.name || menu[index].name,
@@ -119,7 +110,6 @@ app.put("/api/menu/:id", (req, res) => {
     available: req.body.available !== undefined ? req.body.available : menu[index].available,
     image: req.body.image !== undefined ? req.body.image : menu[index].image
   };
-  
   writeJSON(MENU_FILE, menu);
   res.json(menu[index]);
 });
@@ -128,35 +118,69 @@ app.delete("/api/menu/:id", (req, res) => {
   const menu = readJSON(MENU_FILE);
   const filtered = menu.filter(item => item.id !== req.params.id);
   if (filtered.length === menu.length) return res.status(404).json({ error: "Menu item not found" });
-  
   writeJSON(MENU_FILE, filtered);
+  res.json({ success: true });
+});
+
+// ============= EXTRAS ROUTES =============
+app.get("/api/extras", (req, res) => {
+  res.json(getExtras());
+});
+
+app.post("/api/extras", (req, res) => {
+  const settings = readJSON(SETTINGS_FILE);
+  if (!settings.extras) settings.extras = [];
+  const newExtra = {
+    id: Date.now().toString(),
+    name: req.body.name,
+    price: parseFloat(req.body.price),
+    available: req.body.available !== false
+  };
+  settings.extras.push(newExtra);
+  writeJSON(SETTINGS_FILE, settings);
+  res.json(newExtra);
+});
+
+app.put("/api/extras/:id", (req, res) => {
+  const settings = readJSON(SETTINGS_FILE);
+  if (!settings.extras) settings.extras = [];
+  const index = settings.extras.findIndex(e => e.id === req.params.id);
+  if (index === -1) return res.status(404).json({ error: "Extra not found" });
+  settings.extras[index] = {
+    ...settings.extras[index],
+    name: req.body.name !== undefined ? req.body.name : settings.extras[index].name,
+    price: req.body.price !== undefined ? parseFloat(req.body.price) : settings.extras[index].price,
+    available: req.body.available !== undefined ? req.body.available : settings.extras[index].available
+  };
+  writeJSON(SETTINGS_FILE, settings);
+  res.json(settings.extras[index]);
+});
+
+app.delete("/api/extras/:id", (req, res) => {
+  const settings = readJSON(SETTINGS_FILE);
+  if (!settings.extras) settings.extras = [];
+  const filtered = settings.extras.filter(e => e.id !== req.params.id);
+  if (filtered.length === settings.extras.length) return res.status(404).json({ error: "Extra not found" });
+  settings.extras = filtered;
+  writeJSON(SETTINGS_FILE, settings);
   res.json({ success: true });
 });
 
 // ============= SLOT ROUTES =============
 app.get("/api/slots", (req, res) => {
   const slots = readJSON(SLOTS_FILE);
-  
-  // Add current order count and remaining capacity to each slot
   const slotsWithAvailability = slots.map(slot => ({
     ...slot,
     currentOrders: getSlotOrderCount(slot.id),
     remaining: slot.capacity - getSlotOrderCount(slot.id)
   }));
-  
   res.json(slotsWithAvailability);
 });
 
 app.post("/api/slots", (req, res) => {
   const slots = readJSON(SLOTS_FILE);
-  const newSlot = {
-    id: Date.now().toString(),
-    time: req.body.time,
-    capacity: parseInt(req.body.capacity) || 8,
-    orders: []
-  };
+  const newSlot = { id: Date.now().toString(), time: req.body.time, capacity: parseInt(req.body.capacity) || 8, orders: [] };
   slots.push(newSlot);
-  // Sort by time
   slots.sort((a, b) => a.time.localeCompare(b.time));
   writeJSON(SLOTS_FILE, slots);
   res.json(newSlot);
@@ -166,13 +190,11 @@ app.put("/api/slots/:id", (req, res) => {
   const slots = readJSON(SLOTS_FILE);
   const index = slots.findIndex(slot => slot.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: "Slot not found" });
-  
   slots[index] = {
     ...slots[index],
     time: req.body.time || slots[index].time,
     capacity: req.body.capacity !== undefined ? parseInt(req.body.capacity) : slots[index].capacity
   };
-  
   writeJSON(SLOTS_FILE, slots);
   res.json(slots[index]);
 });
@@ -180,16 +202,10 @@ app.put("/api/slots/:id", (req, res) => {
 app.delete("/api/slots/:id", (req, res) => {
   const slots = readJSON(SLOTS_FILE);
   const orders = readJSON(ORDERS_FILE);
-  
-  // Check if slot has orders
   const hasOrders = orders.some(order => order.slotId === req.params.id && order.status !== "cancelled");
-  if (hasOrders) {
-    return res.status(400).json({ error: "Cannot delete slot with existing orders" });
-  }
-  
+  if (hasOrders) return res.status(400).json({ error: "Cannot delete slot with existing orders" });
   const filtered = slots.filter(slot => slot.id !== req.params.id);
   if (filtered.length === slots.length) return res.status(404).json({ error: "Slot not found" });
-  
   writeJSON(SLOTS_FILE, filtered);
   res.json({ success: true });
 });
@@ -199,147 +215,94 @@ app.get("/api/orders", (req, res) => {
   const orders = readJSON(ORDERS_FILE);
   const slots = readJSON(SLOTS_FILE);
   const menu = readJSON(MENU_FILE);
-  
-  // Enrich orders with slot and menu details
   const enrichedOrders = orders.map(order => {
     const slot = slots.find(s => s.id === order.slotId);
     const items = order.items.map(item => {
       const menuItem = menu.find(m => m.id === item.menuId);
-      return {
-        ...item,
-        name: menuItem ? menuItem.name : "Unknown Item"
-      };
+      return { ...item, name: menuItem ? menuItem.name : "Unknown Item" };
     });
-    
-    return {
-      ...order,
-      slotTime: slot ? slot.time : "Unknown",
-      items
-    };
+    return { ...order, slotTime: slot ? slot.time : "Unknown", items };
   });
-  
   res.json(enrichedOrders);
 });
 
 app.post("/api/orders", (req, res) => {
   const { slotId, items, customer, comments } = req.body;
-  
-  // Validate
-  if (!slotId || !items || items.length === 0) {
-    return res.status(400).json({ error: "Invalid order data" });
-  }
-  
-  if (!customer || !customer.name || !customer.email) {
-    return res.status(400).json({ error: "Customer name and email required" });
-  }
-  
+  if (!slotId || !items || items.length === 0) return res.status(400).json({ error: "Invalid order data" });
+  if (!customer || !customer.name || !customer.email) return res.status(400).json({ error: "Customer name and email required" });
+
   const slots = readJSON(SLOTS_FILE);
   const slot = slots.find(s => s.id === slotId);
-  
-  if (!slot) {
-    return res.status(404).json({ error: "Slot not found" });
-  }
-  
-  // Check capacity
+  if (!slot) return res.status(404).json({ error: "Slot not found" });
+
   const currentOrders = getSlotOrderCount(slotId);
   const newOrderCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  
   if (currentOrders + newOrderCount > slot.capacity) {
-    return res.status(400).json({ 
-      error: "Not enough capacity", 
-      remaining: slot.capacity - currentOrders,
-      requested: newOrderCount
-    });
+    return res.status(400).json({ error: "Not enough capacity", remaining: slot.capacity - currentOrders, requested: newOrderCount });
   }
-  
-  // Calculate total
+
   const menu = readJSON(MENU_FILE);
   let total = 0;
   const enrichedItems = items.map(item => {
     const menuItem = menu.find(m => m.id === item.menuId);
     if (!menuItem) throw new Error("Menu item not found");
-    
     const modPrice = calculateModificationPrice(item.modifications);
     const itemPrice = menuItem.price + modPrice;
-    const itemTotal = itemPrice * item.quantity;
-    total += itemTotal;
-    
+    total += itemPrice * item.quantity;
     return {
       menuId: item.menuId,
       quantity: item.quantity,
       basePrice: menuItem.price,
-      modPrice: modPrice,
+      modPrice,
       price: itemPrice,
       name: menuItem.name,
       modifications: item.modifications || [],
       pizzaComments: item.pizzaComments || ""
     };
   });
-  
-  // Create order
+
   const orders = readJSON(ORDERS_FILE);
   const newOrder = {
     id: Date.now().toString(),
     slotId,
     items: enrichedItems,
-    customer: {
-      name: customer.name,
-      email: customer.email,
-      phone: customer.phone || ""
-    },
+    customer: { name: customer.name, email: customer.email, phone: customer.phone || "" },
     comments: comments || "",
     total,
     status: "confirmed",
-    serviceDate: req.body.serviceDate || null, // Track which service date this order is for
+    serviceDate: req.body.serviceDate || null,
     createdAt: new Date().toISOString()
   };
-  
   orders.push(newOrder);
   writeJSON(ORDERS_FILE, orders);
-  
   res.json(newOrder);
 });
 
 app.put("/api/orders/:id/status", (req, res) => {
   const orders = readJSON(ORDERS_FILE);
   const index = orders.findIndex(order => order.id === req.params.id);
-  
   if (index === -1) return res.status(404).json({ error: "Order not found" });
-  
   const validStatuses = ["confirmed", "preparing", "ready", "completed", "cancelled"];
-  if (!validStatuses.includes(req.body.status)) {
-    return res.status(400).json({ error: "Invalid status" });
-  }
-  
+  if (!validStatuses.includes(req.body.status)) return res.status(400).json({ error: "Invalid status" });
   orders[index].status = req.body.status;
   writeJSON(ORDERS_FILE, orders);
-  
   res.json(orders[index]);
 });
 
 // ============= SETTINGS ROUTES =============
 app.get("/api/settings", (req, res) => {
   const settings = readJSON(SETTINGS_FILE);
-  // Don't send password to frontend
   const { chefPassword, ...publicSettings } = settings;
   res.json(publicSettings);
 });
 
 app.put("/api/settings", (req, res) => {
   const settings = readJSON(SETTINGS_FILE);
-  
-  // Update only allowed fields
-  const updatableFields = ['businessName', 'tagline', 'logo', 'chefPassword', 'serviceSchedule'];
-  
+  const updatableFields = ['businessName', 'tagline', 'logo', 'chefPassword', 'serviceSchedule', 'extras'];
   updatableFields.forEach(field => {
-    if (req.body[field] !== undefined) {
-      settings[field] = req.body[field];
-    }
+    if (req.body[field] !== undefined) settings[field] = req.body[field];
   });
-  
   writeJSON(SETTINGS_FILE, settings);
-  
-  // Don't send password back to frontend
   const { chefPassword, ...publicSettings } = settings;
   res.json(publicSettings);
 });
@@ -358,67 +321,33 @@ app.post("/api/orders/archive", (req, res) => {
   const orders = readJSON(ORDERS_FILE);
   const { serviceDate, serviceDates } = req.body || {};
   const ARCHIVE_DIR = path.join(DATA_DIR, "archives");
-  
-  // Create archives directory if it doesn't exist
-  if (!fs.existsSync(ARCHIVE_DIR)) {
-    fs.mkdirSync(ARCHIVE_DIR);
-  }
-  
-  let ordersToArchive;
-  let ordersToKeep;
-  
+  if (!fs.existsSync(ARCHIVE_DIR)) fs.mkdirSync(ARCHIVE_DIR);
+
+  let ordersToArchive, ordersToKeep;
   if (serviceDate) {
-    // Archive specific service date
     ordersToArchive = orders.filter(o => o.serviceDate === serviceDate);
     ordersToKeep = orders.filter(o => o.serviceDate !== serviceDate);
   } else if (serviceDates && Array.isArray(serviceDates)) {
-    // Archive multiple service dates
     ordersToArchive = orders.filter(o => serviceDates.includes(o.serviceDate));
     ordersToKeep = orders.filter(o => !serviceDates.includes(o.serviceDate));
   } else {
-    // Archive all (legacy behavior)
     ordersToArchive = orders;
     ordersToKeep = [];
   }
-  
-  if (ordersToArchive.length === 0) {
-    return res.json({ 
-      success: true, 
-      archived: 0,
-      archiveFile: null
-    });
-  }
-  
-  // Create archive file with today's date
+
+  if (ordersToArchive.length === 0) return res.json({ success: true, archived: 0, archiveFile: null });
+
   const today = new Date().toISOString().split('T')[0];
   const archiveFile = path.join(ARCHIVE_DIR, `orders_${today}_${Date.now()}.json`);
-  
-  // Save orders to archive
-  writeJSON(archiveFile, {
-    archivedAt: new Date().toISOString(),
-    date: today,
-    serviceDate: serviceDate || null,
-    serviceDates: serviceDates || null,
-    orders: ordersToArchive
-  });
-  
-  // Update orders file with remaining orders
+  writeJSON(archiveFile, { archivedAt: new Date().toISOString(), date: today, serviceDate: serviceDate || null, serviceDates: serviceDates || null, orders: ordersToArchive });
   writeJSON(ORDERS_FILE, ordersToKeep);
-  
-  res.json({ 
-    success: true, 
-    archived: ordersToArchive.length,
-    archiveFile: path.basename(archiveFile)
-  });
+  res.json({ success: true, archived: ordersToArchive.length, archiveFile: path.basename(archiveFile) });
 });
 
 // ============= START SERVER =============
 const PORT = process.env.PORT || 3001;
 
-// ============= HOMEPAGE ROUTE (must be last) =============
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "customer.html"));
-});
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "customer.html")));
 
 app.listen(PORT, () => {
   console.log(`🍕 Pizza Pre-Order Backend running on http://localhost:${PORT}`);
