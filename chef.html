@@ -118,6 +118,38 @@
     /* Per-item limit badge in slots table */
     .item-limit-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.75rem; font-weight: 600; background: var(--terra-light); color: var(--terracotta); margin-left: 0.375rem; }
 
+    /* Live Orders / Service view */
+    .service-slot-header { font-family: var(--serif); font-size: 1.2rem; font-weight: 700; color: var(--ink); padding: 0.75rem 0 0.5rem; border-bottom: 2px solid var(--ink); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: baseline; }
+    .service-slot-count { font-family: var(--sans); font-size: 0.8rem; font-weight: 500; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.5px; }
+    .service-slot-section { margin-bottom: 2rem; }
+    .order-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .order-card { background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px; padding: 1.25rem; position: relative; }
+    .order-card.status-completed { opacity: 0.5; }
+    .order-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.875rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--stone); }
+    .order-card-customer { font-weight: 700; font-size: 1.05rem; color: var(--ink); }
+    .order-card-id { font-size: 0.75rem; color: var(--ink-faint); margin-top: 0.2rem; }
+    .order-card-total { font-family: var(--serif); font-size: 1.1rem; font-weight: 700; color: var(--ink); text-align: right; }
+    .order-card-items { margin-bottom: 1rem; }
+    .order-card-item { padding: 0.375rem 0; border-bottom: 1px solid var(--stone); font-size: 0.875rem; color: var(--ink); }
+    .order-card-item:last-child { border-bottom: none; }
+    .order-card-item-name { font-weight: 600; }
+    .order-card-item-mods { font-size: 0.8rem; color: var(--terracotta); margin-top: 0.15rem; }
+    .order-card-item-note { font-size: 0.78rem; color: var(--ink-faint); font-style: italic; margin-top: 0.1rem; }
+    .order-card-comments { background: var(--terra-light); border-left: 3px solid var(--terracotta); padding: 0.5rem 0.75rem; border-radius: 0 3px 3px 0; font-size: 0.8rem; color: var(--ink-light); margin-bottom: 1rem; }
+    .order-card-collect-btn { width: 100%; padding: 0.625rem; background: var(--ink) !important; color: #ffffff !important; border: none; border-radius: 3px; font-size: 0.875rem; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: background 0.15s; }
+    .order-card-collect-btn:hover { background: #2d2926 !important; }
+    .order-card-collect-btn.collected { background: var(--stone) !important; color: var(--ink-faint) !important; cursor: default; }
+    .service-empty { text-align: center; padding: 3rem; color: var(--ink-faint); font-family: var(--serif); font-style: italic; font-size: 1.1rem; }
+
+    /* Print styles */
+    @media print {
+      body * { visibility: hidden; }
+      #print-run-sheet, #print-run-sheet * { visibility: visible; }
+      #print-run-sheet { position: absolute; left: 0; top: 0; width: 100%; }
+      .no-print { display: none !important; }
+    }
+    #print-run-sheet { display: none; }
+
     @media (max-width: 768px) {
       .tabs { flex-direction: column; }
       .form-row { grid-template-columns: 1fr; }
@@ -126,6 +158,7 @@
       .pizza-breakdown { grid-template-columns: 1fr; }
       .header h1 { font-size: 1.5rem; }
       .container { padding: 1rem; }
+      .order-cards-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -178,6 +211,7 @@
       <div class="tabs">
         <button class="tab active" onclick="switchTab('overview')">Overview</button>
         <div id="service-date-tabs"></div>
+        <button class="tab" onclick="switchTab('service')">Live Orders</button>
         <button class="tab" onclick="switchTab('menu')">Menu</button>
         <button class="tab" onclick="switchTab('slots')">Time Slots</button>
         <button class="tab" onclick="switchTab('extras')">Extras</button>
@@ -215,6 +249,18 @@
             </table>
           </div>
         </div>
+      </div>
+
+      <!-- Service / Live Orders Tab -->
+      <div id="service-tab" class="tab-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem;">
+          <div>
+            <h2 style="font-family:var(--serif);font-size:1.4rem;font-weight:700;color:var(--ink);margin:0;">Live Orders</h2>
+            <p style="color:var(--ink-faint);font-size:0.8rem;margin-top:0.25rem;">Auto-refreshes every 15 seconds</p>
+          </div>
+          <button class="secondary" onclick="printRunSheet()">Print Run Sheet</button>
+        </div>
+        <div id="service-orders-container"></div>
       </div>
 
       <!-- Menu Tab -->
@@ -461,13 +507,13 @@
       createServiceDateTabs();
       renderStats(); renderPizzaBreakdown(); renderOverview();
       renderOrders(); renderMenu(); renderSlots(); renderExtras();
-      renderCapacityModeToggle();
+      renderCapacityModeToggle(); renderServiceView();
       populateArchiveOptions();
       setInterval(async () => {
         await loadData();
         renderStats(); renderPizzaBreakdown(); renderOverview();
-        renderOrdersForAllServiceDates(); populateArchiveOptions();
-      }, 10000);
+        renderOrdersForAllServiceDates(); renderServiceView(); populateArchiveOptions();
+      }, 15000);
     }
 
     async function loadData() {
@@ -1144,6 +1190,147 @@
       a.download = serviceDate ? `kitchen-tickets-${serviceDate}.txt` : `kitchen-tickets-${new Date().toISOString().split('T')[0]}.txt`;
       a.click();
     }
+
+    // ============= LIVE ORDERS / SERVICE VIEW =============
+    function renderServiceView() {
+      const container = document.getElementById('service-orders-container');
+      const activeOrders = orders.filter(o => o.status !== 'cancelled');
+
+      if (activeOrders.length === 0) {
+        container.innerHTML = '<div class="service-empty">No orders yet</div>';
+        return;
+      }
+
+      // Group by slot time
+      const bySlot = {};
+      activeOrders.forEach(order => {
+        const time = order.slotTime || 'Unknown';
+        if (!bySlot[time]) bySlot[time] = [];
+        bySlot[time].push(order);
+      });
+
+      const sortedTimes = Object.keys(bySlot).sort();
+
+      container.innerHTML = sortedTimes.map(time => {
+        const slotOrders = bySlot[time];
+        const activeCount = slotOrders.filter(o => o.status !== 'completed').length;
+        return `
+          <div class="service-slot-section">
+            <div class="service-slot-header">
+              <span>${time}</span>
+              <span class="service-slot-count">${activeCount} remaining · ${slotOrders.length} total</span>
+            </div>
+            <div class="order-cards-grid">
+              ${slotOrders.map(order => renderOrderCard(order)).join('')}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderOrderCard(order) {
+      const isCollected = order.status === 'completed';
+      const itemsHtml = order.items.map(item => {
+        const mods = item.modifications && item.modifications.length > 0
+          ? `<div class="order-card-item-mods">${item.modifications.join(', ')}</div>` : '';
+        const note = item.pizzaComments
+          ? `<div class="order-card-item-note">"${item.pizzaComments}"</div>` : '';
+        return `<div class="order-card-item">
+          <span class="order-card-item-name">${item.name}</span> ×${item.quantity}
+          ${mods}${note}
+        </div>`;
+      }).join('');
+
+      const commentsHtml = order.comments
+        ? `<div class="order-card-comments">${order.comments}</div>` : '';
+
+      return `<div class="order-card${isCollected ? ' status-completed' : ''}">
+        <div class="order-card-header">
+          <div>
+            <div class="order-card-customer">${order.customer.name}</div>
+            <div class="order-card-id">#${order.id.slice(-6)} · ${order.customer.phone || order.customer.email}</div>
+          </div>
+          <div class="order-card-total">£${order.total.toFixed(2)}</div>
+        </div>
+        <div class="order-card-items">${itemsHtml}</div>
+        ${commentsHtml}
+        <button class="order-card-collect-btn${isCollected ? ' collected' : ''}"
+          onclick="${isCollected ? '' : `markCollected('${order.id}')`}"
+          ${isCollected ? 'disabled' : ''}>
+          ${isCollected ? 'Collected' : 'Mark as Collected'}
+        </button>
+      </div>`;
+    }
+
+    async function markCollected(orderId) {
+      try {
+        await fetch(`${API_URL}/orders/${orderId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'completed' })
+        });
+        await loadData();
+        renderServiceView();
+        renderStats();
+        renderPizzaBreakdown();
+      } catch (error) { alert('Failed to update order'); }
+    }
+
+    function printRunSheet() {
+      const allOrders = [...orders].filter(o => o.status !== 'cancelled');
+      allOrders.sort((a, b) => {
+        const slotA = slots.find(s => s.id === a.slotId);
+        const slotB = slots.find(s => s.id === b.slotId);
+        return (slotA ? slotA.time : '99:99').localeCompare(slotB ? slotB.time : '99:99');
+      });
+
+      const businessName = settings.businessName || 'Run Sheet';
+      const printedAt = new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+      const rows = allOrders.map(order => {
+        const itemLines = order.items.map(item => {
+          let line = `${item.quantity}× ${item.name}`;
+          if (item.modifications && item.modifications.length > 0) line += ` (${item.modifications.join(', ')})`;
+          if (item.pizzaComments) line += ` — "${item.pizzaComments}"`;
+          return line;
+        }).join('<br>');
+        const commentsLine = order.comments ? `<br><em style="color:#888;">${order.comments}</em>` : '';
+        const collected = order.status === 'completed'
+          ? '<span style="color:#22543d;font-weight:600;">Collected</span>' : '';
+        return `<tr style="border-bottom:1px solid #e0e0e0;">
+          <td style="padding:8px 10px;font-weight:700;white-space:nowrap;">${order.slotTime}</td>
+          <td style="padding:8px 10px;font-weight:600;">${order.customer.name}<br><span style="font-weight:400;font-size:0.8em;color:#888;">${order.customer.phone || order.customer.email}</span></td>
+          <td style="padding:8px 10px;font-size:0.9em;">${itemLines}${commentsLine}</td>
+          <td style="padding:8px 10px;font-weight:700;white-space:nowrap;">£${order.total.toFixed(2)}</td>
+          <td style="padding:8px 10px;text-align:center;">${collected}</td>
+        </tr>`;
+      }).join('');
+
+      const sheet = document.getElementById('print-run-sheet');
+      sheet.innerHTML = `
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;padding:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;border-bottom:2px solid #1c1917;padding-bottom:10px;">
+            <h1 style="font-family:Georgia,serif;font-size:22px;margin:0;">${businessName} — Run Sheet</h1>
+            <span style="font-size:12px;color:#888;">Printed ${printedAt} · ${allOrders.length} orders</span>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr style="background:#f5f5f5;border-bottom:2px solid #1c1917;">
+                <th style="padding:8px 10px;text-align:left;">Time</th>
+                <th style="padding:8px 10px;text-align:left;">Customer</th>
+                <th style="padding:8px 10px;text-align:left;">Items</th>
+                <th style="padding:8px 10px;text-align:left;">Total</th>
+                <th style="padding:8px 10px;text-align:center;">Collected</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+      sheet.style.display = 'block';
+      window.print();
+      sheet.style.display = 'none';
+    }
   </script>
 </body>
+<!-- Print run sheet (hidden, shown only during print) -->
+<div id="print-run-sheet"></div>
 </html>
