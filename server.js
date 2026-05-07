@@ -243,6 +243,7 @@ initFile(SETTINGS_FILE, {
   logo: "",
   chefPassword: "chef123",
   capacityMode: "total",
+  theme: "classic",
   extras: [
     { id: "1", name: "Gluten Free Base", price: 2, available: true },
     { id: "2", name: "Vegan Cheese", price: 1, available: true },
@@ -554,7 +555,7 @@ app.get("/api/settings", (req, res) => {
 
 app.put("/api/settings", (req, res) => {
   const settings = readJSON(SETTINGS_FILE);
-  const updatableFields = ['businessName', 'tagline', 'logo', 'chefPassword', 'serviceSchedule', 'extras', 'capacityMode'];
+  const updatableFields = ['businessName', 'tagline', 'logo', 'chefPassword', 'serviceSchedule', 'extras', 'capacityMode', 'theme'];
   updatableFields.forEach(field => {
     if (req.body[field] !== undefined) settings[field] = req.body[field];
   });
