@@ -17,7 +17,7 @@ const resend = Resend && process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM_EMAIL = "orders@reorientplaces.com";
+const FROM_EMAIL = "orders@send.orders.reorientplaces.com";
 const CHEF_EMAIL = "admin@reorientplaces.com";
 
 function buildCustomerEmail(order, businessName, slot) {
