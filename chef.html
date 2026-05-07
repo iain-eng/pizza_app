@@ -712,7 +712,7 @@
           <td style="padding:0.875rem;"><span class="status-badge ${statusClass}">${statusBadge}</span></td>
           <td style="padding:0.875rem;font-size:0.875rem;color:var(--ink-light);">${ordersOpenAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} at ${ordersOpenAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</td>
           <td style="padding:0.875rem;font-size:0.875rem;color:var(--ink-light);">${serviceDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} 23:59</td>
-          <td style="padding:0.875rem;text-align:center;"><span style="font-weight:600;">${dateOrders.length}</span></td>
+          <td style="padding:0.875rem;text-align:center;"><span style="font-weight:600;">${countUniqueOrders(dateOrders)}</span></td>
           <td style="padding:0.875rem;text-align:right;font-weight:600;">${revenue > 0 ? `£${revenue.toFixed(2)}` : '—'}</td>
         </tr>`;
       }).join('');
@@ -823,12 +823,25 @@
       if (taglineInput) taglineInput.addEventListener('input', previewSettings);
     });
 
+    function countUniqueOrders(orderList) {
+      const seenGroups = new Set();
+      let count = 0;
+      orderList.forEach(o => {
+        if (o.groupId) {
+          if (!seenGroups.has(o.groupId)) { seenGroups.add(o.groupId); count++; }
+        } else {
+          count++;
+        }
+      });
+      return count;
+    }
+
     function renderStats() {
       const today = new Date().toISOString().split('T')[0];
       const todayOrders = orders.filter(o => o.createdAt.startsWith(today) && o.status !== 'cancelled');
       const revenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
       const items = todayOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0);
-      document.getElementById('stat-orders').textContent = todayOrders.length;
+      document.getElementById('stat-orders').textContent = countUniqueOrders(todayOrders);
       document.getElementById('stat-revenue').textContent = `£${revenue.toFixed(0)}`;
       document.getElementById('stat-pizzas').textContent = items;
     }
