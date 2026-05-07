@@ -725,11 +725,12 @@
       }
 
       try {
+        const groupId = Object.keys(ordersBySlot).length > 1 ? Date.now().toString() : null;
         const orderPromises = Object.keys(ordersBySlot).map(slotId => {
           return fetch(`${API_URL}/orders`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ slotId, items: ordersBySlot[slotId], customer: { name, email, phone }, comments: fullComments, serviceDate: selectedServiceDate })
+            body: JSON.stringify({ slotId, items: ordersBySlot[slotId], customer: { name, email, phone }, comments: fullComments, serviceDate: selectedServiceDate, groupId })
           });
         });
         const responses = await Promise.all(orderPromises);
