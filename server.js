@@ -5,7 +5,6 @@ const path = require("path");
 const cors = require("cors");
 
 // ============= RESEND EMAIL =============
-// npm install resend
 let Resend;
 try {
   Resend = require("resend").Resend;
@@ -64,35 +63,20 @@ function buildCustomerEmail(order, businessName, slot) {
     <tr>
       <td align="center">
         <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
-
-          <!-- Header -->
           <tr>
             <td style="background:#ffffff;border:1px solid #e8e2d9;border-bottom:none;border-radius:4px 4px 0 0;padding:32px 32px 24px;text-align:center;">
-              <h1 style="margin:0 0 6px;font-family:Georgia,'Playfair Display',serif;font-size:26px;font-weight:700;color:#1c1917;letter-spacing:-0.3px;">
-                ${businessName}
-              </h1>
+              <h1 style="margin:0 0 6px;font-family:Georgia,'Playfair Display',serif;font-size:26px;font-weight:700;color:#1c1917;letter-spacing:-0.3px;">${businessName}</h1>
               <p style="margin:0;color:#a8a29e;font-size:14px;">Order Confirmation</p>
             </td>
           </tr>
-
-          <!-- Body -->
           <tr>
             <td style="background:#ffffff;border:1px solid #e8e2d9;border-top:none;border-bottom:none;padding:0 32px 32px;">
-
-              <p style="margin:0 0 24px;font-size:16px;color:#1c1917;">
-                Thanks <strong>${order.customer.name}</strong>, your order is confirmed.
-              </p>
-
-              <!-- Pickup details -->
+              <p style="margin:0 0 24px;font-size:16px;color:#1c1917;">Thanks <strong>${order.customer.name}</strong>, your order is confirmed.</p>
               <div style="background:#faf8f4;border:1px solid #e8e2d9;border-radius:4px;padding:16px 20px;margin-bottom:24px;">
                 <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#a8a29e;font-weight:600;">Collection Details</p>
                 ${serviceDateLine}
-                <p style="margin:0;color:#57534e;font-size:15px;">
-                  <strong>Pick up at:</strong> ${slot ? slot.time : "See your order details"}
-                </p>
+                <p style="margin:0;color:#57534e;font-size:15px;"><strong>Pick up at:</strong> ${slot ? slot.time : "See your order details"}</p>
               </div>
-
-              <!-- Order items -->
               <table width="100%" cellpadding="0" cellspacing="0">
                 <thead>
                   <tr>
@@ -100,9 +84,7 @@ function buildCustomerEmail(order, businessName, slot) {
                     <th style="text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#a8a29e;font-weight:600;padding-bottom:8px;border-bottom:2px solid #e8e2d9;">Price</th>
                   </tr>
                 </thead>
-                <tbody>
-                  ${itemRows}
-                </tbody>
+                <tbody>${itemRows}</tbody>
                 <tfoot>
                   <tr>
                     <td style="padding-top:16px;font-family:Georgia,serif;font-size:20px;font-weight:700;color:#1c1917;">Total</td>
@@ -110,24 +92,17 @@ function buildCustomerEmail(order, businessName, slot) {
                   </tr>
                 </tfoot>
               </table>
-
               ${commentsBlock}
-
-              <!-- Collection reminder -->
               <div style="margin-top:28px;padding-top:20px;border-top:1px solid #e8e2d9;font-size:13px;color:#a8a29e;line-height:1.6;">
                 Please collect your order within 20 minutes of your time slot. If you need to make any changes, get in touch as soon as possible.
               </div>
-
             </td>
           </tr>
-
-          <!-- Footer -->
           <tr>
             <td style="background:#faf8f4;border:1px solid #e8e2d9;border-top:none;border-radius:0 0 4px 4px;padding:16px 32px;text-align:center;">
               <p style="margin:0;font-size:12px;color:#a8a29e;">Order #${order.id.slice(-6)}</p>
             </td>
           </tr>
-
         </table>
       </td>
     </tr>
@@ -139,12 +114,8 @@ function buildCustomerEmail(order, businessName, slot) {
 function buildChefText(order, businessName, slot) {
   const itemLines = order.items.map(item => {
     let line = `  ${item.quantity}x ${item.name} — £${item.price.toFixed(2)}`;
-    if (item.modifications && item.modifications.length > 0) {
-      line += `\n    Extras: ${item.modifications.join(", ")}`;
-    }
-    if (item.pizzaComments) {
-      line += `\n    Note: ${item.pizzaComments}`;
-    }
+    if (item.modifications && item.modifications.length > 0) line += `\n    Extras: ${item.modifications.join(", ")}`;
+    if (item.pizzaComments) line += `\n    Note: ${item.pizzaComments}`;
     return line;
   }).join("\n");
 
@@ -152,45 +123,16 @@ function buildChefText(order, businessName, slot) {
     ? new Date(order.serviceDate).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })
     : null;
 
-  return `New order for ${businessName}
-
-Order #${order.id.slice(-6)}
-${serviceDate ? `Service date: ${serviceDate}\n` : ""}Pickup slot: ${slot ? slot.time : "Unknown"}
-
-Customer: ${order.customer.name}
-Email: ${order.customer.email}
-Phone: ${order.customer.phone || "Not provided"}
-
-Items:
-${itemLines}
-${order.comments ? `\nOrder note: ${order.comments}` : ""}
-
-Total: £${order.total.toFixed(2)}
-`;
+  return `New order for ${businessName}\n\nOrder #${order.id.slice(-6)}\n${serviceDate ? `Service date: ${serviceDate}\n` : ""}Pickup slot: ${slot ? slot.time : "Unknown"}\n\nCustomer: ${order.customer.name}\nEmail: ${order.customer.email}\nPhone: ${order.customer.phone || "Not provided"}\n\nItems:\n${itemLines}\n${order.comments ? `\nOrder note: ${order.comments}` : ""}\n\nTotal: £${order.total.toFixed(2)}\n`;
 }
 
 async function sendOrderEmails(order, businessName, slot) {
-  if (!resend) {
-    console.log("Email skipped — Resend not configured");
-    return;
-  }
+  if (!resend) { console.log("Email skipped — Resend not configured"); return; }
   const subject = `Order confirmed — #${order.id.slice(-6)} — ${businessName}`;
-
-  // Customer email
-  resend.emails.send({
-    from: `${businessName} <${FROM_EMAIL}>`,
-    to: order.customer.email,
-    subject,
-    html: buildCustomerEmail(order, businessName, slot),
-  }).catch(err => console.error("Customer email failed:", err.message));
-
-  // Chef email
-  resend.emails.send({
-    from: `${businessName} <${FROM_EMAIL}>`,
-    to: CHEF_EMAIL,
-    subject: `New order #${order.id.slice(-6)} — ${order.customer.name} — ${slot ? slot.time : "?"}`,
-    text: buildChefText(order, businessName, slot),
-  }).catch(err => console.error("Chef email failed:", err.message));
+  resend.emails.send({ from: `${businessName} <${FROM_EMAIL}>`, to: order.customer.email, subject, html: buildCustomerEmail(order, businessName, slot) })
+    .catch(err => console.error("Customer email failed:", err.message));
+  resend.emails.send({ from: `${businessName} <${FROM_EMAIL}>`, to: CHEF_EMAIL, subject: `New order #${order.id.slice(-6)} — ${order.customer.name} — ${slot ? slot.time : "?"}`, text: buildChefText(order, businessName, slot) })
+    .catch(err => console.error("Chef email failed:", err.message));
 }
 
 // ============= EXPRESS SETUP =============
@@ -199,7 +141,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// Data file paths
 const DATA_DIR = path.join(__dirname, "data");
 const MENU_FILE = path.join(DATA_DIR, "menu.json");
 const SLOTS_FILE = path.join(DATA_DIR, "slots.json");
@@ -209,9 +150,7 @@ const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 
 const initFile = (filepath, defaultData) => {
-  if (!fs.existsSync(filepath)) {
-    fs.writeFileSync(filepath, JSON.stringify(defaultData, null, 2));
-  }
+  if (!fs.existsSync(filepath)) fs.writeFileSync(filepath, JSON.stringify(defaultData, null, 2));
 };
 
 initFile(MENU_FILE, [
@@ -236,6 +175,7 @@ initFile(SETTINGS_FILE, {
   tagline: "Fresh. Fast. Delicious.",
   logo: "",
   chefPassword: "chef123",
+  capacityMode: "total",
   extras: [
     { id: "1", name: "Gluten Free Base", price: 2, available: true },
     { id: "2", name: "Vegan Cheese", price: 1, available: true },
@@ -244,13 +184,17 @@ initFile(SETTINGS_FILE, {
   serviceSchedule: []
 });
 
-// Helper functions
 const readJSON = (filepath) => JSON.parse(fs.readFileSync(filepath, "utf8"));
 const writeJSON = (filepath, data) => fs.writeFileSync(filepath, JSON.stringify(data, null, 2));
 
 const getExtras = () => {
   const settings = readJSON(SETTINGS_FILE);
   return settings.extras || [];
+};
+
+const getCapacityMode = () => {
+  const settings = readJSON(SETTINGS_FILE);
+  return settings.capacityMode || "total";
 };
 
 const calculateModificationPrice = (modifications) => {
@@ -269,6 +213,19 @@ const getSlotOrderCount = (slotId) => {
     .reduce((total, order) => total + order.items.reduce((sum, item) => sum + item.quantity, 0), 0);
 };
 
+const getSlotItemCounts = (slotId) => {
+  const orders = readJSON(ORDERS_FILE);
+  const counts = {};
+  orders
+    .filter(order => order.slotId === slotId && order.status !== "cancelled")
+    .forEach(order => {
+      order.items.forEach(item => {
+        counts[item.menuId] = (counts[item.menuId] || 0) + item.quantity;
+      });
+    });
+  return counts;
+};
+
 // ============= MENU ROUTES =============
 app.get("/api/menu", (req, res) => res.json(readJSON(MENU_FILE)));
 
@@ -280,7 +237,8 @@ app.post("/api/menu", (req, res) => {
     description: req.body.description || "",
     price: parseFloat(req.body.price),
     available: req.body.available !== false,
-    image: req.body.image || ""
+    image: req.body.image || "",
+    slotLimit: req.body.slotLimit !== undefined ? req.body.slotLimit : null
   };
   menu.push(newItem);
   writeJSON(MENU_FILE, menu);
@@ -297,7 +255,8 @@ app.put("/api/menu/:id", (req, res) => {
     description: req.body.description !== undefined ? req.body.description : menu[index].description,
     price: req.body.price !== undefined ? parseFloat(req.body.price) : menu[index].price,
     available: req.body.available !== undefined ? req.body.available : menu[index].available,
-    image: req.body.image !== undefined ? req.body.image : menu[index].image
+    image: req.body.image !== undefined ? req.body.image : menu[index].image,
+    slotLimit: req.body.slotLimit !== undefined ? req.body.slotLimit : menu[index].slotLimit
   };
   writeJSON(MENU_FILE, menu);
   res.json(menu[index]);
@@ -317,12 +276,7 @@ app.get("/api/extras", (req, res) => res.json(getExtras()));
 app.post("/api/extras", (req, res) => {
   const settings = readJSON(SETTINGS_FILE);
   if (!settings.extras) settings.extras = [];
-  const newExtra = {
-    id: Date.now().toString(),
-    name: req.body.name,
-    price: parseFloat(req.body.price),
-    available: req.body.available !== false
-  };
+  const newExtra = { id: Date.now().toString(), name: req.body.name, price: parseFloat(req.body.price), available: req.body.available !== false };
   settings.extras.push(newExtra);
   writeJSON(SETTINGS_FILE, settings);
   res.json(newExtra);
@@ -356,11 +310,33 @@ app.delete("/api/extras/:id", (req, res) => {
 // ============= SLOT ROUTES =============
 app.get("/api/slots", (req, res) => {
   const slots = readJSON(SLOTS_FILE);
-  const slotsWithAvailability = slots.map(slot => ({
-    ...slot,
-    currentOrders: getSlotOrderCount(slot.id),
-    remaining: slot.capacity - getSlotOrderCount(slot.id)
-  }));
+  const menu = readJSON(MENU_FILE);
+  const capacityMode = getCapacityMode();
+
+  const slotsWithAvailability = slots.map(slot => {
+    const totalOrdered = getSlotOrderCount(slot.id);
+    const itemCounts = getSlotItemCounts(slot.id);
+
+    const itemAvailability = {};
+    menu.forEach(item => {
+      const ordered = itemCounts[item.id] || 0;
+      const limit = (item.slotLimit !== null && item.slotLimit !== undefined) ? item.slotLimit : null;
+      itemAvailability[item.id] = {
+        ordered,
+        limit,
+        remaining: limit !== null ? Math.max(0, limit - ordered) : null
+      };
+    });
+
+    return {
+      ...slot,
+      currentOrders: totalOrdered,
+      remaining: slot.capacity - totalOrdered,
+      capacityMode,
+      itemAvailability
+    };
+  });
+
   res.json(slotsWithAvailability);
 });
 
@@ -422,13 +398,33 @@ app.post("/api/orders", (req, res) => {
   const slot = slots.find(s => s.id === slotId);
   if (!slot) return res.status(404).json({ error: "Slot not found" });
 
-  const currentOrders = getSlotOrderCount(slotId);
-  const newOrderCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  if (currentOrders + newOrderCount > slot.capacity) {
-    return res.status(400).json({ error: "Not enough capacity", remaining: slot.capacity - currentOrders, requested: newOrderCount });
+  const capacityMode = getCapacityMode();
+  const menu = readJSON(MENU_FILE);
+
+  if (capacityMode === "total") {
+    const currentOrders = getSlotOrderCount(slotId);
+    const newOrderCount = items.reduce((sum, item) => sum + item.quantity, 0);
+    if (currentOrders + newOrderCount > slot.capacity) {
+      return res.status(400).json({ error: "Not enough capacity", remaining: slot.capacity - currentOrders, requested: newOrderCount });
+    }
+  } else {
+    const itemCounts = getSlotItemCounts(slotId);
+    for (const item of items) {
+      const menuItem = menu.find(m => m.id === item.menuId);
+      if (!menuItem) return res.status(404).json({ error: "Menu item not found" });
+      if (menuItem.slotLimit !== null && menuItem.slotLimit !== undefined) {
+        const currentCount = itemCounts[item.menuId] || 0;
+        if (currentCount + item.quantity > menuItem.slotLimit) {
+          return res.status(400).json({
+            error: `Not enough capacity for ${menuItem.name}`,
+            remaining: Math.max(0, menuItem.slotLimit - currentCount),
+            requested: item.quantity
+          });
+        }
+      }
+    }
   }
 
-  const menu = readJSON(MENU_FILE);
   let total = 0;
   const enrichedItems = items.map(item => {
     const menuItem = menu.find(m => m.id === item.menuId);
@@ -463,7 +459,6 @@ app.post("/api/orders", (req, res) => {
   orders.push(newOrder);
   writeJSON(ORDERS_FILE, orders);
 
-  // Send emails — non-blocking, never affects order response
   const settings = readJSON(SETTINGS_FILE);
   sendOrderEmails(newOrder, settings.businessName || "Pizza Truck no.1", slot);
 
@@ -490,7 +485,7 @@ app.get("/api/settings", (req, res) => {
 
 app.put("/api/settings", (req, res) => {
   const settings = readJSON(SETTINGS_FILE);
-  const updatableFields = ['businessName', 'tagline', 'logo', 'chefPassword', 'serviceSchedule', 'extras'];
+  const updatableFields = ['businessName', 'tagline', 'logo', 'chefPassword', 'serviceSchedule', 'extras', 'capacityMode'];
   updatableFields.forEach(field => {
     if (req.body[field] !== undefined) settings[field] = req.body[field];
   });
@@ -508,7 +503,7 @@ app.post("/api/auth/chef", (req, res) => {
   }
 });
 
-// ============= ARCHIVE & RESET =============
+// ============= ARCHIVE =============
 app.post("/api/orders/archive", (req, res) => {
   const orders = readJSON(ORDERS_FILE);
   const { serviceDate, serviceDates } = req.body || {};
@@ -538,13 +533,12 @@ app.post("/api/orders/archive", (req, res) => {
 
 // ============= START SERVER =============
 const PORT = process.env.PORT || 3001;
-
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "customer.html")));
-
 app.listen(PORT, () => {
   console.log(`🍕 Pizza Pre-Order Backend running on http://localhost:${PORT}`);
   console.log(`📂 Data stored in: ${DATA_DIR}`);
   console.log(`📧 Resend email: ${resend ? "enabled" : "disabled (set RESEND_API_KEY)"}`);
+  console.log(`⚙️  Capacity mode: ${getCapacityMode()}`);
   console.log(`\n📱 Customer page: http://localhost:${PORT}/customer.html`);
   console.log(`👨‍🍳 Chef dashboard: http://localhost:${PORT}/chef.html`);
 });
