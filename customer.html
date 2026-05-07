@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order Pizza</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { overflow-y: scroll; -webkit-overflow-scrolling: touch; }
@@ -139,6 +139,148 @@
     @media (min-width: 769px) and (max-width: 1024px) {
       .time-slots-grid { grid-template-columns: repeat(2, 1fr); }
       .menu-preview { grid-template-columns: repeat(2, 1fr); }
+    }
+    /* ============= ROCK & ROLL THEME ============= */
+    body.theme-rockandroll {
+      --cream:         #0f0f0f;
+      --warm-white:    #1a1a1a;
+      --stone:         #2a2a2a;
+      --stone-dark:    #3a3a3a;
+      --ink:           #ffffff;
+      --ink-light:     #cccccc;
+      --ink-faint:     #888888;
+      --terracotta:    #e83a2e;
+      --terra-light:   #2a1212;
+      --serif:         'Barlow Condensed', 'Inter', sans-serif;
+      --sans:          'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f0f0f;
+    }
+    body.theme-rockandroll .site-header {
+      background: #000000;
+      border-bottom: 2px solid var(--terracotta);
+    }
+    body.theme-rockandroll .site-header h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: -1px;
+      color: #ffffff;
+    }
+    body.theme-rockandroll .site-header .subtitle {
+      font-family: 'Inter', sans-serif;
+      font-style: normal;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 0.75rem;
+      color: var(--terracotta);
+    }
+    body.theme-rockandroll h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 2rem;
+    }
+    body.theme-rockandroll .card {
+      border-color: var(--stone);
+      background: var(--warm-white);
+    }
+    body.theme-rockandroll .pizza-card h3 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 1.3rem;
+    }
+    body.theme-rockandroll .pizza-card .price {
+      color: var(--terracotta);
+      font-weight: 700;
+    }
+    body.theme-rockandroll .slot-time {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 2.5rem;
+      text-transform: uppercase;
+    }
+    body.theme-rockandroll .button,
+    body.theme-rockandroll .time-nav-button,
+    body.theme-rockandroll .quantity-controls button {
+      background: var(--terracotta) !important;
+      border-color: var(--terracotta) !important;
+      border-radius: 2px !important;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+    body.theme-rockandroll .button:hover:not(:disabled),
+    body.theme-rockandroll .time-nav-button:hover:not(:disabled),
+    body.theme-rockandroll .quantity-controls button:hover:not(:disabled) {
+      background: #c0291f !important;
+    }
+    body.theme-rockandroll .button.secondary {
+      background: transparent !important;
+      color: var(--ink) !important;
+      border: 1px solid var(--stone-dark) !important;
+    }
+    body.theme-rockandroll .button.secondary:hover:not(:disabled) {
+      background: var(--stone) !important;
+      border-color: var(--ink) !important;
+    }
+    body.theme-rockandroll .step.completed .step-number {
+      background: var(--terracotta) !important;
+      border-color: var(--terracotta) !important;
+    }
+    body.theme-rockandroll .cart-summary {
+      background: #000000;
+      border: 1px solid var(--terracotta);
+    }
+    body.theme-rockandroll .pizza-select-item {
+      background: var(--stone);
+      border-color: var(--stone-dark);
+    }
+    body.theme-rockandroll .checkbox-group label {
+      background: var(--stone);
+      border-color: var(--stone-dark);
+    }
+    body.theme-rockandroll .pizza-card {
+      background: var(--warm-white);
+      border-color: var(--stone);
+    }
+    body.theme-rockandroll .time-slot-card {
+      background: var(--warm-white);
+      border-color: var(--stone);
+    }
+    body.theme-rockandroll .time-slot-card.full {
+      background: #0f0f0f;
+    }
+    body.theme-rockandroll .pizza-mod-item {
+      background: var(--warm-white);
+      border-color: var(--stone);
+    }
+    body.theme-rockandroll .order-summary-box {
+      background: var(--stone);
+      border-color: var(--stone-dark);
+    }
+    body.theme-rockandroll .contact-note {
+      background: var(--terra-light);
+      border-left-color: var(--terracotta);
+    }
+    body.theme-rockandroll input,
+    body.theme-rockandroll select,
+    body.theme-rockandroll textarea {
+      background: var(--stone) !important;
+      border-color: var(--stone-dark) !important;
+      color: var(--ink) !important;
+    }
+    body.theme-rockandroll input:focus,
+    body.theme-rockandroll select:focus,
+    body.theme-rockandroll textarea:focus {
+      border-color: var(--terracotta) !important;
+    }
+    body.theme-rockandroll .pizza-card .description {
+      color: var(--ink-faint);
     }
   </style>
 </head>
@@ -315,6 +457,10 @@
         document.getElementById('business-name').textContent = settings.businessName || 'Pizza Truck no.1';
         document.getElementById('business-tagline').textContent = settings.tagline || 'Fresh. Fast. Delicious.';
         document.title = settings.businessName || 'Order';
+
+        // Apply theme
+        const theme = settings.theme || 'classic';
+        document.body.className = theme === 'rockandroll' ? 'theme-rockandroll' : '';
 
         if (!checkOrderingAvailable()) { showOrderingClosedMessage(); return; }
 
