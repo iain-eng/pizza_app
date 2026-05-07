@@ -375,6 +375,35 @@
               <label>Chef Password</label>
               <input type="password" id="settings-password" placeholder="Leave blank to keep current password">
             </div>
+            <h3 style="margin-top:30px;margin-bottom:15px;border-bottom:1px solid var(--stone);padding-bottom:10px;">Customer Page Theme</h3>
+            <div class="info-box">
+              <h4>About Themes</h4>
+              <p>Choose how your customer ordering page looks. Changes take effect immediately when saved.</p>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+              <label style="cursor:pointer;">
+                <input type="radio" name="settings-theme" id="theme-classic" value="classic" style="display:none;">
+                <div id="theme-classic-preview" style="border:2px solid var(--stone);border-radius:4px;padding:1.25rem;text-align:center;transition:border-color 0.15s;">
+                  <div style="background:#faf8f4;border:1px solid #e8e2d9;border-radius:3px;padding:1rem;margin-bottom:0.75rem;">
+                    <div style="font-family:Georgia,serif;font-size:1rem;font-weight:700;color:#1c1917;margin-bottom:0.25rem;">Classic</div>
+                    <div style="font-size:0.75rem;color:#c2714f;font-weight:600;">£12.00</div>
+                  </div>
+                  <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Classic</div>
+                  <div style="font-size:0.75rem;color:var(--ink-faint);">Warm, elegant, serif</div>
+                </div>
+              </label>
+              <label style="cursor:pointer;">
+                <input type="radio" name="settings-theme" id="theme-rockandroll" value="rockandroll" style="display:none;">
+                <div id="theme-rockandroll-preview" style="border:2px solid var(--stone);border-radius:4px;padding:1.25rem;text-align:center;transition:border-color 0.15s;">
+                  <div style="background:#0f0f0f;border:1px solid #2a2a2a;border-radius:3px;padding:1rem;margin-bottom:0.75rem;">
+                    <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.25rem;">Rock & Roll</div>
+                    <div style="font-size:0.75rem;color:#e83a2e;font-weight:700;">£12.00</div>
+                  </div>
+                  <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Rock & Roll</div>
+                  <div style="font-size:0.75rem;color:var(--ink-faint);">Bold, dark, high contrast</div>
+                </div>
+              </label>
+            </div>
             <h3 style="margin-top:30px;margin-bottom:15px;border-bottom:1px solid var(--stone);padding-bottom:10px;">Service Schedule</h3>
             <div class="info-box">
               <h4>About Service Schedule</h4>
@@ -745,8 +774,26 @@
         document.getElementById('settings-logo').value = settings.logo || '';
         document.getElementById('settings-password').value = '';
         if (!settings.serviceSchedule) settings.serviceSchedule = [];
+        setThemeRadio(settings.theme || 'classic');
         renderSchedule(); previewSettings();
       } catch (error) { console.error('Failed to load settings:', error); }
+    }
+
+    function setThemeRadio(theme) {
+      document.querySelectorAll('input[name="settings-theme"]').forEach(radio => {
+        radio.checked = radio.value === theme;
+      });
+      updateThemePreviews(theme);
+    }
+
+    function updateThemePreviews(theme) {
+      ['classic', 'rockandroll'].forEach(t => {
+        const preview = document.getElementById(`theme-${t}-preview`);
+        if (preview) {
+          preview.style.borderColor = t === theme ? 'var(--ink)' : 'var(--stone)';
+          preview.style.background = t === theme ? 'var(--cream)' : '';
+        }
+      });
     }
 
     function renderSchedule() {
@@ -798,7 +845,8 @@
 
     async function saveSettings(e) {
       e.preventDefault();
-      const data = { businessName: document.getElementById('settings-name').value, tagline: document.getElementById('settings-tagline').value, logo: document.getElementById('settings-logo').value, serviceSchedule: settings.serviceSchedule };
+      const selectedTheme = document.querySelector('input[name="settings-theme"]:checked');
+      const data = { businessName: document.getElementById('settings-name').value, tagline: document.getElementById('settings-tagline').value, logo: document.getElementById('settings-logo').value, serviceSchedule: settings.serviceSchedule, theme: selectedTheme ? selectedTheme.value : 'classic' };
       const password = document.getElementById('settings-password').value;
       if (password) data.chefPassword = password;
       try {
@@ -821,6 +869,16 @@
       const taglineInput = document.getElementById('settings-tagline');
       if (nameInput) nameInput.addEventListener('input', previewSettings);
       if (taglineInput) taglineInput.addEventListener('input', previewSettings);
+      document.querySelectorAll('input[name="settings-theme"]').forEach(radio => {
+        radio.addEventListener('change', () => updateThemePreviews(radio.value));
+      });
+      ['classic', 'rockandroll'].forEach(t => {
+        const preview = document.getElementById(`theme-${t}-preview`);
+        if (preview) preview.addEventListener('click', () => {
+          document.getElementById(`theme-${t}`).checked = true;
+          updateThemePreviews(t);
+        });
+      });
     });
 
     function countUniqueOrders(orderList) {
