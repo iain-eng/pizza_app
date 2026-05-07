@@ -514,6 +514,7 @@ app.post("/api/orders", (req, res) => {
   const orders = readJSON(ORDERS_FILE);
   const newOrder = {
     id: Date.now().toString(),
+    groupId: req.body.groupId || null,
     slotId,
     items: enrichedItems,
     customer: { name: customer.name, email: customer.email, phone: customer.phone || "" },
