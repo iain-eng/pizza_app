@@ -136,8 +136,7 @@
     .order-card-item-mods { font-size: 0.8rem; color: var(--terracotta); margin-top: 0.15rem; }
     .order-card-item-note { font-size: 0.78rem; color: var(--ink-faint); font-style: italic; margin-top: 0.1rem; }
     .order-card-comments { background: var(--terra-light); border-left: 3px solid var(--terracotta); padding: 0.5rem 0.75rem; border-radius: 0 3px 3px 0; font-size: 0.8rem; color: var(--ink-light); margin-bottom: 1rem; }
-    .order-card-linked { font-size: 0.8rem; color: var(--ink-light); background: var(--cream); border: 1px solid var(--stone); border-left: 3px solid var(--stone-dark); border-radius: 0 3px 3px 0; padding: 0.375rem 0.625rem; margin-bottom: 0.75rem; }
-    .order-card-has-link { border-left: 3px solid var(--stone-dark); }
+    .order-card-grouped { border-left: 3px solid var(--ink); }
     .order-card-collect-btn { width: 100%; padding: 0.625rem; background: var(--ink) !important; color: #ffffff !important; border: none; border-radius: 3px; font-size: 0.875rem; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: background 0.15s; }
     .order-card-collect-btn:hover { background: #2d2926 !important; }
     .order-card-collect-btn.collected { background: var(--stone) !important; color: var(--ink-faint) !important; cursor: default; }
@@ -1203,43 +1202,116 @@
         return;
       }
 
-      // Group by slot time
-      const bySlot = {};
+      // Separate grouped orders (multi-slot) from single orders
+      const usedIds = new Set();
+      const displayItems = []; // each item is either a single order or an array of grouped orders
+
+      // First pass — collect groups
+      const groups = {};
       activeOrders.forEach(order => {
-        const time = order.slotTime || 'Unknown';
+        if (order.groupId) {
+          if (!groups[order.groupId]) groups[order.groupId] = [];
+          groups[order.groupId].push(order);
+        }
+      });
+
+      // Build display list in slot-time order
+      // Get the earliest slot time per group for sorting
+      const getEarliestSlotTime = (groupOrders) => {
+        return groupOrders.map(o => o.slotTime || '99:99').sort()[0];
+      };
+
+      activeOrders.forEach(order => {
+        if (usedIds.has(order.id)) return;
+        if (order.groupId && groups[order.groupId] && groups[order.groupId].length > 1) {
+          const group = groups[order.groupId];
+          group.forEach(o => usedIds.add(o.id));
+          displayItems.push({ type: 'group', orders: group, sortTime: getEarliestSlotTime(group) });
+        } else {
+          usedIds.add(order.id);
+          displayItems.push({ type: 'single', orders: [order], sortTime: order.slotTime || '99:99' });
+        }
+      });
+
+      // Sort all display items by earliest slot time
+      displayItems.sort((a, b) => a.sortTime.localeCompare(b.sortTime));
+
+      // Group display items into slot-time sections (by earliest slot for groups)
+      const bySlot = {};
+      displayItems.forEach(item => {
+        const time = item.sortTime;
         if (!bySlot[time]) bySlot[time] = [];
-        bySlot[time].push(order);
+        bySlot[time].push(item);
       });
 
       const sortedTimes = Object.keys(bySlot).sort();
 
       container.innerHTML = sortedTimes.map(time => {
-        const slotOrders = bySlot[time];
-        const activeCount = slotOrders.filter(o => o.status !== 'completed').length;
+        const slotItems = bySlot[time];
+        const activeCount = slotItems.filter(item =>
+          item.orders.every(o => o.status !== 'completed')
+        ).length;
         return `
           <div class="service-slot-section">
             <div class="service-slot-header">
               <span>${time}</span>
-              <span class="service-slot-count">${activeCount} remaining · ${slotOrders.length} total</span>
+              <span class="service-slot-count">${activeCount} remaining · ${slotItems.length} total</span>
             </div>
             <div class="order-cards-grid">
-              ${slotOrders.map(order => renderOrderCard(order)).join('')}
+              ${slotItems.map(item =>
+                item.type === 'group'
+                  ? renderGroupedOrderCard(item.orders)
+                  : renderOrderCard(item.orders[0])
+              ).join('')}
             </div>
           </div>`;
       }).join('');
     }
 
-    function findLinkedOrders(order) {
-      // Orders from same customer submitted within 5 seconds, different slot
-      const orderTime = new Date(order.createdAt).getTime();
-      return orders.filter(o =>
-        o.id !== order.id &&
-        o.status !== 'cancelled' &&
-        o.customer.email === order.customer.email &&
-        o.customer.phone === order.customer.phone &&
-        o.slotId !== order.slotId &&
-        Math.abs(new Date(o.createdAt).getTime() - orderTime) <= 5000
-      );
+    function renderGroupedOrderCard(groupOrders) {
+      const isCollected = groupOrders.every(o => o.status === 'completed');
+      const sortedOrders = [...groupOrders].sort((a, b) => (a.slotTime || '').localeCompare(b.slotTime || ''));
+      const firstOrder = sortedOrders[0];
+      const groupTotal = groupOrders.reduce((sum, o) => sum + o.total, 0);
+      const groupIds = groupOrders.map(o => `'${o.id}'`).join(',');
+
+      const slotsHtml = sortedOrders.map(order => {
+        const itemsHtml = order.items.map(item => {
+          const mods = item.modifications && item.modifications.length > 0
+            ? `<div class="order-card-item-mods">${item.modifications.join(', ')}</div>` : '';
+          const note = item.pizzaComments
+            ? `<div class="order-card-item-note">"${item.pizzaComments}"</div>` : '';
+          return `<div class="order-card-item">
+            <span class="order-card-item-name">${item.name}</span> ×${item.quantity}
+            ${mods}${note}
+          </div>`;
+        }).join('');
+
+        return `<div style="margin-bottom:0.75rem;">
+          <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-faint);margin-bottom:0.375rem;">Pickup ${order.slotTime}</div>
+          ${itemsHtml}
+        </div>`;
+      }).join('');
+
+      const commentsHtml = firstOrder.comments
+        ? `<div class="order-card-comments">${firstOrder.comments}</div>` : '';
+
+      return `<div class="order-card order-card-grouped${isCollected ? ' status-completed' : ''}">
+        <div class="order-card-header">
+          <div>
+            <div class="order-card-customer">${firstOrder.customer.name}</div>
+            <div class="order-card-id">${firstOrder.customer.phone || firstOrder.customer.email} · ${sortedOrders.length} slots</div>
+          </div>
+          <div class="order-card-total">£${groupTotal.toFixed(2)}</div>
+        </div>
+        <div class="order-card-items">${slotsHtml}</div>
+        ${commentsHtml}
+        <button class="order-card-collect-btn${isCollected ? ' collected' : ''}"
+          onclick="${isCollected ? '' : `markGroupCollected([${groupIds}])`}"
+          ${isCollected ? 'disabled' : ''}>
+          ${isCollected ? 'Collected' : 'Mark All as Collected'}
+        </button>
+      </div>`;
     }
 
     function renderOrderCard(order) {
@@ -1258,15 +1330,7 @@
       const commentsHtml = order.comments
         ? `<div class="order-card-comments">${order.comments}</div>` : '';
 
-      // Linked orders — same customer, same submission window, different slot
-      const linked = findLinkedOrders(order);
-      const linkedHtml = linked.length > 0
-        ? `<div class="order-card-linked">
-            Also collecting at ${linked.map(o => `<strong>${o.slotTime}</strong>`).join(', ')}
-           </div>`
-        : '';
-
-      return `<div class="order-card${isCollected ? ' status-completed' : ''}${linked.length > 0 ? ' order-card-has-link' : ''}">
+      return `<div class="order-card${isCollected ? ' status-completed' : ''}">
         <div class="order-card-header">
           <div>
             <div class="order-card-customer">${order.customer.name}</div>
@@ -1276,7 +1340,6 @@
         </div>
         <div class="order-card-items">${itemsHtml}</div>
         ${commentsHtml}
-        ${linkedHtml}
         <button class="order-card-collect-btn${isCollected ? ' collected' : ''}"
           onclick="${isCollected ? '' : `markCollected('${order.id}')`}"
           ${isCollected ? 'disabled' : ''}>
@@ -1297,6 +1360,22 @@
         renderStats();
         renderPizzaBreakdown();
       } catch (error) { alert('Failed to update order'); }
+    }
+
+    async function markGroupCollected(orderIds) {
+      try {
+        await Promise.all(orderIds.map(id =>
+          fetch(`${API_URL}/orders/${id}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'completed' })
+          })
+        ));
+        await loadData();
+        renderServiceView();
+        renderStats();
+        renderPizzaBreakdown();
+      } catch (error) { alert('Failed to update orders'); }
     }
 
     function printRunSheet() {
