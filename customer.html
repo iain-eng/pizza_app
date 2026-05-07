@@ -68,8 +68,10 @@
 
     .pizza-selector { border-top: 1px solid var(--stone); padding-top: 1rem; }
     .pizza-select-item { display: flex; justify-content: space-between; align-items: center; padding: 0.625rem 0.75rem; margin-bottom: 0.5rem; background: var(--cream); border: 1px solid var(--stone); border-radius: 3px; }
+    .pizza-select-item.item-unavailable { opacity: 0.5; }
     .pizza-select-name { font-weight: 500; color: var(--ink); flex: 1; font-size: 0.875rem; }
     .pizza-select-price { color: var(--terracotta); font-weight: 600; margin-right: 1rem; font-size: 0.875rem; }
+    .item-availability-note { font-size: 0.75rem; color: var(--terracotta); margin-top: 2px; }
     .quantity-controls { display: flex; align-items: center; gap: 0.625rem; }
     .quantity-controls button { background: var(--ink) !important; color: #ffffff !important; border: none; width: 28px; height: 28px; font-size: 1rem; cursor: pointer; transition: background 0.15s; font-weight: 500; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-family: var(--sans); }
     .quantity-controls button:hover:not(:disabled) { background: #2d2926 !important; }
@@ -151,7 +153,7 @@
     <div id="error" class="error"></div>
 
     <div class="step-indicator">
-      <div class="step active" id="step-1"><span class="step-number">1</span><span>Choose pizzas</span></div>
+      <div class="step active" id="step-1"><span class="step-number">1</span><span>Choose items</span></div>
       <div class="step-divider"></div>
       <div class="step" id="step-2"><span class="step-number">2</span><span>Customise</span></div>
       <div class="step-divider"></div>
@@ -161,7 +163,7 @@
     <!-- Step 1 -->
     <div id="selection-section">
       <div class="card">
-        <h2>Our Pizzas</h2>
+        <h2>Our Menu</h2>
         <div id="menu-preview" class="menu-preview"></div>
       </div>
 
@@ -171,7 +173,7 @@
           <label style="display:block; font-weight:500; margin-bottom:0.5rem; font-size:0.875rem;">Select Service Date</label>
           <select id="service-date-select" onchange="changeServiceDate()"></select>
         </div>
-        <p style="color: var(--ink-light); margin-bottom: 1.25rem; font-size:0.9rem;">Select a time slot and add pizzas below:</p>
+        <p style="color: var(--ink-light); margin-bottom: 1.25rem; font-size:0.9rem;">Select a time slot and add items below:</p>
         <div class="time-navigation">
           <button class="time-nav-button" id="prev-hour" onclick="changeHour(-1)">← Previous</button>
           <div class="current-time-range" id="current-hour-range">Loading...</div>
@@ -180,13 +182,13 @@
         <div id="time-slots-display" class="time-slots-grid"></div>
       </div>
 
-      <button id="next-to-mods" class="button" disabled>Next: Customise Pizzas</button>
+      <button id="next-to-mods" class="button" disabled>Next: Customise</button>
     </div>
 
     <!-- Step 2: Modifications -->
     <div id="modifications-section" class="modifications-section">
       <div class="card">
-        <h2>Customise Your Pizzas</h2>
+        <h2>Customise Your Order</h2>
         <div id="modifications-list"></div>
       </div>
       <div style="display: flex; gap: 1rem;">
@@ -239,7 +241,7 @@
         <div id="success-order-summary" class="order-summary-box" style="margin: 2rem 0; text-align: left;"></div>
         <div class="contact-note" style="text-align: left;">
           <strong>Need to change something?</strong><br>
-          Please contact us as soon as possible. We'll do our best to accommodate changes before we start preparing your pizzas.
+          Please contact us as soon as possible. We'll do our best to accommodate changes before we start preparing your order.
         </div>
         <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--stone);">
           <a href="javascript:location.reload()" style="color: var(--ink-faint); font-size: 0.875rem; text-decoration: none; border-bottom: 1px solid var(--stone-dark); padding-bottom: 1px;">Place another order</a>
@@ -252,10 +254,11 @@
     const API_URL = '/api';
     let menu = [];
     let slots = [];
-    let extras = []; // loaded dynamically from server
+    let extras = [];
     let cart = {};
     let pizzaModifications = {};
     let settings = {};
+    let capacityMode = 'total';
     let currentStep = 1;
     let currentHourIndex = 0;
     let hourRanges = [];
@@ -302,10 +305,16 @@
         slots = await slotsRes.json();
         settings = await settingsRes.json();
         extras = await extrasRes.json();
+        capacityMode = settings.capacityMode || 'total';
+
+        // Pull capacityMode from slots response if available
+        if (slots.length > 0 && slots[0].capacityMode) {
+          capacityMode = slots[0].capacityMode;
+        }
 
         document.getElementById('business-name').textContent = settings.businessName || 'Pizza Truck no.1';
         document.getElementById('business-tagline').textContent = settings.tagline || 'Fresh. Fast. Delicious.';
-        document.title = settings.businessName || 'Order Pizza';
+        document.title = settings.businessName || 'Order';
 
         if (!checkOrderingAvailable()) { showOrderingClosedMessage(); return; }
 
@@ -407,6 +416,35 @@
       `).join('');
     }
 
+    // Get how many of a specific item are in the cart for a given slot
+    function getItemCartCount(slotId, menuId) {
+      const key = `${slotId}-${menuId}`;
+      return cart[key] ? cart[key].quantity : 0;
+    }
+
+    // Check if a specific item can be added in a slot (handles both capacity modes)
+    function canAddItem(slot, menuId) {
+      if (capacityMode === 'per-item') {
+        const itemAvail = slot.itemAvailability ? slot.itemAvailability[menuId] : null;
+        if (itemAvail && itemAvail.remaining !== null) {
+          const inCart = getItemCartCount(slot.id, menuId);
+          return (itemAvail.remaining - inCart) > 0;
+        }
+        return true; // null remaining = unlimited
+      } else {
+        return getSlotTotal(slot.id) < slot.remaining;
+      }
+    }
+
+    // Get remaining for display in per-item mode
+    function getItemRemaining(slot, menuId) {
+      if (capacityMode !== 'per-item') return null;
+      const itemAvail = slot.itemAvailability ? slot.itemAvailability[menuId] : null;
+      if (!itemAvail || itemAvail.remaining === null) return null; // unlimited
+      const inCart = getItemCartCount(slot.id, menuId);
+      return Math.max(0, itemAvail.remaining - inCart);
+    }
+
     function renderCurrentHourSlots() {
       if (hourRanges.length === 0) {
         document.getElementById('time-slots-display').innerHTML = '<div class="no-slots-message">No time slots available</div>';
@@ -424,25 +462,61 @@
       const availableMenu = menu.filter(item => item.available);
 
       display.innerHTML = currentRange.slots.map(slot => {
-        const isFull = slot.remaining <= 0;
-        const isLow = slot.remaining <= 2 && slot.remaining > 0;
-        if (isFull) {
+        // In total mode, check overall slot capacity
+        // In per-item mode, slot is "full" only if ALL limited items are at 0
+        let slotIsFull = false;
+        if (capacityMode === 'total') {
+          slotIsFull = slot.remaining <= 0;
+        } else {
+          // Full if every item with a limit has 0 remaining (unlimited items always available)
+          const limitedItems = availableMenu.filter(m => {
+            const avail = slot.itemAvailability ? slot.itemAvailability[m.id] : null;
+            return avail && avail.remaining !== null;
+          });
+          slotIsFull = limitedItems.length > 0 && limitedItems.every(m => {
+            const inCart = getItemCartCount(slot.id, m.id);
+            const avail = slot.itemAvailability[m.id];
+            return (avail.remaining - inCart) <= 0;
+          });
+        }
+
+        const isLow = capacityMode === 'total' && slot.remaining <= 2 && slot.remaining > 0;
+
+        if (slotIsFull) {
           return `<div class="time-slot-card full">
             <div class="slot-time">${slot.time}</div>
             <div class="slot-full">Fully booked</div>
           </div>`;
         }
+
+        const capacityLine = capacityMode === 'total'
+          ? `<div class="slot-capacity ${isLow ? 'low' : ''}">${slot.remaining} of ${slot.capacity} available</div>`
+          : `<div class="slot-capacity">Select items below</div>`;
+
         return `<div class="time-slot-card">
           <div class="slot-time">${slot.time}</div>
-          <div class="slot-capacity ${isLow ? 'low' : ''}">${slot.remaining} of ${slot.capacity} available</div>
+          ${capacityLine}
           <div class="pizza-selector">
             ${availableMenu.map(pizza => {
-              const key = `${slot.id}-${pizza.id}`;
-              const qty = cart[key] ? cart[key].quantity : 0;
-              const slotTotal = getSlotTotal(slot.id);
-              const canAdd = slotTotal < slot.remaining;
-              return `<div class="pizza-select-item">
-                <div class="pizza-select-name">${pizza.name}</div>
+              const qty = getItemCartCount(slot.id, pizza.id);
+              const remaining = getItemRemaining(slot, pizza.id);
+              const canAdd = canAddItem(slot, pizza.id);
+              const isItemFull = remaining !== null && remaining <= 0 && qty === 0;
+
+              let availNote = '';
+              if (capacityMode === 'per-item' && remaining !== null) {
+                if (remaining === 0 && qty === 0) {
+                  availNote = `<div class="item-availability-note">Sold out this slot</div>`;
+                } else if (remaining <= 2 && remaining > 0) {
+                  availNote = `<div class="item-availability-note">${remaining} left this slot</div>`;
+                }
+              }
+
+              return `<div class="pizza-select-item${isItemFull ? ' item-unavailable' : ''}">
+                <div style="flex:1;">
+                  <div class="pizza-select-name">${pizza.name}</div>
+                  ${availNote}
+                </div>
                 <div class="pizza-select-price">£${pizza.price.toFixed(2)}</div>
                 <div class="quantity-controls">
                   <button onclick="changeQuantity('${slot.id}', '${pizza.id}', -1)" ${qty === 0 ? 'disabled' : ''}>−</button>
@@ -474,7 +548,9 @@
       if (!slot || !pizza) return;
       const current = cart[key] ? cart[key].quantity : 0;
       const newQty = Math.max(0, current + delta);
-      if (delta > 0 && getSlotTotal(slotId) >= slot.remaining) return;
+
+      if (delta > 0 && !canAddItem(slot, menuId)) return;
+
       if (newQty === 0) {
         delete cart[key];
         Object.keys(pizzaModifications).forEach(modKey => { if (modKey.startsWith(key + '-')) delete pizzaModifications[modKey]; });
@@ -512,7 +588,6 @@
       const availableExtras = extras.filter(e => e.available);
       let html = '';
 
-      // If no extras configured, show a simple message
       if (availableExtras.length === 0) {
         html = `<p style="color:var(--ink-faint); text-align:center; padding: 1rem;">No customisation options available. Click Next to continue.</p>`;
         modList.innerHTML = html;
@@ -540,13 +615,13 @@
               `).join('')}
             </div>
             <div class="form-group">
-              <label>Special instructions for this pizza</label>
-              <input type="text" id="comment-${uniqueId}" value="${mods.comments}" placeholder="e.g. Extra crispy, light on sauce..." onchange="updatePizzaComment('${uniqueId}', this.value)">
+              <label>Special instructions for this item</label>
+              <input type="text" id="comment-${uniqueId}" value="${mods.comments}" placeholder="e.g. Extra crispy, no sauce..." onchange="updatePizzaComment('${uniqueId}', this.value)">
             </div>
           </div>`;
         }
       });
-      modList.innerHTML = html || '<p style="color:var(--ink-faint)">No pizzas selected</p>';
+      modList.innerHTML = html || '<p style="color:var(--ink-faint)">No items selected</p>';
     }
 
     function updateModification(uniqueId, checkbox) {
