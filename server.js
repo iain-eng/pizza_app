@@ -19,7 +19,7 @@ const resend = Resend && process.env.RESEND_API_KEY
 const FROM_EMAIL = "orders@orders.reorientplaces.com";
 const CHEF_EMAIL = "admin@reorientplaces.com";
 
-function buildCustomerEmail(order, businessName, slot) {
+function buildCustomerEmail(order, businessName, slot, baseUrl) {
   const itemRows = order.items.map(item => {
     const mods = item.modifications && item.modifications.length > 0
       ? `<div style="font-size:13px;color:#a8a29e;margin-top:3px;">${item.modifications.join(", ")}</div>`
@@ -50,6 +50,10 @@ function buildCustomerEmail(order, businessName, slot) {
         <strong>Your note:</strong> ${order.comments}
        </div>`
     : "";
+
+  const cancelUrl = `${baseUrl}/cancel/${order.id}`;
+  const contactSubject = encodeURIComponent(`Order #${order.id.slice(-6)} — amendment request`);
+  const contactUrl = `mailto:${CHEF_EMAIL}?subject=${contactSubject}`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -93,8 +97,20 @@ function buildCustomerEmail(order, businessName, slot) {
                 </tfoot>
               </table>
               ${commentsBlock}
-              <div style="margin-top:28px;padding-top:20px;border-top:1px solid #e8e2d9;font-size:13px;color:#a8a29e;line-height:1.6;">
-                Please collect your order within 20 minutes of your time slot. If you need to make any changes, get in touch as soon as possible.
+
+              <!-- Cancel / Contact actions -->
+              <div style="margin-top:28px;padding-top:20px;border-top:1px solid #e8e2d9;">
+                <p style="margin:0 0 14px;font-size:13px;color:#a8a29e;line-height:1.6;">Need to make a change? You can cancel your order below, or get in touch if you'd like to amend it.</p>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding-right:6px;">
+                      <a href="${cancelUrl}" style="display:block;text-align:center;padding:10px;background:#1c1917;color:#ffffff;text-decoration:none;border-radius:3px;font-size:13px;font-weight:600;">Cancel Order</a>
+                    </td>
+                    <td style="padding-left:6px;">
+                      <a href="${contactUrl}" style="display:block;text-align:center;padding:10px;background:#ffffff;color:#1c1917;text-decoration:none;border-radius:3px;font-size:13px;font-weight:600;border:1px solid #e8e2d9;">Contact Us</a>
+                    </td>
+                  </tr>
+                </table>
               </div>
             </td>
           </tr>
@@ -126,13 +142,64 @@ function buildChefText(order, businessName, slot) {
   return `New order for ${businessName}\n\nOrder #${order.id.slice(-6)}\n${serviceDate ? `Service date: ${serviceDate}\n` : ""}Pickup slot: ${slot ? slot.time : "Unknown"}\n\nCustomer: ${order.customer.name}\nEmail: ${order.customer.email}\nPhone: ${order.customer.phone || "Not provided"}\n\nItems:\n${itemLines}\n${order.comments ? `\nOrder note: ${order.comments}` : ""}\n\nTotal: £${order.total.toFixed(2)}\n`;
 }
 
-async function sendOrderEmails(order, businessName, slot) {
+async function sendOrderEmails(order, businessName, slot, baseUrl) {
   if (!resend) { console.log("Email skipped — Resend not configured"); return; }
   const subject = `Order confirmed — #${order.id.slice(-6)} — ${businessName}`;
-  resend.emails.send({ from: `${businessName} <${FROM_EMAIL}>`, to: order.customer.email, subject, html: buildCustomerEmail(order, businessName, slot) })
+  resend.emails.send({ from: `${businessName} <${FROM_EMAIL}>`, to: order.customer.email, subject, html: buildCustomerEmail(order, businessName, slot, baseUrl) })
     .catch(err => console.error("Customer email failed:", err.message));
   resend.emails.send({ from: `${businessName} <${FROM_EMAIL}>`, to: CHEF_EMAIL, subject: `New order #${order.id.slice(-6)} — ${order.customer.name} — ${slot ? slot.time : "?"}`, text: buildChefText(order, businessName, slot) })
     .catch(err => console.error("Chef email failed:", err.message));
+}
+
+async function sendCancellationEmails(order, businessName, slot) {
+  if (!resend) return;
+
+  const itemLines = order.items.map(i => `  ${i.quantity}x ${i.name} — £${i.price.toFixed(2)}`).join("\n");
+
+  // Chef notification
+  resend.emails.send({
+    from: `${businessName} <${FROM_EMAIL}>`,
+    to: CHEF_EMAIL,
+    subject: `Order CANCELLED #${order.id.slice(-6)} — ${order.customer.name} — ${slot ? slot.time : "?"}`,
+    text: `Order cancelled by customer\n\nOrder #${order.id.slice(-6)}\nPickup slot: ${slot ? slot.time : "Unknown"}\n\nCustomer: ${order.customer.name}\nEmail: ${order.customer.email}\nPhone: ${order.customer.phone || "Not provided"}\n\nItems:\n${itemLines}\n\nTotal: £${order.total.toFixed(2)}\n`
+  }).catch(err => console.error("Cancellation chef email failed:", err.message));
+
+  // Customer confirmation
+  resend.emails.send({
+    from: `${businessName} <${FROM_EMAIL}>`,
+    to: order.customer.email,
+    subject: `Order cancelled — #${order.id.slice(-6)} — ${businessName}`,
+    html: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Order Cancelled</title></head>
+<body style="margin:0;padding:0;background:#faf8f4;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf8f4;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+        <tr>
+          <td style="background:#ffffff;border:1px solid #e8e2d9;border-bottom:none;border-radius:4px 4px 0 0;padding:32px 32px 24px;text-align:center;">
+            <h1 style="margin:0 0 6px;font-family:Georgia,serif;font-size:26px;font-weight:700;color:#1c1917;">${businessName}</h1>
+            <p style="margin:0;color:#a8a29e;font-size:14px;">Order Cancelled</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#ffffff;border:1px solid #e8e2d9;border-top:none;border-bottom:none;padding:0 32px 32px;">
+            <p style="margin:0 0 16px;font-size:16px;color:#1c1917;">Your order <strong>#${order.id.slice(-6)}</strong> has been cancelled.</p>
+            <p style="margin:0 0 24px;font-size:14px;color:#57534e;">If you cancelled by mistake or would like to place a new order, please get in touch.</p>
+            <a href="mailto:${CHEF_EMAIL}?subject=Order%20%23${order.id.slice(-6)}%20-%20query" style="display:inline-block;padding:10px 20px;background:#1c1917;color:#ffffff;text-decoration:none;border-radius:3px;font-size:13px;font-weight:600;">Contact Us</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#faf8f4;border:1px solid #e8e2d9;border-top:none;border-radius:0 0 4px 4px;padding:16px 32px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#a8a29e;">Order #${order.id.slice(-6)}</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+  }).catch(err => console.error("Cancellation customer email failed:", err.message));
 }
 
 // ============= EXPRESS SETUP =============
@@ -460,7 +527,8 @@ app.post("/api/orders", (req, res) => {
   writeJSON(ORDERS_FILE, orders);
 
   const settings = readJSON(SETTINGS_FILE);
-  sendOrderEmails(newOrder, settings.businessName || "Pizza Truck no.1", slot);
+  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  sendOrderEmails(newOrder, settings.businessName || "Pizza Truck no.1", slot, baseUrl);
 
   res.json(newOrder);
 });
@@ -501,6 +569,198 @@ app.post("/api/auth/chef", (req, res) => {
   } else {
     res.status(401).json({ error: "Invalid password" });
   }
+});
+
+// ============= CANCEL ROUTES =============
+
+// Cancel page — served as HTML
+app.get("/cancel/:orderId", (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cancel Order</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    :root { --cream:#faf8f4; --warm-white:#ffffff; --stone:#e8e2d9; --stone-dark:#d4ccbf; --ink:#1c1917; --ink-light:#57534e; --ink-faint:#a8a29e; --terracotta:#c2714f; }
+    body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; background:var(--cream); color:var(--ink); min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1.5rem; }
+    .box { background:var(--warm-white); border:1px solid var(--stone); border-radius:4px; padding:2.5rem 2rem; max-width:480px; width:100%; text-align:center; }
+    h1 { font-family:'Playfair Display',Georgia,serif; font-size:1.75rem; font-weight:700; margin-bottom:0.5rem; color:var(--ink); }
+    .subtitle { color:var(--ink-faint); font-size:0.875rem; margin-bottom:2rem; }
+    .order-info { background:var(--cream); border:1px solid var(--stone); border-radius:4px; padding:1.25rem; margin-bottom:1.5rem; text-align:left; }
+    .order-info-row { display:flex; justify-content:space-between; padding:0.375rem 0; border-bottom:1px solid var(--stone); font-size:0.9rem; }
+    .order-info-row:last-child { border-bottom:none; }
+    .order-info-label { color:var(--ink-faint); }
+    .order-info-value { font-weight:600; color:var(--ink); }
+    .warning { background:#fef2f2; border:1px solid #fecaca; border-left:3px solid #ef4444; border-radius:3px; padding:0.875rem 1rem; margin-bottom:1.5rem; font-size:0.875rem; color:#991b1b; text-align:left; display:none; }
+    .warning.show { display:block; }
+    .btn { display:block; width:100%; padding:0.875rem; border:none; border-radius:3px; font-size:0.95rem; font-weight:600; cursor:pointer; font-family:inherit; transition:background 0.15s; text-decoration:none; margin-bottom:0.75rem; }
+    .btn-cancel { background:#dc2626; color:#ffffff; }
+    .btn-cancel:hover { background:#b91c1c; }
+    .btn-cancel:disabled { background:#a8a29e; cursor:not-allowed; }
+    .btn-contact { background:var(--warm-white); color:var(--ink); border:1px solid var(--stone-dark); display:block; }
+    .btn-contact:hover { background:var(--cream); }
+    .success { display:none; }
+    .success.show { display:block; }
+    .loading { color:var(--ink-faint); font-size:0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="box" id="main-box">
+    <h1 id="business-title">Loading...</h1>
+    <p class="subtitle">Order Management</p>
+    <div id="loading" class="loading">Loading order details...</div>
+    <div id="order-content" style="display:none;">
+      <div class="order-info" id="order-info"></div>
+      <div class="warning" id="warning-msg"></div>
+      <button class="btn btn-cancel" id="cancel-btn" onclick="confirmCancel()">Cancel My Order</button>
+      <a class="btn btn-contact" id="contact-link" href="#">Contact Us to Amend</a>
+    </div>
+    <div class="success" id="success-content">
+      <p style="font-size:1.1rem;font-weight:600;color:var(--ink);margin-bottom:0.75rem;">Your order has been cancelled.</p>
+      <p style="font-size:0.875rem;color:var(--ink-faint);">You'll receive a confirmation email shortly.</p>
+    </div>
+  </div>
+  <script>
+    const orderId = '${req.params.orderId}';
+    let orderData = null;
+    let businessName = '';
+
+    async function loadOrder() {
+      try {
+        const [orderRes, settingsRes] = await Promise.all([
+          fetch('/api/cancel/' + orderId),
+          fetch('/api/settings')
+        ]);
+        const settings = await settingsRes.json();
+        businessName = settings.businessName || 'Order';
+        document.getElementById('business-title').textContent = businessName;
+
+        if (!orderRes.ok) {
+          const err = await orderRes.json();
+          document.getElementById('loading').textContent = err.error || 'Order not found.';
+          return;
+        }
+
+        orderData = await orderRes.json();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('order-content').style.display = 'block';
+
+        const contactSubject = encodeURIComponent('Order #' + orderId.slice(-6) + ' — amendment request');
+        document.getElementById('contact-link').href = 'mailto:admin@reorientplaces.com?subject=' + contactSubject;
+
+        const itemLines = orderData.items.map(i => i.name + ' x' + i.quantity).join(', ');
+        document.getElementById('order-info').innerHTML =
+          '<div class="order-info-row"><span class="order-info-label">Order</span><span class="order-info-value">#' + orderId.slice(-6) + '</span></div>' +
+          '<div class="order-info-row"><span class="order-info-label">Pickup</span><span class="order-info-value">' + (orderData.slotTime || '—') + '</span></div>' +
+          '<div class="order-info-row"><span class="order-info-label">Items</span><span class="order-info-value">' + itemLines + '</span></div>' +
+          '<div class="order-info-row"><span class="order-info-label">Total</span><span class="order-info-value">£' + orderData.total.toFixed(2) + '</span></div>';
+
+        if (orderData.tooLate) {
+          const warning = document.getElementById('warning-msg');
+          warning.textContent = 'This order cannot be cancelled — it is within 30 minutes of the pickup time. Please contact us if you need help.';
+          warning.classList.add('show');
+          document.getElementById('cancel-btn').disabled = true;
+        }
+
+        if (orderData.status === 'cancelled') {
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('order-content').style.display = 'none';
+          document.getElementById('success-content').classList.add('show');
+        }
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Failed to load order. Please try again.';
+      }
+    }
+
+    async function confirmCancel() {
+      if (!confirm('Are you sure you want to cancel order #' + orderId.slice(-6) + '?')) return;
+      const btn = document.getElementById('cancel-btn');
+      btn.disabled = true;
+      btn.textContent = 'Cancelling...';
+      try {
+        const res = await fetch('/api/cancel/' + orderId, { method: 'POST' });
+        if (res.ok) {
+          document.getElementById('order-content').style.display = 'none';
+          document.getElementById('success-content').classList.add('show');
+        } else {
+          const err = await res.json();
+          const warning = document.getElementById('warning-msg');
+          warning.textContent = err.error || 'Failed to cancel order.';
+          warning.classList.add('show');
+          btn.disabled = false;
+          btn.textContent = 'Cancel My Order';
+        }
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = 'Cancel My Order';
+      }
+    }
+
+    loadOrder();
+  </script>
+</body>
+</html>`);
+});
+
+// Cancel API — GET (fetch order details for cancel page)
+app.get("/api/cancel/:orderId", (req, res) => {
+  const orders = readJSON(ORDERS_FILE);
+  const slots = readJSON(SLOTS_FILE);
+  const order = orders.find(o => o.id === req.params.orderId);
+  if (!order) return res.status(404).json({ error: "Order not found." });
+  if (order.status === "cancelled") return res.json({ ...order, tooLate: false });
+
+  const slot = slots.find(s => s.id === order.slotId);
+  const slotTime = slot ? slot.time : null;
+
+  // Check 30 min window
+  let tooLate = false;
+  if (slotTime) {
+    const today = new Date();
+    const [hours, minutes] = slotTime.split(":").map(Number);
+    const slotDate = new Date(today);
+    slotDate.setHours(hours, minutes, 0, 0);
+    tooLate = (slotDate - today) < 30 * 60 * 1000;
+  }
+
+  res.json({ ...order, slotTime, tooLate });
+});
+
+// Cancel API — POST (perform cancellation)
+app.post("/api/cancel/:orderId", (req, res) => {
+  const orders = readJSON(ORDERS_FILE);
+  const slots = readJSON(SLOTS_FILE);
+  const index = orders.findIndex(o => o.id === req.params.orderId);
+  if (index === -1) return res.status(404).json({ error: "Order not found." });
+
+  const order = orders[index];
+  if (order.status === "cancelled") return res.status(400).json({ error: "Order is already cancelled." });
+
+  const slot = slots.find(s => s.id === order.slotId);
+  const slotTime = slot ? slot.time : null;
+
+  // Enforce 30 min window
+  if (slotTime) {
+    const today = new Date();
+    const [hours, minutes] = slotTime.split(":").map(Number);
+    const slotDate = new Date(today);
+    slotDate.setHours(hours, minutes, 0, 0);
+    if ((slotDate - today) < 30 * 60 * 1000) {
+      return res.status(400).json({ error: "This order cannot be cancelled — it is within 30 minutes of the pickup time. Please contact us directly." });
+    }
+  }
+
+  orders[index].status = "cancelled";
+  writeJSON(ORDERS_FILE, orders);
+
+  const settings = readJSON(SETTINGS_FILE);
+  sendCancellationEmails(order, settings.businessName || "Pizza Truck no.1", slot);
+
+  res.json({ success: true });
 });
 
 // ============= ARCHIVE =============
