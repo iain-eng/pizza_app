@@ -1058,8 +1058,8 @@
       try {
         if (id) await fetch(`${API_URL}/menu/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         else await fetch(`${API_URL}/menu`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        closeModal('menu-modal'); await loadData(); renderMenu();
-        if (capacityMode === 'per-item') renderPerItemLimits();
+        closeModal('menu-modal'); await loadData(); renderMenu(); renderSlots();
+        if (capacityMode === 'per-item') { renderCapacityModeToggle(); }
       } catch (error) { alert('Failed to save menu item'); }
     }
 
