@@ -1230,14 +1230,15 @@
     }
 
     function findLinkedOrders(order) {
-      // Orders from same customer submitted within 60 seconds, different slot
+      // Orders from same customer submitted within 5 seconds, different slot
       const orderTime = new Date(order.createdAt).getTime();
       return orders.filter(o =>
         o.id !== order.id &&
         o.status !== 'cancelled' &&
         o.customer.email === order.customer.email &&
+        o.customer.phone === order.customer.phone &&
         o.slotId !== order.slotId &&
-        Math.abs(new Date(o.createdAt).getTime() - orderTime) <= 60000
+        Math.abs(new Date(o.createdAt).getTime() - orderTime) <= 5000
       );
     }
 
