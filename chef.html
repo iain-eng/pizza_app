@@ -103,9 +103,21 @@
     .extras-list-item:last-child { border-bottom: none; }
     .extra-name { font-weight: 500; color: var(--ink); }
     .extra-price { color: var(--terracotta); font-weight: 600; font-size: 1rem; }
-    .extra-available-badge { font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 10px; font-weight: 600; }
-    .extra-on { background: #c6f6d5; color: #22543d; }
-    .extra-off { background: var(--stone); color: var(--ink-faint); }
+
+    /* Capacity mode toggle */
+    .capacity-mode-toggle { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: var(--cream); border: 1px solid var(--stone); border-radius: 4px; margin-bottom: 1.5rem; }
+    .toggle-switch { position: relative; width: 48px; height: 26px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--stone-dark); border-radius: 26px; transition: 0.2s; }
+    .toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.2s; }
+    input:checked + .toggle-slider { background: var(--ink); }
+    input:checked + .toggle-slider:before { transform: translateX(22px); }
+    .toggle-label { font-size: 0.9rem; font-weight: 500; color: var(--ink); }
+    .toggle-description { font-size: 0.8rem; color: var(--ink-faint); margin-top: 2px; }
+
+    /* Per-item limit badge in slots table */
+    .item-limit-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.75rem; font-weight: 600; background: var(--terra-light); color: var(--terracotta); margin-left: 0.375rem; }
+
     @media (max-width: 768px) {
       .tabs { flex-direction: column; }
       .form-row { grid-template-columns: 1fr; }
@@ -146,12 +158,12 @@
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-value" id="stat-orders">0</div><div class="stat-label">Today's Orders</div></div>
         <div class="stat-card"><div class="stat-value" id="stat-revenue">£0</div><div class="stat-label">Revenue</div></div>
-        <div class="stat-card"><div class="stat-value" id="stat-pizzas">0</div><div class="stat-label">Total Pizzas to Make</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-pizzas">0</div><div class="stat-label">Total Items to Make</div></div>
       </div>
 
-      <!-- Pizza Breakdown -->
+      <!-- Item Breakdown -->
       <div class="card">
-        <h2>Pizza Breakdown (Active Orders)</h2>
+        <h2>Item Breakdown (Active Orders)</h2>
         <div id="pizza-breakdown" class="pizza-breakdown"></div>
       </div>
 
@@ -210,10 +222,10 @@
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
             <h2 style="margin:0;border:none;">Menu Items</h2>
-            <button class="primary" onclick="openAddMenu()">+ Add Pizza</button>
+            <button class="primary" onclick="openAddMenu()">+ Add Item</button>
           </div>
           <table>
-            <thead><tr><th>Image</th><th>Name</th><th>Description</th><th>Price</th><th>Available</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Image</th><th>Name</th><th>Description</th><th>Price</th><th>Slot Limit</th><th>Available</th><th>Actions</th></tr></thead>
             <tbody id="menu-list"></tbody>
           </table>
         </div>
@@ -222,6 +234,25 @@
       <!-- Slots Tab -->
       <div id="slots-tab" class="tab-content">
         <div class="card">
+          <h2>Capacity Mode</h2>
+          <div class="info-box">
+            <h4>Total vs Per-Item Capacity</h4>
+            <p><strong>Total mode:</strong> each slot has one overall capacity limit — e.g. max 8 items across all orders in that slot.<br><br>
+            <strong>Per-item mode:</strong> each menu item has its own limit per slot — e.g. max 2 Thai curries, max 4 loaded fries per slot. Items with no limit set are unlimited.</p>
+          </div>
+          <div class="capacity-mode-toggle">
+            <label class="toggle-switch">
+              <input type="checkbox" id="capacity-mode-toggle" onchange="toggleCapacityMode(this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <div>
+              <div class="toggle-label" id="capacity-mode-label">Total capacity mode</div>
+              <div class="toggle-description" id="capacity-mode-desc">Each slot has a single capacity limit</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
             <h2 style="margin:0;border:none;">Time Slots</h2>
             <button class="primary" onclick="openAddSlot()">+ Add Slot</button>
@@ -229,6 +260,19 @@
           <table>
             <thead><tr><th>Time</th><th>Capacity</th><th>Current Orders</th><th>Remaining</th><th>Actions</th></tr></thead>
             <tbody id="slots-list"></tbody>
+          </table>
+        </div>
+
+        <!-- Per-item limits (shown in per-item mode) -->
+        <div class="card" id="per-item-limits-card" style="display:none;">
+          <h2>Per-Item Slot Limits</h2>
+          <div class="info-box">
+            <h4>Set limits per menu item</h4>
+            <p>These limits apply per slot. Leave blank for unlimited. Edit the item in the Menu tab to update its limit.</p>
+          </div>
+          <table>
+            <thead><tr><th>Item</th><th>Limit per Slot</th><th></th></tr></thead>
+            <tbody id="per-item-limits-list"></tbody>
           </table>
         </div>
       </div>
@@ -240,21 +284,12 @@
             <h2 style="margin:0;border:none;">Customisation Extras</h2>
             <button class="primary" onclick="openAddExtra()">+ Add Extra</button>
           </div>
-
           <div class="info-box">
             <h4>About Extras</h4>
             <p>Extras appear as optional add-ons on the customer customise screen. Prices are added to the order total automatically. Toggle availability to show or hide an extra without deleting it.</p>
           </div>
-
           <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Name</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="extras-list"></tbody>
           </table>
         </div>
@@ -322,7 +357,7 @@
   <!-- Menu Modal -->
   <div id="menu-modal" class="modal">
     <div class="modal-content">
-      <h3 id="menu-modal-title">Add Pizza</h3>
+      <h3 id="menu-modal-title">Add Item</h3>
       <form onsubmit="saveMenuItem(event)">
         <input type="hidden" id="menu-id">
         <div class="form-group"><label>Name *</label><input type="text" id="menu-name" required></div>
@@ -330,8 +365,13 @@
         <div class="form-group"><label>Price (£) *</label><input type="number" id="menu-price" step="0.01" min="0" required></div>
         <div class="form-group">
           <label>Image URL (optional)</label>
-          <input type="url" id="menu-image" placeholder="https://example.com/pizza.jpg" onchange="previewImage()">
+          <input type="url" id="menu-image" placeholder="https://example.com/item.jpg" onchange="previewImage()">
           <img id="image-preview" class="pizza-image-preview" alt="Preview">
+        </div>
+        <div class="form-group" id="slot-limit-group">
+          <label>Max per Slot (per-item mode only)</label>
+          <input type="number" id="menu-slot-limit" min="1" placeholder="Leave blank for unlimited">
+          <small>When per-item capacity mode is on, this limits how many of this item can be ordered per time slot.</small>
         </div>
         <div class="form-group"><label><input type="checkbox" id="menu-available" checked> Available for ordering</label></div>
         <div class="button-group">
@@ -349,7 +389,11 @@
       <form onsubmit="saveSlot(event)">
         <input type="hidden" id="slot-id">
         <div class="form-group"><label>Time *</label><input type="time" id="slot-time" required></div>
-        <div class="form-group"><label>Capacity (number of pizzas) *</label><input type="number" id="slot-capacity" min="1" required></div>
+        <div class="form-group" id="slot-capacity-group">
+          <label>Capacity (total items) *</label>
+          <input type="number" id="slot-capacity" min="1" required>
+          <small id="slot-capacity-hint">Maximum number of items across all orders in this slot</small>
+        </div>
         <div class="button-group">
           <button type="submit" class="primary">Save</button>
           <button type="button" class="secondary" onclick="closeModal('slot-modal')">Cancel</button>
@@ -371,7 +415,7 @@
         <div class="form-group">
           <label>Price (£) *</label>
           <input type="number" id="extra-price" step="0.50" min="0" placeholder="e.g. 2.00" required>
-          <small>Additional charge added to the pizza price when this extra is selected</small>
+          <small>Additional charge added to the item price when this extra is selected</small>
         </div>
         <div class="form-group">
           <label><input type="checkbox" id="extra-available" checked> Available to customers</label>
@@ -383,10 +427,12 @@
       </form>
     </div>
   </div>
+
   <script>
     const API_URL = '/api';
     let authenticated = false;
     let orders = [], menu = [], slots = [], settings = {}, extras = [];
+    let capacityMode = 'total';
 
     async function login(e) {
       e.preventDefault();
@@ -415,6 +461,7 @@
       createServiceDateTabs();
       renderStats(); renderPizzaBreakdown(); renderOverview();
       renderOrders(); renderMenu(); renderSlots(); renderExtras();
+      renderCapacityModeToggle();
       populateArchiveOptions();
       setInterval(async () => {
         await loadData();
@@ -431,6 +478,9 @@
         orders = await ordersRes.json();
         menu = await menuRes.json();
         slots = await slotsRes.json();
+        if (slots.length > 0 && slots[0].capacityMode) {
+          capacityMode = slots[0].capacityMode;
+        }
       } catch (error) { console.error('Failed to load data:', error); }
     }
 
@@ -439,6 +489,57 @@
         const res = await fetch(`${API_URL}/extras`);
         extras = await res.json();
       } catch (error) { console.error('Failed to load extras:', error); extras = []; }
+    }
+
+    // ============= CAPACITY MODE =============
+    function renderCapacityModeToggle() {
+      const toggle = document.getElementById('capacity-mode-toggle');
+      const label = document.getElementById('capacity-mode-label');
+      const desc = document.getElementById('capacity-mode-desc');
+      const perItemCard = document.getElementById('per-item-limits-card');
+      const isPerItem = capacityMode === 'per-item';
+
+      toggle.checked = isPerItem;
+      label.textContent = isPerItem ? 'Per-item capacity mode' : 'Total capacity mode';
+      desc.textContent = isPerItem
+        ? 'Each menu item has its own limit per slot'
+        : 'Each slot has a single capacity limit';
+      perItemCard.style.display = isPerItem ? 'block' : 'none';
+
+      if (isPerItem) renderPerItemLimits();
+    }
+
+    async function toggleCapacityMode(isPerItem) {
+      capacityMode = isPerItem ? 'per-item' : 'total';
+      try {
+        await fetch(`${API_URL}/settings`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ capacityMode })
+        });
+        renderCapacityModeToggle();
+        renderSlots();
+      } catch (error) { alert('Failed to update capacity mode'); }
+    }
+
+    function renderPerItemLimits() {
+      const tbody = document.getElementById('per-item-limits-list');
+      const availableMenu = menu.filter(item => item.available);
+      if (availableMenu.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--ink-faint);padding:1.5rem;">No menu items</td></tr>';
+        return;
+      }
+      tbody.innerHTML = availableMenu.map(item => `
+        <tr>
+          <td><strong>${item.name}</strong></td>
+          <td>
+            ${item.slotLimit !== null && item.slotLimit !== undefined
+              ? `<span class="item-limit-badge">${item.slotLimit} per slot</span>`
+              : '<span style="color:var(--ink-faint);font-size:0.875rem;">Unlimited</span>'}
+          </td>
+          <td><button class="small secondary" onclick="editMenuItem('${item.id}')">Edit limit</button></td>
+        </tr>
+      `).join('');
     }
 
     // ============= EXTRAS =============
@@ -452,11 +553,7 @@
         <tr>
           <td><strong>${extra.name}</strong></td>
           <td><span style="color:var(--terracotta);font-weight:600;font-size:1rem;">+£${extra.price.toFixed(2)}</span></td>
-          <td>
-            <span class="status-badge ${extra.available ? 'status-ready' : 'status-cancelled'}">
-              ${extra.available ? 'Shown' : 'Hidden'}
-            </span>
-          </td>
+          <td><span class="status-badge ${extra.available ? 'status-ready' : 'status-cancelled'}">${extra.available ? 'Shown' : 'Hidden'}</span></td>
           <td style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             <button class="small secondary" onclick="editExtra('${extra.id}')">Edit</button>
             <button class="small secondary" onclick="toggleExtra('${extra.id}', ${!extra.available})">${extra.available ? 'Hide' : 'Show'}</button>
@@ -476,8 +573,7 @@
     }
 
     function editExtra(id) {
-      const extra = extras.find(e => e.id === id);
-      if (!extra) return;
+      const extra = extras.find(e => e.id === id); if (!extra) return;
       document.getElementById('extras-modal-title').textContent = 'Edit Extra';
       document.getElementById('extra-id').value = extra.id;
       document.getElementById('extra-name').value = extra.name;
@@ -489,28 +585,18 @@
     async function saveExtra(e) {
       e.preventDefault();
       const id = document.getElementById('extra-id').value;
-      const data = {
-        name: document.getElementById('extra-name').value,
-        price: parseFloat(document.getElementById('extra-price').value),
-        available: document.getElementById('extra-available').checked
-      };
+      const data = { name: document.getElementById('extra-name').value, price: parseFloat(document.getElementById('extra-price').value), available: document.getElementById('extra-available').checked };
       try {
-        if (id) {
-          await fetch(`${API_URL}/extras/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        } else {
-          await fetch(`${API_URL}/extras`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        }
-        closeModal('extras-modal');
-        await loadExtras();
-        renderExtras();
+        if (id) await fetch(`${API_URL}/extras/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        else await fetch(`${API_URL}/extras`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        closeModal('extras-modal'); await loadExtras(); renderExtras();
       } catch (error) { alert('Failed to save extra'); }
     }
 
     async function toggleExtra(id, available) {
       try {
         await fetch(`${API_URL}/extras/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ available }) });
-        await loadExtras();
-        renderExtras();
+        await loadExtras(); renderExtras();
       } catch (error) { alert('Failed to update extra'); }
     }
 
@@ -519,8 +605,7 @@
       if (!confirm(`Delete "${extra ? extra.name : 'this extra'}"?\n\nNote: existing orders with this extra will not be affected.`)) return;
       try {
         await fetch(`${API_URL}/extras/${id}`, { method: 'DELETE' });
-        await loadExtras();
-        renderExtras();
+        await loadExtras(); renderExtras();
       } catch (error) { alert('Failed to delete extra'); }
     }
 
@@ -607,6 +692,7 @@
       try {
         const response = await fetch(`${API_URL}/settings`);
         settings = await response.json();
+        capacityMode = settings.capacityMode || 'total';
         document.getElementById('settings-name').value = settings.businessName || '';
         document.getElementById('settings-tagline').value = settings.tagline || '';
         document.getElementById('settings-logo').value = settings.logo || '';
@@ -694,19 +780,19 @@
       const today = new Date().toISOString().split('T')[0];
       const todayOrders = orders.filter(o => o.createdAt.startsWith(today) && o.status !== 'cancelled');
       const revenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
-      const pizzas = todayOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0);
+      const items = todayOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0);
       document.getElementById('stat-orders').textContent = todayOrders.length;
       document.getElementById('stat-revenue').textContent = `£${revenue.toFixed(0)}`;
-      document.getElementById('stat-pizzas').textContent = pizzas;
+      document.getElementById('stat-pizzas').textContent = items;
     }
 
     function renderPizzaBreakdown() {
       const activeOrders = orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled');
-      const pizzaCounts = {};
-      activeOrders.forEach(order => order.items.forEach(item => { pizzaCounts[item.name] = (pizzaCounts[item.name] || 0) + item.quantity; }));
+      const itemCounts = {};
+      activeOrders.forEach(order => order.items.forEach(item => { itemCounts[item.name] = (itemCounts[item.name] || 0) + item.quantity; }));
       const breakdownDiv = document.getElementById('pizza-breakdown');
-      if (Object.keys(pizzaCounts).length === 0) { breakdownDiv.innerHTML = '<p style="color:var(--ink-faint);text-align:center;padding:20px;">No active orders</p>'; return; }
-      breakdownDiv.innerHTML = Object.entries(pizzaCounts).sort((a, b) => b[1] - a[1]).map(([name, count]) => `<div class="pizza-stat"><div class="pizza-stat-name">${name}</div><div class="pizza-stat-count">${count}</div></div>`).join('');
+      if (Object.keys(itemCounts).length === 0) { breakdownDiv.innerHTML = '<p style="color:var(--ink-faint);text-align:center;padding:20px;">No active orders</p>'; return; }
+      breakdownDiv.innerHTML = Object.entries(itemCounts).sort((a, b) => b[1] - a[1]).map(([name, count]) => `<div class="pizza-stat"><div class="pizza-stat-name">${name}</div><div class="pizza-stat-count">${count}</div></div>`).join('');
     }
 
     function renderOrders() {
@@ -740,22 +826,22 @@
     function renderOrdersTable(tbody, ordersToRender, availableMenu) {
       const sortedOrders = ordersToRender.sort((a, b) => { const slotA = slots.find(s => s.id === a.slotId); const slotB = slots.find(s => s.id === b.slotId); return (slotA ? slotA.time : '99:99').localeCompare(slotB ? slotB.time : '99:99'); });
       tbody.innerHTML = sortedOrders.map(order => {
-        const pizzaCounts = {};
+        const itemCounts = {};
         order.items.forEach(item => {
-          if (!pizzaCounts[item.name]) pizzaCounts[item.name] = [];
-          pizzaCounts[item.name].push({ quantity: item.quantity, mods: item.modifications || [], comments: item.pizzaComments || '' });
+          if (!itemCounts[item.name]) itemCounts[item.name] = [];
+          itemCounts[item.name].push({ quantity: item.quantity, mods: item.modifications || [], comments: item.pizzaComments || '' });
         });
-        const pizzaColumns = availableMenu.map(menuPizza => {
-          const orderedPizzas = pizzaCounts[menuPizza.name];
-          if (!orderedPizzas || orderedPizzas.length === 0) return '<td style="background:#f5f5f5;text-align:center;color:#ccc;font-size:0.9em;">—</td>';
-          const totalQty = orderedPizzas.reduce((sum, p) => sum + p.quantity, 0);
-          const pizzaDetails = orderedPizzas.map(pizza => {
+        const itemColumns = availableMenu.map(menuItem => {
+          const orderedItems = itemCounts[menuItem.name];
+          if (!orderedItems || orderedItems.length === 0) return '<td style="background:#f5f5f5;text-align:center;color:#ccc;font-size:0.9em;">—</td>';
+          const totalQty = orderedItems.reduce((sum, p) => sum + p.quantity, 0);
+          const itemDetails = orderedItems.map(i => {
             let details = [];
-            if (pizza.mods.length > 0) details.push(`<div style="font-size:0.75em;color:var(--terracotta);margin-top:2px;">${pizza.mods.join(', ')}</div>`);
-            if (pizza.comments) details.push(`<div style="font-size:0.7em;color:var(--ink-faint);font-style:italic;margin-top:2px;">"${pizza.comments}"</div>`);
+            if (i.mods.length > 0) details.push(`<div style="font-size:0.75em;color:var(--terracotta);margin-top:2px;">${i.mods.join(', ')}</div>`);
+            if (i.comments) details.push(`<div style="font-size:0.7em;color:var(--ink-faint);font-style:italic;margin-top:2px;">"${i.comments}"</div>`);
             return details.join('');
           }).join('');
-          return `<td style="vertical-align:top;padding:8px;"><div style="font-weight:bold;font-size:1.4em;color:var(--ink);">${totalQty}</div>${pizzaDetails}</td>`;
+          return `<td style="vertical-align:top;padding:8px;"><div style="font-weight:bold;font-size:1.4em;color:var(--ink);">${totalQty}</div>${itemDetails}</td>`;
         }).join('');
         const generalComments = order.comments ? `<div style="margin-top:3px;font-size:0.7em;color:var(--terracotta);">${order.comments}</div>` : '';
         const pagerNumber = order.pagerNumber || '';
@@ -763,7 +849,7 @@
           <td style="vertical-align:top;font-size:0.9em;padding:8px;"><strong>${order.slotTime}</strong></td>
           <td style="vertical-align:top;font-size:0.7em;padding:8px;color:var(--ink-faint);">#${order.id.slice(-6)}</td>
           <td style="vertical-align:top;padding:8px;"><div style="font-weight:600;font-size:0.85em;">${order.customer.name}</div><div style="font-size:0.7em;color:var(--ink-faint);">${order.customer.phone || order.customer.email}</div>${generalComments}</td>
-          ${pizzaColumns}
+          ${itemColumns}
           <td style="vertical-align:top;padding:8px;font-size:0.9em;"><strong>£${order.total.toFixed(2)}</strong></td>
           <td style="vertical-align:top;padding:8px;">
             <select onchange="updatePager('${order.id}', this.value)" style="padding:4px;border:1px solid var(--stone-dark);font-family:inherit;font-size:0.85em;width:100%;">
@@ -858,25 +944,31 @@
 
     function renderMenu() {
       const tbody = document.getElementById('menu-list');
-      if (!menu || menu.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--ink-faint);">No menu items found. Click "+ Add Pizza" to create one.</td></tr>'; return; }
-      tbody.innerHTML = menu.map(item => `
-        <tr>
+      if (!menu || menu.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--ink-faint);">No menu items found. Click "+ Add Item" to create one.</td></tr>'; return; }
+      tbody.innerHTML = menu.map(item => {
+        const limitDisplay = (item.slotLimit !== null && item.slotLimit !== undefined)
+          ? `<span class="item-limit-badge">${item.slotLimit}</span>`
+          : '<span style="color:var(--ink-faint);font-size:0.8rem;">—</span>';
+        return `<tr>
           <td>${item.image ? `<img src="${item.image}" alt="${item.name}" style="width:60px;height:60px;object-fit:cover;border:1px solid var(--stone);">` : '<div style="width:60px;height:60px;background:var(--stone);border-radius:2px;"></div>'}</td>
           <td><strong>${item.name}</strong></td>
           <td>${item.description}</td>
           <td><strong>£${item.price.toFixed(2)}</strong></td>
+          <td>${limitDisplay}</td>
           <td>${item.available ? 'Yes' : 'No'}</td>
           <td><button class="small secondary" onclick="editMenuItem('${item.id}')">Edit</button> <button class="small danger" onclick="deleteMenuItem('${item.id}')">Delete</button></td>
-        </tr>`).join('');
+        </tr>`;
+      }).join('');
     }
 
     function openAddMenu() {
-      document.getElementById('menu-modal-title').textContent = 'Add Pizza';
+      document.getElementById('menu-modal-title').textContent = 'Add Item';
       document.getElementById('menu-id').value = '';
       document.getElementById('menu-name').value = '';
       document.getElementById('menu-desc').value = '';
       document.getElementById('menu-price').value = '';
       document.getElementById('menu-image').value = '';
+      document.getElementById('menu-slot-limit').value = '';
       document.getElementById('menu-available').checked = true;
       document.getElementById('image-preview').classList.remove('show');
       openModal('menu-modal');
@@ -884,12 +976,13 @@
 
     function editMenuItem(id) {
       const item = menu.find(m => m.id === id); if (!item) return;
-      document.getElementById('menu-modal-title').textContent = 'Edit Pizza';
+      document.getElementById('menu-modal-title').textContent = 'Edit Item';
       document.getElementById('menu-id').value = item.id;
       document.getElementById('menu-name').value = item.name;
       document.getElementById('menu-desc').value = item.description;
       document.getElementById('menu-price').value = item.price;
       document.getElementById('menu-image').value = item.image || '';
+      document.getElementById('menu-slot-limit').value = (item.slotLimit !== null && item.slotLimit !== undefined) ? item.slotLimit : '';
       document.getElementById('menu-available').checked = item.available;
       if (item.image) { document.getElementById('image-preview').src = item.image; document.getElementById('image-preview').classList.add('show'); }
       else { document.getElementById('image-preview').classList.remove('show'); }
@@ -905,16 +998,25 @@
     async function saveMenuItem(e) {
       e.preventDefault();
       const id = document.getElementById('menu-id').value;
-      const data = { name: document.getElementById('menu-name').value, description: document.getElementById('menu-desc').value, price: parseFloat(document.getElementById('menu-price').value), image: document.getElementById('menu-image').value, available: document.getElementById('menu-available').checked };
+      const slotLimitVal = document.getElementById('menu-slot-limit').value;
+      const data = {
+        name: document.getElementById('menu-name').value,
+        description: document.getElementById('menu-desc').value,
+        price: parseFloat(document.getElementById('menu-price').value),
+        image: document.getElementById('menu-image').value,
+        available: document.getElementById('menu-available').checked,
+        slotLimit: slotLimitVal !== '' ? parseInt(slotLimitVal) : null
+      };
       try {
         if (id) await fetch(`${API_URL}/menu/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         else await fetch(`${API_URL}/menu`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         closeModal('menu-modal'); await loadData(); renderMenu();
+        if (capacityMode === 'per-item') renderPerItemLimits();
       } catch (error) { alert('Failed to save menu item'); }
     }
 
     async function deleteMenuItem(id) {
-      if (!confirm('Delete this pizza?')) return;
+      if (!confirm('Delete this item?')) return;
       try { await fetch(`${API_URL}/menu/${id}`, { method: 'DELETE' }); await loadData(); renderMenu(); }
       catch (error) { alert('Failed to delete menu item'); }
     }
@@ -923,11 +1025,29 @@
       const tbody = document.getElementById('slots-list');
       if (!slots || slots.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--ink-faint);">No time slots found. Click "+ Add Slot" to create one.</td></tr>'; return; }
       const sortedSlots = [...slots].sort((a, b) => a.time.localeCompare(b.time));
-      tbody.innerHTML = sortedSlots.map(slot => `
-        <tr>
-          <td><strong>${slot.time}</strong></td><td>${slot.capacity}</td><td>${slot.currentOrders}</td><td><strong>${slot.remaining}</strong></td>
-          <td><button class="small secondary" onclick="editSlot('${slot.id}')">Edit</button> <button class="small danger" onclick="deleteSlot('${slot.id}')">Delete</button></td>
-        </tr>`).join('');
+
+      if (capacityMode === 'per-item') {
+        // In per-item mode show item-level availability
+        tbody.innerHTML = sortedSlots.map(slot => {
+          const itemSummary = menu.filter(m => m.available && m.slotLimit !== null && m.slotLimit !== undefined).map(m => {
+            const avail = slot.itemAvailability ? slot.itemAvailability[m.id] : null;
+            const remaining = avail ? avail.remaining : m.slotLimit;
+            return `<span style="font-size:0.8rem;color:var(--ink-light);">${m.name}: <strong>${remaining !== null ? remaining : '∞'}</strong> left</span>`;
+          }).join(' &nbsp;·&nbsp; ');
+          return `<tr>
+            <td><strong>${slot.time}</strong></td>
+            <td colspan="2" style="font-size:0.85rem;">${itemSummary || '<span style="color:var(--ink-faint);">No limits set — all items unlimited</span>'}</td>
+            <td>—</td>
+            <td><button class="small secondary" onclick="editSlot('${slot.id}')">Edit</button> <button class="small danger" onclick="deleteSlot('${slot.id}')">Delete</button></td>
+          </tr>`;
+        }).join('');
+      } else {
+        tbody.innerHTML = sortedSlots.map(slot => `
+          <tr>
+            <td><strong>${slot.time}</strong></td><td>${slot.capacity}</td><td>${slot.currentOrders}</td><td><strong>${slot.remaining}</strong></td>
+            <td><button class="small secondary" onclick="editSlot('${slot.id}')">Edit</button> <button class="small danger" onclick="deleteSlot('${slot.id}')">Delete</button></td>
+          </tr>`).join('');
+      }
     }
 
     function openAddSlot() {
@@ -978,9 +1098,9 @@
       if (!confirm('Reset menu and time slots to defaults?\n\nThis will DELETE all current menu items and time slots!')) return;
       try {
         const defaultMenu = [
-          { name: "Margherita", description: "Classic tomato & mozzarella", price: 12, available: true, image: "" },
-          { name: "Pepperoni", description: "Spicy pepperoni & cheese", price: 14, available: true, image: "" },
-          { name: "Veggie Supreme", description: "Bell peppers, mushrooms, olives", price: 13, available: true, image: "" }
+          { name: "Margherita", description: "Classic tomato & mozzarella", price: 12, available: true, image: "", slotLimit: null },
+          { name: "Pepperoni", description: "Spicy pepperoni & cheese", price: 14, available: true, image: "", slotLimit: null },
+          { name: "Veggie Supreme", description: "Bell peppers, mushrooms, olives", price: 13, available: true, image: "", slotLimit: null }
         ];
         const defaultSlots = [{ time: "17:00", capacity: 8 }, { time: "17:30", capacity: 8 }, { time: "18:00", capacity: 8 }, { time: "18:30", capacity: 8 }, { time: "19:00", capacity: 8 }, { time: "19:30", capacity: 8 }];
         for (const item of menu) await fetch(`${API_URL}/menu/${item.id}`, { method: 'DELETE' });
