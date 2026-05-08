@@ -1,0 +1,344 @@
+/* ============= PORTUGUESE BEACH CAFE THEME ============= */
+/* Deep house, sun-bleached, unhurried.
+   Palette:
+   Whitewash:        #F7F3EE  — primary background
+   Terracotta wall:  #C4714A  — accent, highlights
+   Deep ocean:       #1B3D5F  — headings, primary actions
+   Warm sand:        #E8D5B0  — secondary surfaces
+   Faded coral:      #E8907A  — warm accents
+   Driftwood:        #8C7B6B  — secondary text
+   Sea foam:         #A8C5B5  — subtle highlights
+   Font: Cormorant Garamond (display) + Inter (body)
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+
+body {
+  --cream:         #F7F3EE;
+  --warm-white:    #FDFAF6;
+  --stone:         #E8D5B0;
+  --stone-dark:    #D4BF98;
+  --ink:           #2C1810;
+  --ink-light:     #5C4033;
+  --ink-faint:     #8C7B6B;
+  --terracotta:    #C4714A;
+  --terra-light:   #F5E6D8;
+  --serif:         'Cormorant Garamond', Georgia, serif;
+  --sans:          'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #F7F3EE;
+  letter-spacing: 0.01em;
+}
+
+.site-header {
+  background: #1B3D5F;
+  border-bottom: none;
+  padding: 3rem 1.5rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.site-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #C4714A, #E8907A, #A8C5B5, #C4714A);
+}
+
+.site-header h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 3.5rem;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: #F7F3EE;
+  line-height: 1;
+  font-style: italic;
+}
+
+.site-header .subtitle {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  font-size: 0.65rem;
+  color: #A8C5B5;
+  margin-top: 0.5rem;
+}
+
+h2 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  font-size: 2.25rem;
+  color: #1B3D5F;
+  font-style: italic;
+}
+
+.card {
+  background: #FDFAF6;
+  border-color: #E8D5B0;
+  border-radius: 2px;
+  box-shadow: 0 1px 8px rgba(44,24,16,0.06);
+}
+
+.pizza-card {
+  background: #FDFAF6;
+  border-color: #E8D5B0;
+  border-radius: 2px;
+  box-shadow: 0 1px 8px rgba(44,24,16,0.06);
+}
+
+.pizza-card h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  font-size: 1.4rem;
+  color: #1B3D5F;
+  font-style: italic;
+}
+
+.pizza-card .description {
+  color: #8C7B6B;
+  font-style: italic;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.pizza-card .price {
+  color: #C4714A;
+  font-weight: 400;
+  font-size: 1.2rem;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  letter-spacing: 0.05em;
+}
+
+.slot-time {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 300;
+  font-size: 2.75rem;
+  letter-spacing: 0.05em;
+  color: #1B3D5F;
+  font-style: italic;
+}
+
+.time-slot-card {
+  background: #FDFAF6;
+  border: 1px solid #E8D5B0;
+  border-radius: 2px;
+  box-shadow: 0 1px 6px rgba(44,24,16,0.05);
+}
+
+.time-slot-card.full {
+  background: #F0EBE3;
+  border-color: #D4BF98;
+  opacity: 0.7;
+}
+
+.slot-capacity { color: #8C7B6B; }
+.slot-capacity.low { color: #C4714A; font-style: italic; }
+.item-availability-note { color: #C4714A; font-style: italic; }
+
+.time-navigation {
+  background: #FDFAF6;
+  border-color: #E8D5B0;
+  box-shadow: 0 1px 6px rgba(44,24,16,0.05);
+}
+
+.current-time-range {
+  color: #1B3D5F;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: 0.05em;
+}
+
+.button, .time-nav-button {
+  background: #1B3D5F !important;
+  color: #F7F3EE !important;
+  border-color: #1B3D5F !important;
+  border-radius: 2px !important;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.button:hover:not(:disabled), .time-nav-button:hover:not(:disabled) {
+  background: #142d47 !important;
+  border-color: #142d47 !important;
+}
+
+.button:disabled, .time-nav-button:disabled {
+  background: #E8D5B0 !important;
+  color: #8C7B6B !important;
+  border-color: #E8D5B0 !important;
+}
+
+.button.secondary {
+  background: transparent !important;
+  color: #1B3D5F !important;
+  border: 1px solid #D4BF98 !important;
+}
+
+.button.secondary:hover:not(:disabled) {
+  background: #F0EBE3 !important;
+  border-color: #1B3D5F !important;
+}
+
+.quantity-controls button {
+  background: #1B3D5F !important;
+  color: #F7F3EE !important;
+  border-color: #1B3D5F !important;
+  border-radius: 2px !important;
+}
+
+.quantity-controls button:hover:not(:disabled) { background: #142d47 !important; }
+
+.quantity-controls button:disabled {
+  background: #E8D5B0 !important;
+  color: #8C7B6B !important;
+}
+
+.quantity-controls .qty {
+  color: #2C1810;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.1rem;
+}
+
+.pizza-select-item {
+  background: #F7F3EE;
+  border-color: #E8D5B0;
+}
+
+.pizza-select-name {
+  color: #2C1810;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.pizza-select-price {
+  color: #C4714A;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1rem;
+}
+
+.step-number { border-color: #D4BF98; color: #8C7B6B; }
+.step.active .step-number { border-color: #1B3D5F; color: #1B3D5F; }
+.step.active { color: #1B3D5F; }
+
+.step.completed .step-number {
+  background: #C4714A !important;
+  border-color: #C4714A !important;
+  color: #ffffff !important;
+}
+
+.step.completed { color: #C4714A; }
+.step-divider { background: #E8D5B0; }
+
+.cart-summary {
+  background: #1B3D5F;
+  border: none;
+  border-radius: 2px;
+}
+
+.cart-item { border-bottom-color: rgba(247,243,238,0.1); }
+
+.pizza-mod-item {
+  background: #FDFAF6;
+  border-color: #E8D5B0;
+}
+
+.pizza-mod-header { border-bottom-color: #E8D5B0; }
+
+.pizza-mod-title {
+  color: #1B3D5F;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.pizza-mod-slot { color: #8C7B6B; }
+
+.checkbox-group label {
+  background: #F7F3EE;
+  border-color: #E8D5B0;
+  color: #2C1810;
+}
+
+.checkbox-group label:hover { border-color: #C4714A; }
+.checkbox-group input[type="checkbox"] { accent-color: #C4714A; }
+
+.form-group label { color: #5C4033; font-weight: 400; }
+
+input, select, textarea {
+  background: #FDFAF6 !important;
+  border-color: #D4BF98 !important;
+  color: #2C1810 !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #8C7B6B !important;
+  font-style: italic;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #1B3D5F !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(27,61,95,0.08);
+}
+
+.order-summary-box {
+  background: #F0EBE3;
+  border-color: #E8D5B0;
+}
+
+.order-summary-box h3 {
+  color: #1B3D5F;
+  border-bottom-color: #E8D5B0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.order-summary-item { border-bottom-color: #E8D5B0; color: #5C4033; }
+
+.contact-note {
+  background: #F5E6D8;
+  border-left-color: #C4714A;
+  color: #5C4033;
+}
+
+.contact-note strong { color: #C4714A; }
+
+.error {
+  background: #FDF0ED;
+  border-color: #E8907A;
+  border-left-color: #C4714A;
+  color: #7A2A1A;
+}
+
+.no-slots-message {
+  color: #8C7B6B;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: 1.3rem;
+}
+
+#service-date-select {
+  background: #FDFAF6 !important;
+  border-color: #D4BF98 !important;
+  color: #2C1810 !important;
+}
+
+.slot-full {
+  color: #8C7B6B;
+  font-style: italic;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
