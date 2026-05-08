@@ -244,6 +244,7 @@ initFile(SETTINGS_FILE, {
   chefPassword: "chef123",
   capacityMode: "total",
   theme: "classic",
+  earlyAccessCode: null,
   extras: [
     { id: "1", name: "Gluten Free Base", price: 2, available: true },
     { id: "2", name: "Vegan Cheese", price: 1, available: true },
@@ -555,7 +556,7 @@ app.get("/api/settings", (req, res) => {
 
 app.put("/api/settings", (req, res) => {
   const settings = readJSON(SETTINGS_FILE);
-  const updatableFields = ['businessName', 'tagline', 'logo', 'chefPassword', 'serviceSchedule', 'extras', 'capacityMode', 'theme'];
+  const updatableFields = ['businessName', 'tagline', 'logo', 'chefPassword', 'serviceSchedule', 'extras', 'capacityMode', 'theme', 'earlyAccessCode'];
   updatableFields.forEach(field => {
     if (req.body[field] !== undefined) settings[field] = req.body[field];
   });
@@ -571,6 +572,24 @@ app.post("/api/auth/chef", (req, res) => {
   } else {
     res.status(401).json({ error: "Invalid password" });
   }
+});
+
+// Generate a new early access code
+app.post("/api/settings/generate-code", (req, res) => {
+  const settings = readJSON(SETTINGS_FILE);
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  settings.earlyAccessCode = code;
+  writeJSON(SETTINGS_FILE, settings);
+  const { chefPassword, ...publicSettings } = settings;
+  res.json(publicSettings);
+});
+
+// Validate early access code — used by customer page
+app.get("/api/early-access/:code", (req, res) => {
+  const settings = readJSON(SETTINGS_FILE);
+  const valid = settings.earlyAccessCode &&
+    req.params.code.toUpperCase() === settings.earlyAccessCode.toUpperCase();
+  res.json({ valid: !!valid });
 });
 
 // ============= CANCEL ROUTES =============
