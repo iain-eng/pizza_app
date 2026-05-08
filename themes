@@ -1,1 +1,278 @@
+themes/rockandroll.css
+/* ============= ROCK & ROLL THEME — 90s HIP HOP ============= */
+/* Palette:
+   Tibet:              #3D6BBC  — primary surface (80%)
+   American Turquoise: #20ACC9  — slot cards
+   Elegant Yellow:     #F1D04A  — buttons, prices, highlights
+   Catholic Red:       #C93127  — errors, sold out
+   Perfect Orange:     #F5A01F  — warnings, low stock
+   Intense Amethyst:   #673B90  — completed steps
+   Font: Bebas Neue (display) + Inter (body)
+*/
 
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+
+body {
+  --cream:         #2e5097;
+  --warm-white:    #3D6BBC;
+  --stone:         #4a7acc;
+  --stone-dark:    #5585d4;
+  --ink:           #ffffff;
+  --ink-light:     #e8f0ff;
+  --ink-faint:     #b8cef0;
+  --terracotta:    #F1D04A;
+  --terra-light:   #3a2800;
+  --serif:         'Bebas Neue', 'Inter', sans-serif;
+  --sans:          'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #2e5097;
+}
+
+.site-header {
+  background: #1e3a7a;
+  border-bottom: 3px solid #F1D04A;
+}
+
+.site-header h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 4rem;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.site-header .subtitle {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-size: 0.7rem;
+  color: #20ACC9;
+}
+
+h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-weight: 400;
+  letter-spacing: 1px;
+  font-size: 2.25rem;
+  color: #ffffff;
+}
+
+.card {
+  background: #3D6BBC;
+  border-color: #4a7acc;
+}
+
+.pizza-card {
+  background: #3D6BBC;
+  border-color: #4a7acc;
+}
+
+.pizza-card h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-weight: 400;
+  letter-spacing: 1px;
+  font-size: 1.4rem;
+  color: #ffffff;
+}
+
+.pizza-card .description {
+  color: #b8cef0;
+  font-style: normal;
+  font-family: 'Inter', sans-serif;
+}
+
+.pizza-card .price {
+  color: #F1D04A;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.slot-time {
+  font-family: 'Bebas Neue', sans-serif;
+  font-weight: 400;
+  font-size: 3rem;
+  letter-spacing: 2px;
+  color: #ffffff;
+}
+
+.time-slot-card {
+  background: #20ACC9;
+  border: 2px solid #1a96b0;
+}
+
+.time-slot-card.full {
+  background: #2e5097;
+  border-color: #4a7acc;
+  opacity: 0.6;
+}
+
+.slot-capacity { color: #e8f0ff; }
+.slot-capacity.low { color: #F5A01F; }
+.item-availability-note { color: #F5A01F; }
+
+.time-navigation {
+  background: #1e3a7a;
+  border-color: #4a7acc;
+}
+
+.current-time-range {
+  color: #F1D04A;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 1px;
+}
+
+.button, .time-nav-button {
+  background: #F1D04A !important;
+  color: #1e3a7a !important;
+  border-color: #F1D04A !important;
+  border-radius: 2px !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.button:hover:not(:disabled), .time-nav-button:hover:not(:disabled) {
+  background: #d4b530 !important;
+  border-color: #d4b530 !important;
+}
+
+.button:disabled, .time-nav-button:disabled {
+  background: #4a7acc !important;
+  color: #b8cef0 !important;
+  border-color: #4a7acc !important;
+}
+
+.button.secondary {
+  background: transparent !important;
+  color: #ffffff !important;
+  border: 2px solid #F1D04A !important;
+}
+
+.button.secondary:hover:not(:disabled) {
+  background: rgba(241,208,74,0.15) !important;
+}
+
+.quantity-controls button {
+  background: #F1D04A !important;
+  color: #1e3a7a !important;
+  border-color: #F1D04A !important;
+  border-radius: 2px !important;
+  font-weight: 700;
+}
+
+.quantity-controls button:hover:not(:disabled) { background: #d4b530 !important; }
+
+.quantity-controls button:disabled {
+  background: #4a7acc !important;
+  color: #b8cef0 !important;
+}
+
+.quantity-controls .qty { color: #ffffff; }
+
+.pizza-select-item {
+  background: #2e5097;
+  border-color: #4a7acc;
+}
+
+.pizza-select-name { color: #ffffff; }
+.pizza-select-price { color: #F1D04A; }
+
+.step-number { border-color: #b8cef0; color: #b8cef0; }
+.step.active .step-number { border-color: #F1D04A; color: #F1D04A; }
+.step.active { color: #F1D04A; }
+
+.step.completed .step-number {
+  background: #673B90 !important;
+  border-color: #673B90 !important;
+  color: #ffffff !important;
+}
+
+.step.completed { color: #673B90; }
+.step-divider { background: #4a7acc; }
+
+.cart-summary {
+  background: #1e3a7a;
+  border: 2px solid #F1D04A;
+}
+
+.cart-item { border-bottom-color: rgba(241,208,74,0.2); }
+
+.pizza-mod-item {
+  background: #2e5097;
+  border-color: #4a7acc;
+}
+
+.pizza-mod-header { border-bottom-color: #4a7acc; }
+
+.pizza-mod-title {
+  color: #ffffff;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.5px;
+}
+
+.pizza-mod-slot { color: #20ACC9; }
+
+.checkbox-group label {
+  background: #2e5097;
+  border-color: #4a7acc;
+  color: #ffffff;
+}
+
+.checkbox-group label:hover { border-color: #F1D04A; }
+.checkbox-group input[type="checkbox"] { accent-color: #F1D04A; }
+
+.form-group label { color: #e8f0ff; }
+
+input, select, textarea {
+  background: #2e5097 !important;
+  border-color: #4a7acc !important;
+  color: #ffffff !important;
+}
+
+input::placeholder, textarea::placeholder { color: #b8cef0 !important; }
+
+input:focus, select:focus, textarea:focus {
+  border-color: #F1D04A !important;
+  outline: none;
+}
+
+.order-summary-box {
+  background: #2e5097;
+  border-color: #4a7acc;
+}
+
+.order-summary-box h3 { color: #ffffff; border-bottom-color: #4a7acc; }
+.order-summary-item { border-bottom-color: #4a7acc; color: #e8f0ff; }
+
+.contact-note {
+  background: rgba(245,160,31,0.15);
+  border-left-color: #F5A01F;
+  color: #e8f0ff;
+}
+
+.contact-note strong { color: #F5A01F; }
+
+.error {
+  background: rgba(201,49,39,0.2);
+  border-color: #C93127;
+  border-left-color: #C93127;
+  color: #ffb8b5;
+}
+
+.no-slots-message {
+  color: #b8cef0;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+}
+
+#service-date-select {
+  background: #2e5097 !important;
+  border-color: #4a7acc !important;
+  color: #ffffff !important;
+}
+
+.slot-full { color: #b8cef0; }
