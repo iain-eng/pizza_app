@@ -793,6 +793,32 @@ app.post("/api/orders/archive", (req, res) => {
   res.json({ success: true, archived: ordersToArchive.length, archiveFile: path.basename(archiveFile) });
 });
 
+// ============= THEME CSS =============
+const THEMES_DIR = path.join(__dirname, "themes");
+
+app.get("/theme.css", (req, res) => {
+  const settings = readJSON(SETTINGS_FILE);
+  const theme = settings.theme || "classic";
+
+  // Sanitise theme name — only allow alphanumeric to prevent path traversal
+  const safeName = theme.replace(/[^a-z0-9]/gi, "");
+  const themePath = path.join(THEMES_DIR, `${safeName}.css`);
+
+  // Fall back to classic if theme file doesn't exist
+  const filePath = fs.existsSync(themePath)
+    ? themePath
+    : path.join(THEMES_DIR, "classic.css");
+
+  res.setHeader("Content-Type", "text/css");
+  res.setHeader("Cache-Control", "no-cache");
+
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.send("/* no theme file found */");
+  }
+});
+
 // ============= START SERVER =============
 const PORT = process.env.PORT || 3001;
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "customer.html")));
