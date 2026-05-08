@@ -415,6 +415,23 @@
                 </div>
               </label>
             </div>
+            <h3 style="margin-top:30px;margin-bottom:15px;border-bottom:1px solid var(--stone);padding-bottom:10px;">Early Access</h3>
+            <div class="info-box">
+              <h4>About Early Access</h4>
+              <p>Generate a code to share with select customers (e.g. the venue). They visit your ordering page with <strong>?code=XXXXXX</strong> appended to the URL and can order before the public window opens. Set an early access open time per service date below.</p>
+            </div>
+            <div style="background:var(--cream);border:1px solid var(--stone);border-radius:4px;padding:1.25rem;margin-bottom:1rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
+                <div>
+                  <div style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-faint);margin-bottom:0.375rem;">Current Code</div>
+                  <div id="early-access-code-display" style="font-size:1.5rem;font-weight:700;font-family:monospace;color:var(--ink);letter-spacing:2px;">—</div>
+                </div>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                  <button type="button" class="small secondary" onclick="copyEarlyAccessLink()">Copy Link</button>
+                  <button type="button" class="small primary" onclick="generateEarlyAccessCode()">Generate New Code</button>
+                </div>
+              </div>
+            </div>
             <h3 style="margin-top:30px;margin-bottom:15px;border-bottom:1px solid var(--stone);padding-bottom:10px;">Service Schedule</h3>
             <div class="info-box">
               <h4>About Service Schedule</h4>
@@ -786,8 +803,38 @@
         document.getElementById('settings-password').value = '';
         if (!settings.serviceSchedule) settings.serviceSchedule = [];
         setThemeRadio(settings.theme || 'classic');
+        updateEarlyAccessCodeDisplay();
         renderSchedule(); previewSettings();
       } catch (error) { console.error('Failed to load settings:', error); }
+    }
+
+    function updateEarlyAccessCodeDisplay() {
+      const display = document.getElementById('early-access-code-display');
+      if (display) display.textContent = settings.earlyAccessCode || '—';
+    }
+
+    async function generateEarlyAccessCode() {
+      try {
+        const response = await fetch(`${API_URL}/settings/generate-code`, { method: 'POST' });
+        if (response.ok) {
+          settings = await response.json();
+          updateEarlyAccessCodeDisplay();
+          showSettingsMessage('New early access code generated!', 'success');
+        }
+      } catch (error) { alert('Failed to generate code'); }
+    }
+
+    function copyEarlyAccessLink() {
+      if (!settings.earlyAccessCode) {
+        alert('Generate a code first');
+        return;
+      }
+      const link = `${window.location.origin}/?code=${settings.earlyAccessCode}`;
+      navigator.clipboard.writeText(link).then(() => {
+        showSettingsMessage('Early access link copied to clipboard!', 'success');
+      }).catch(() => {
+        prompt('Copy this link:', link);
+      });
     }
 
     function setThemeRadio(theme) {
@@ -812,6 +859,7 @@
       if (settings.serviceSchedule.length === 0) { scheduleList.innerHTML = '<p style="color:var(--ink-faint);text-align:center;padding:20px;">No service dates scheduled. Add one below!</p>'; return; }
       scheduleList.innerHTML = settings.serviceSchedule.map((schedule, index) => {
         const serviceDate = new Date(schedule.serviceDate);
+        const hasEarlyAccess = !!schedule.earlyAccessOpenAt;
         return `<div style="background:var(--cream);border:1px solid var(--stone);border-radius:4px;padding:1.25rem;margin-bottom:1rem;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
             <strong>Service: ${serviceDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</strong>
@@ -819,11 +867,32 @@
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
             <div class="form-group" style="margin:0;"><label>Service Date</label><input type="date" value="${schedule.serviceDate}" onchange="updateScheduleItem(${index}, 'serviceDate', this.value)"></div>
-            <div class="form-group" style="margin:0;"><label>Orders Open At</label><input type="datetime-local" value="${schedule.ordersOpenAt.slice(0, 16)}" onchange="updateScheduleItem(${index}, 'ordersOpenAt', this.value)"><small>When customers can start ordering</small></div>
+            <div class="form-group" style="margin:0;"><label>Orders Open At</label><input type="datetime-local" value="${schedule.ordersOpenAt.slice(0, 16)}" onchange="updateScheduleItem(${index}, 'ordersOpenAt', this.value)"><small>When the public can start ordering</small></div>
           </div>
+          <div class="form-group" style="margin-top:0.75rem;margin-bottom:0.75rem;">
+            <label><input type="checkbox" ${hasEarlyAccess ? 'checked' : ''} onchange="toggleEarlyAccess(${index}, this.checked)"> Enable early access for this date</label>
+          </div>
+          ${hasEarlyAccess ? `
+          <div class="form-group" style="margin:0;background:var(--warm-white);border:1px solid var(--stone);border-radius:3px;padding:0.875rem;">
+            <label>Early Access Opens At</label>
+            <input type="datetime-local" value="${schedule.earlyAccessOpenAt ? schedule.earlyAccessOpenAt.slice(0, 16) : ''}" onchange="updateScheduleItem(${index}, 'earlyAccessOpenAt', this.value)">
+            <small>Customers with the early access code can order from this time</small>
+          </div>` : ''}
           <div class="form-group" style="margin-top:0.75rem;margin-bottom:0;"><label><input type="checkbox" ${schedule.enabled ? 'checked' : ''} onchange="updateScheduleItem(${index}, 'enabled', this.checked)"> Enable this service date</label></div>
         </div>`;
       }).join('');
+    }
+
+    function toggleEarlyAccess(index, enabled) {
+      if (enabled) {
+        // Default early access to 2 days before ordersOpenAt
+        const openAt = new Date(settings.serviceSchedule[index].ordersOpenAt);
+        openAt.setDate(openAt.getDate() - 2);
+        settings.serviceSchedule[index].earlyAccessOpenAt = openAt.toISOString().slice(0, 16);
+      } else {
+        settings.serviceSchedule[index].earlyAccessOpenAt = null;
+      }
+      renderSchedule();
     }
 
     function addScheduleItem() {
@@ -831,12 +900,12 @@
       const daysUntilFriday = (5 - today.getDay() + 7) % 7 || 7;
       const nextFriday = new Date(today); nextFriday.setDate(today.getDate() + daysUntilFriday);
       const tuesdayBefore = new Date(nextFriday); tuesdayBefore.setDate(nextFriday.getDate() - 3); tuesdayBefore.setHours(10, 0, 0, 0);
-      settings.serviceSchedule.push({ serviceDate: nextFriday.toISOString().split('T')[0], ordersOpenAt: tuesdayBefore.toISOString().slice(0, 16), enabled: true });
+      settings.serviceSchedule.push({ serviceDate: nextFriday.toISOString().split('T')[0], ordersOpenAt: tuesdayBefore.toISOString().slice(0, 16), earlyAccessOpenAt: null, enabled: true });
       renderSchedule();
     }
 
     function updateScheduleItem(index, field, value) {
-      settings.serviceSchedule[index][field] = field === 'ordersOpenAt' ? value + ':00' : value;
+      settings.serviceSchedule[index][field] = (field === 'ordersOpenAt' || field === 'earlyAccessOpenAt') ? value + ':00' : value;
       renderSchedule();
     }
 
