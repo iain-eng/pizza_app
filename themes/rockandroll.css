@@ -1,4 +1,3 @@
-
 /* ============= ROCK & ROLL THEME — 90s HIP HOP ============= */
 /* Palette:
    Tibet:              #3D6BBC  — primary surface (80%)
@@ -7,10 +6,10 @@
    Catholic Red:       #C93127  — errors, sold out
    Perfect Orange:     #F5A01F  — warnings, low stock
    Intense Amethyst:   #673B90  — completed steps
-   Font: Bebas Neue (display) + Inter (body)
+   Font: Lilita One (display) + Inter (body)
 */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
 
 body {
   --cream:         #2e5097;
@@ -22,7 +21,7 @@ body {
   --ink-faint:     #b8cef0;
   --terracotta:    #F1D04A;
   --terra-light:   #3a2800;
-  --serif:         'Bebas Neue', 'Inter', sans-serif;
+  --serif:         'Lilita One', 'Inter', sans-serif;
   --sans:          'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: #2e5097;
 }
@@ -33,7 +32,7 @@ body {
 }
 
 .site-header h1 {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Lilita One', sans-serif;
   font-size: 4rem;
   font-weight: 400;
   letter-spacing: 2px;
@@ -52,7 +51,7 @@ body {
 }
 
 h2 {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Lilita One', sans-serif;
   font-weight: 400;
   letter-spacing: 1px;
   font-size: 2.25rem;
@@ -70,7 +69,7 @@ h2 {
 }
 
 .pizza-card h3 {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Lilita One', sans-serif;
   font-weight: 400;
   letter-spacing: 1px;
   font-size: 1.4rem;
@@ -90,7 +89,7 @@ h2 {
 }
 
 .slot-time {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Lilita One', sans-serif;
   font-weight: 400;
   font-size: 3rem;
   letter-spacing: 2px;
@@ -119,7 +118,7 @@ h2 {
 
 .current-time-range {
   color: #F1D04A;
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Lilita One', sans-serif;
   font-size: 1.6rem;
   letter-spacing: 1px;
 }
@@ -209,7 +208,7 @@ h2 {
 
 .pizza-mod-title {
   color: #ffffff;
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Lilita One', sans-serif;
   font-size: 1.3rem;
   letter-spacing: 0.5px;
 }
