@@ -410,10 +410,10 @@
                     <div style="font-family:Georgia,serif;font-size:1rem;font-weight:300;color:#F7F3EE;font-style:italic;letter-spacing:0.08em;margin-bottom:0.25rem;">Portuguese</div>
                     <div style="font-size:0.75rem;color:#C4714A;font-weight:400;">£12.00</div>
                   </div>
-                    <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Portuguese</div>
-                    <div style="font-size:0.75rem;color:var(--ink-faint);">Beach cafe, deep house</div>
-                  </div>
-                </label>
+                  <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Portuguese</div>
+                  <div style="font-size:0.75rem;color:var(--ink-faint);">Beach cafe, deep house</div>
+                </div>
+              </label>
             </div>
             <h3 style="margin-top:30px;margin-bottom:15px;border-bottom:1px solid var(--stone);padding-bottom:10px;">Service Schedule</h3>
             <div class="info-box">
@@ -798,7 +798,7 @@
     }
 
     function updateThemePreviews(theme) {
-      ['classic', 'rockandroll', 'portuguese'].forEach(t => {        
+      ['classic', 'rockandroll', 'portuguese'].forEach(t => {
         const preview = document.getElementById(`theme-${t}-preview`);
         if (preview) {
           preview.style.borderColor = t === theme ? 'var(--ink)' : 'var(--stone)';
@@ -883,7 +883,7 @@
       document.querySelectorAll('input[name="settings-theme"]').forEach(radio => {
         radio.addEventListener('change', () => updateThemePreviews(radio.value));
       });
-      ['classic', 'rockandroll', 'portuguese'].forEach(t => {        
+      ['classic', 'rockandroll', 'portuguese'].forEach(t => {
         const preview = document.getElementById(`theme-${t}-preview`);
         if (preview) preview.addEventListener('click', () => {
           document.getElementById(`theme-${t}`).checked = true;
