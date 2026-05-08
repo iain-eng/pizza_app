@@ -265,6 +265,7 @@
     let hourRanges = [];
     let availableServiceDates = [];
     let selectedServiceDate = null;
+    const earlyAccessCode = new URLSearchParams(window.location.search).get('code') || null;
 
     function calculateModPrice(mods) {
       if (!mods || mods.length === 0) return 0;
@@ -369,36 +370,65 @@
         return true;
       }
       const now = new Date();
+      const codeValid = earlyAccessCode &&
+        settings.earlyAccessCode &&
+        earlyAccessCode.toUpperCase() === settings.earlyAccessCode.toUpperCase();
+
       availableServiceDates = settings.serviceSchedule.filter(schedule => {
         if (!schedule.enabled) return false;
-        const ordersOpenAt = new Date(schedule.ordersOpenAt);
         const serviceDate = new Date(schedule.serviceDate);
         serviceDate.setHours(23, 59, 59);
-        return now >= ordersOpenAt && now <= serviceDate;
+        if (now > serviceDate) return false;
+
+        // Early access: use earlyAccessOpenAt if code is valid and date is set
+        if (codeValid && schedule.earlyAccessOpenAt) {
+          const earlyOpen = new Date(schedule.earlyAccessOpenAt);
+          return now >= earlyOpen;
+        }
+
+        // Standard: use ordersOpenAt
+        const ordersOpenAt = new Date(schedule.ordersOpenAt);
+        return now >= ordersOpenAt;
       }).sort((a, b) => new Date(a.serviceDate) - new Date(b.serviceDate));
+
       return availableServiceDates.length > 0;
     }
 
     function showOrderingClosedMessage() {
       const container = document.querySelector('.container');
       let nextOpening = null;
+      const codeValid = earlyAccessCode &&
+        settings.earlyAccessCode &&
+        earlyAccessCode.toUpperCase() === settings.earlyAccessCode.toUpperCase();
+
       if (settings.serviceSchedule && settings.serviceSchedule.length > 0) {
         const now = new Date();
-        const futureSchedules = settings.serviceSchedule
-          .filter(s => s.enabled && new Date(s.ordersOpenAt) > now)
-          .sort((a, b) => new Date(a.ordersOpenAt) - new Date(b.ordersOpenAt));
+        const futureSchedules = settings.serviceSchedule.filter(s => {
+          if (!s.enabled) return false;
+          // Use earlyAccessOpenAt if code valid, else ordersOpenAt
+          const openAt = (codeValid && s.earlyAccessOpenAt)
+            ? new Date(s.earlyAccessOpenAt)
+            : new Date(s.ordersOpenAt);
+          return openAt > now;
+        }).sort((a, b) => new Date(a.ordersOpenAt) - new Date(b.ordersOpenAt));
         if (futureSchedules.length > 0) nextOpening = futureSchedules[0];
       }
+
+      const openAt = nextOpening
+        ? ((codeValid && nextOpening.earlyAccessOpenAt)
+            ? new Date(nextOpening.earlyAccessOpenAt)
+            : new Date(nextOpening.ordersOpenAt))
+        : null;
+
       let html = `<div class="card" style="text-align:center; padding: 3rem;">
         <h2 style="font-size:2rem; margin-bottom:1rem;">Orders are currently closed</h2>
         <p style="color: var(--ink-light); font-family: var(--serif); font-style:italic; font-size:1.1rem; margin-bottom:1.5rem;">We're not currently taking orders.</p>`;
-      if (nextOpening) {
-        const openDate = new Date(nextOpening.ordersOpenAt);
+      if (nextOpening && openAt) {
         const serviceDate = new Date(nextOpening.serviceDate);
         html += `<div style="background:var(--cream); border:1px solid var(--stone); border-radius:4px; padding:1.5rem; max-width:400px; margin:0 auto; text-align:center;">
           <p style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint); margin-bottom:0.5rem;">Next service</p>
           <p style="font-family:var(--serif); font-size:1.4rem; font-weight:600; margin-bottom:0.5rem;">${serviceDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-          <p style="color:var(--ink-light); font-size:0.875rem;">Orders open ${openDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at ${openDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
+          <p style="color:var(--ink-light); font-size:0.875rem;">Orders open ${openAt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at ${openAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
         </div>`;
       }
       html += `<p style="color:var(--ink-faint); margin-top:2rem; font-size:0.875rem;">Check back soon.</p></div>`;
