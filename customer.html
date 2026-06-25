@@ -55,7 +55,7 @@
     .time-navigation { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding: 1rem 1.25rem; background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px; }
     .time-nav-button { background: var(--ink) !important; color: #ffffff !important; border: none; padding: 0.5rem 1.25rem; font-size: 0.9rem; cursor: pointer; font-weight: 500; transition: background 0.15s; font-family: var(--sans); border-radius: 3px; }
     .time-nav-button:hover:not(:disabled) { background: #2d2926 !important; }
-    .time-nav-button:disabled { background: var(--stone) !important; color: var(--ink-faint) !important; cursor: not-allowed; }
+    .time-nav-button:disabled { background: var(--stone); color: var(--ink-faint); cursor: not-allowed; opacity: 0.5; }
     .current-time-range { font-family: var(--serif); color: var(--ink); font-size: 1.3rem; font-weight: 600; text-align: center; flex: 1; }
 
     .time-slots-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
@@ -76,7 +76,7 @@
     .quantity-controls { display: flex; align-items: center; gap: 0.625rem; }
     .quantity-controls button { background: var(--ink) !important; color: #ffffff !important; border: none; width: 28px; height: 28px; font-size: 1rem; cursor: pointer; transition: background 0.15s; font-weight: 500; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-family: var(--sans); }
     .quantity-controls button:hover:not(:disabled) { background: #2d2926 !important; }
-    .quantity-controls button:disabled { background: var(--stone) !important; color: var(--ink-faint) !important; cursor: not-allowed; }
+    .quantity-controls button:disabled { background: var(--stone); color: var(--ink-faint); cursor: not-allowed; opacity: 0.5; }
     .quantity-controls .qty { font-weight: 600; color: var(--ink); min-width: 22px; text-align: center; font-size: 0.9rem; }
 
     .modifications-section { display: none; }
@@ -105,7 +105,7 @@
 
     .button { width: 100%; padding: 1rem 1.5rem; background: var(--ink) !important; color: #ffffff !important; border: none; border-radius: 3px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: var(--sans); letter-spacing: 0.3px; }
     .button:hover:not(:disabled) { background: #2d2926 !important; }
-    .button:disabled { background: var(--stone) !important; color: var(--ink-faint) !important; cursor: not-allowed; }
+    .button:disabled { background: var(--stone); color: var(--ink-faint); cursor: not-allowed; opacity: 0.5; }
     .button.secondary { background: var(--warm-white) !important; color: var(--ink) !important; border: 1px solid var(--stone-dark); }
     .button.secondary:hover:not(:disabled) { background: var(--cream) !important; border-color: var(--ink); }
 
