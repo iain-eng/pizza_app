@@ -1,0 +1,345 @@
+/* ============= ENTERPRISE THEME ============= */
+/* Modern SaaS, bold condensed type, muted dusty tones.
+   Palette:
+   Dust:         #F0EBF0  — primary background (dusty pink/lilac)
+   White:        #FFFFFF  — card surfaces
+   Slate:        #1A1A2E  — headings, primary text
+   Purple:       #6B5CE7  — primary actions, accents
+   Soft Purple:  #E8E4FF  — secondary surfaces
+   Mid:          #8B8B9E  — secondary text
+   Font: Figtree (display + body) — clean, modern, slightly rounded
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap');
+
+body {
+  --cream:         #F0EBF0;
+  --warm-white:    #FFFFFF;
+  --stone:         #E2DCE8;
+  --stone-dark:    #C8BFD4;
+  --ink:           #1A1A2E;
+  --ink-light:     #4A4A6A;
+  --ink-faint:     #8B8B9E;
+  --terracotta:    #6B5CE7;
+  --terra-light:   #E8E4FF;
+  --serif:         'Figtree', sans-serif;
+  --sans:          'Figtree', sans-serif;
+  background: #F0EBF0;
+  font-family: 'Figtree', sans-serif;
+}
+
+.site-header {
+  background: #6B5CE7;
+  border-bottom: none;
+  padding: 2.5rem 1.5rem 2rem;
+}
+
+.site-header h1 {
+  font-family: 'Figtree', sans-serif;
+  font-size: 3rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.site-header .subtitle {
+  font-family: 'Figtree', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.7);
+  margin-top: 0.5rem;
+}
+
+h2 {
+  font-family: 'Figtree', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  font-size: 1.75rem;
+  color: #1A1A2E;
+}
+
+.card {
+  background: #FFFFFF;
+  border-color: #E2DCE8;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(107,92,231,0.08);
+}
+
+.pizza-card {
+  background: #FFFFFF;
+  border-color: #E2DCE8;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(107,92,231,0.08);
+}
+
+.pizza-card h3 {
+  font-family: 'Figtree', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.3px;
+  font-size: 1.1rem;
+  color: #1A1A2E;
+}
+
+.pizza-card .description {
+  color: #8B8B9E;
+  font-style: normal;
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.875rem;
+}
+
+.pizza-card .price {
+  color: #6B5CE7;
+  font-weight: 800;
+  font-size: 1.2rem;
+  font-family: 'Figtree', sans-serif;
+}
+
+.slot-time {
+  font-family: 'Figtree', sans-serif;
+  font-weight: 900;
+  font-size: 2.5rem;
+  letter-spacing: -1px;
+  color: #1A1A2E;
+  text-transform: uppercase;
+}
+
+.time-slot-card {
+  background: #FFFFFF;
+  border: 1px solid #E2DCE8;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(107,92,231,0.06);
+}
+
+.time-slot-card.full {
+  background: #F5F3F8;
+  border-color: #E2DCE8;
+  opacity: 0.6;
+}
+
+.slot-capacity { color: #8B8B9E; font-weight: 500; }
+.slot-capacity.low { color: #6B5CE7; font-weight: 700; }
+.item-availability-note { color: #6B5CE7; font-weight: 600; }
+
+.time-navigation {
+  background: #FFFFFF;
+  border-color: #E2DCE8;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(107,92,231,0.06);
+}
+
+.current-time-range {
+  color: #1A1A2E;
+  font-family: 'Figtree', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+}
+
+.button, .time-nav-button {
+  background: #6B5CE7 !important;
+  color: #ffffff !important;
+  border-color: #6B5CE7 !important;
+  border-radius: 6px !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  font-family: 'Figtree', sans-serif;
+}
+
+.button:hover:not(:disabled), .time-nav-button:hover:not(:disabled) {
+  background: #5a4bd6 !important;
+  border-color: #5a4bd6 !important;
+}
+
+.button:disabled, .time-nav-button:disabled {
+  background: #E2DCE8 !important;
+  color: #8B8B9E !important;
+  border-color: #E2DCE8 !important;
+}
+
+.button.secondary {
+  background: #FFFFFF !important;
+  color: #6B5CE7 !important;
+  border: 2px solid #6B5CE7 !important;
+}
+
+.button.secondary:hover:not(:disabled) {
+  background: #E8E4FF !important;
+}
+
+.quantity-controls button {
+  background: #6B5CE7 !important;
+  color: #ffffff !important;
+  border-color: #6B5CE7 !important;
+  border-radius: 6px !important;
+  font-weight: 700;
+}
+
+.quantity-controls button:hover:not(:disabled) {
+  background: #5a4bd6 !important;
+}
+
+.quantity-controls button:disabled {
+  background: #E2DCE8 !important;
+  color: #8B8B9E !important;
+}
+
+.quantity-controls .qty {
+  color: #1A1A2E;
+  font-weight: 700;
+}
+
+.pizza-select-item {
+  background: #F5F3F8;
+  border-color: #E2DCE8;
+  border-radius: 6px;
+}
+
+.pizza-select-name {
+  color: #1A1A2E;
+  font-weight: 600;
+  font-family: 'Figtree', sans-serif;
+}
+
+.pizza-select-price {
+  color: #6B5CE7;
+  font-weight: 700;
+}
+
+.step-number { border-color: #C8BFD4; color: #8B8B9E; }
+.step.active .step-number { border-color: #6B5CE7; color: #6B5CE7; }
+.step.active { color: #6B5CE7; }
+
+.step.completed .step-number {
+  background: #6B5CE7 !important;
+  border-color: #6B5CE7 !important;
+  color: #ffffff !important;
+}
+
+.step.completed { color: #6B5CE7; }
+.step-divider { background: #E2DCE8; }
+
+.cart-summary {
+  background: #1A1A2E;
+  border: none;
+  border-radius: 8px;
+}
+
+.cart-item { border-bottom-color: rgba(255,255,255,0.08); }
+
+.pizza-mod-item {
+  background: #F5F3F8;
+  border-color: #E2DCE8;
+  border-radius: 8px;
+}
+
+.pizza-mod-header { border-bottom-color: #E2DCE8; }
+
+.pizza-mod-title {
+  color: #1A1A2E;
+  font-family: 'Figtree', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pizza-mod-slot { color: #8B8B9E; }
+
+.checkbox-group label {
+  background: #FFFFFF;
+  border-color: #E2DCE8;
+  color: #1A1A2E;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.checkbox-group label:hover { border-color: #6B5CE7; }
+.checkbox-group input[type="checkbox"] { accent-color: #6B5CE7; }
+
+.form-group label {
+  color: #4A4A6A;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.75rem;
+}
+
+input, select, textarea {
+  background: #FFFFFF !important;
+  border-color: #E2DCE8 !important;
+  color: #1A1A2E !important;
+  border-radius: 6px !important;
+  font-family: 'Figtree', sans-serif !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #8B8B9E !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #6B5CE7 !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(107,92,231,0.12);
+}
+
+.order-summary-box {
+  background: #E8E4FF;
+  border-color: #C8BFD4;
+  border-radius: 8px;
+}
+
+.order-summary-box h3 {
+  color: #1A1A2E;
+  border-bottom-color: #C8BFD4;
+  font-family: 'Figtree', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.order-summary-item { border-bottom-color: #C8BFD4; color: #4A4A6A; }
+
+.contact-note {
+  background: #E8E4FF;
+  border-left-color: #6B5CE7;
+  color: #4A4A6A;
+  border-radius: 0 6px 6px 0;
+}
+
+.contact-note strong { color: #6B5CE7; }
+
+.error {
+  background: #FFF0F5;
+  border-color: #FFB3CC;
+  border-left-color: #FF4081;
+  color: #8B0033;
+  border-radius: 6px;
+}
+
+.no-slots-message {
+  color: #8B8B9E;
+  font-family: 'Figtree', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+}
+
+#service-date-select {
+  background: #FFFFFF !important;
+  border-color: #E2DCE8 !important;
+  color: #1A1A2E !important;
+}
+
+.slot-full {
+  color: #8B8B9E;
+  font-weight: 500;
+}
