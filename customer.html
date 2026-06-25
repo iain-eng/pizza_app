@@ -310,9 +310,20 @@
           capacityMode = slots[0].capacityMode;
         }
 
-        document.getElementById('business-name').textContent = settings.businessName || 'Pizza Truck no.1';
-        document.getElementById('business-tagline').textContent = settings.tagline || 'Fresh. Fast. Delicious.';
-        document.title = settings.businessName || 'Order';
+        const businessName = settings.businessName || 'Pizza Truck no.1';
+        document.title = businessName;
+
+        if (settings.logo) {
+          document.getElementById('business-name').style.display = 'none';
+          const logoImg = document.createElement('img');
+          logoImg.src = settings.logo;
+          logoImg.alt = businessName;
+          logoImg.style.cssText = 'max-height:80px;max-width:280px;object-fit:contain;margin-bottom:0.5rem;';
+          document.querySelector('.site-header').insertBefore(logoImg, document.getElementById('business-name'));
+        } else {
+          document.getElementById('business-name').textContent = businessName;
+        }
+        document.getElementById('business-tagline').textContent = settings.tagline || '';
 
         if (!checkOrderingAvailable()) { showOrderingClosedMessage(); return; }
 
@@ -805,7 +816,16 @@
       }
       summaryHtml += `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--stone);text-align:right;"><strong style="font-family:var(--serif);font-size:1.4rem;">Total: £${totalAmount.toFixed(2)}</strong></div>`;
       document.getElementById('success-order-summary').innerHTML = summaryHtml;
-      document.getElementById('success-business-name').textContent = settings.businessName || 'Pizza Truck no.1';
+      if (settings.logo) {
+        document.getElementById('success-business-name').style.display = 'none';
+        const logoImg = document.createElement('img');
+        logoImg.src = settings.logo;
+        logoImg.alt = settings.businessName || '';
+        logoImg.style.cssText = 'max-height:80px;max-width:280px;object-fit:contain;margin-bottom:0.5rem;';
+        document.querySelector('#success-page .site-header').insertBefore(logoImg, document.getElementById('success-business-name'));
+      } else {
+        document.getElementById('success-business-name').textContent = settings.businessName || 'Pizza Truck no.1';
+      }
 
       document.querySelector('.container').style.display = 'none';
       document.querySelector('.site-header').style.display = 'none';
