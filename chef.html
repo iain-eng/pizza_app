@@ -380,7 +380,7 @@
               <h4>About Themes</h4>
               <p>Choose how your customer ordering page looks. Changes take effect immediately when saved.</p>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:1.5rem;">
               <label style="cursor:pointer;">
                 <input type="radio" name="settings-theme" id="theme-classic" value="classic" style="display:none;">
                 <div id="theme-classic-preview" style="border:2px solid var(--stone);border-radius:4px;padding:1.25rem;text-align:center;transition:border-color 0.15s;">
@@ -406,12 +406,12 @@
               <label style="cursor:pointer;">
                 <input type="radio" name="settings-theme" id="theme-portuguese" value="portuguese" style="display:none;">
                 <div id="theme-portuguese-preview" style="border:2px solid var(--stone);border-radius:4px;padding:1.25rem;text-align:center;transition:border-color 0.15s;">
-                  <div style="background:#1B3D5F;border:1px solid #E8D5B0;border-radius:3px;padding:1rem;margin-bottom:0.75rem;">
-                    <div style="font-family:Georgia,serif;font-size:1rem;font-weight:300;color:#F7F3EE;font-style:italic;letter-spacing:0.08em;margin-bottom:0.25rem;">Portuguese</div>
-                    <div style="font-size:0.75rem;color:#C4714A;font-weight:400;">£12.00</div>
+                  <div style="background:linear-gradient(135deg,#0D1B2A,#1B3D5F);border:1px solid #1E3448;border-radius:8px;padding:1rem;margin-bottom:0.75rem;">
+                    <div style="font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;color:#FFF1E6;letter-spacing:-0.5px;margin-bottom:0.25rem;">Sunset</div>
+                    <div style="font-size:0.75rem;color:#FFB347;font-weight:700;">£12.00</div>
                   </div>
-                  <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Portuguese</div>
-                  <div style="font-size:0.75rem;color:var(--ink-faint);">Beach cafe, deep house</div>
+                  <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Sunset</div>
+                  <div style="font-size:0.75rem;color:var(--ink-faint);">Deep house, beach</div>
                 </div>
               </label>
             </div>
@@ -424,6 +424,17 @@
                   </div>
                   <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Enterprise</div>
                   <div style="font-size:0.75rem;color:var(--ink-faint);">Bold, modern, SaaS</div>
+                </div>
+              </label>
+              <label style="cursor:pointer;">
+                <input type="radio" name="settings-theme" id="theme-highland" value="highland" style="display:none;">
+                <div id="theme-highland-preview" style="border:2px solid var(--stone);border-radius:4px;padding:1.25rem;text-align:center;transition:border-color 0.15s;">
+                  <div style="background:#1E1E1E;border:1px solid #D4A017;border-radius:4px;padding:1rem;margin-bottom:0.75rem;">
+                    <div style="font-family:'Montserrat',sans-serif;font-size:0.7rem;font-weight:800;color:#FFFFFF;text-transform:uppercase;letter-spacing:3px;margin-bottom:0.25rem;">Highland</div>
+                    <div style="font-size:0.75rem;color:#D4A017;font-weight:700;">£12.00</div>
+                  </div>
+                  <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Highland</div>
+                  <div style="font-size:0.75rem;color:var(--ink-faint);">Dark, gold, branded</div>
                 </div>
               </label>
             </div>
@@ -857,7 +868,7 @@
     }
 
     function updateThemePreviews(theme) {
-      ['classic', 'rockandroll', 'portuguese', 'enterprise'].forEach(t => {
+      ['classic', 'rockandroll', 'portuguese', 'enterprise', 'highland'].forEach(t => {
         const preview = document.getElementById(`theme-${t}-preview`);
         if (preview) {
           preview.style.borderColor = t === theme ? 'var(--ink)' : 'var(--stone)';
@@ -964,7 +975,7 @@
       document.querySelectorAll('input[name="settings-theme"]').forEach(radio => {
         radio.addEventListener('change', () => updateThemePreviews(radio.value));
       });
-      ['classic', 'rockandroll', 'portuguese', 'enterprise'].forEach(t => {
+      ['classic', 'rockandroll', 'portuguese', 'enterprise', 'highland'].forEach(t => {
         const preview = document.getElementById(`theme-${t}-preview`);
         if (preview) preview.addEventListener('click', () => {
           document.getElementById(`theme-${t}`).checked = true;
