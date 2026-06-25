@@ -145,13 +145,9 @@ h2 {
 }
 
 .button.secondary {
-  background: transparent !important;
+  background: rgba(241,208,74,0.15) !important;
   color: #ffffff !important;
   border: 2px solid #F1D04A !important;
-}
-
-.button.secondary:hover:not(:disabled) {
-  background: rgba(241,208,74,0.15) !important;
 }
 
 .quantity-controls button {
