@@ -208,7 +208,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-const DATA_DIR = '/opt/render/project/src/storage';
+const DATA_DIR = '/var/data';
 const MENU_FILE = path.join(DATA_DIR, "menu.json");
 const SLOTS_FILE = path.join(DATA_DIR, "slots.json");
 const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
@@ -815,18 +815,21 @@ app.post("/api/orders/archive", (req, res) => {
 // ============= THEME CSS =============
 const THEMES_DIR = path.join(__dirname, "themes");
 
+// Debug route — remove after confirming themes work
+app.get("/debug-themes", (req, res) => {
+  const exists = fs.existsSync(THEMES_DIR);
+  const files = exists ? fs.readdirSync(THEMES_DIR) : [];
+  const settings = readJSON(SETTINGS_FILE);
+  res.json({ themesDir: THEMES_DIR, exists, files, currentTheme: settings.theme });
+});
+
 app.get("/theme.css", (req, res) => {
   const settings = readJSON(SETTINGS_FILE);
   const theme = settings.theme || "classic";
-
-  // Sanitise theme name — only allow alphanumeric to prevent path traversal
   const safeName = theme.replace(/[^a-z0-9]/gi, "");
   const themePath = path.join(THEMES_DIR, `${safeName}.css`);
-
-  // Fall back to classic if theme file doesn't exist
-  const filePath = fs.existsSync(themePath)
-    ? themePath
-    : path.join(THEMES_DIR, "classic.css");
+  const classicPath = path.join(THEMES_DIR, "classic.css");
+  const filePath = fs.existsSync(themePath) ? themePath : classicPath;
 
   res.setHeader("Content-Type", "text/css");
   res.setHeader("Cache-Control", "no-cache");
@@ -834,7 +837,7 @@ app.get("/theme.css", (req, res) => {
   if (fs.existsSync(filePath)) {
     res.sendFile(filePath);
   } else {
-    res.send("/* no theme file found */");
+    res.send("/* no theme file found — themesDir: " + THEMES_DIR + " */");
   }
 });
 
