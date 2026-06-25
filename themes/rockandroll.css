@@ -133,6 +133,18 @@ h2 {
   font-weight: 700;
 }
 
+.button:disabled, .time-nav-button:disabled {
+  background: #F1D04A !important;
+  color: #1e3a7a !important;
+  opacity: 0.35;
+}
+
+.quantity-controls button:disabled {
+  background: #F1D04A !important;
+  color: #1e3a7a !important;
+  opacity: 0.35;
+}
+
 .button.secondary {
   background: rgba(241,208,74,0.15) !important;
   color: #ffffff !important;
