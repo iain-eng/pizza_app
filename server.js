@@ -208,7 +208,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-const DATA_DIR = path.join(__dirname, "data");
+const DATA_DIR = '/var/data';
 const MENU_FILE = path.join(DATA_DIR, "menu.json");
 const SLOTS_FILE = path.join(DATA_DIR, "slots.json");
 const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
