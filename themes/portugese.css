@@ -1,344 +1,351 @@
-/* ============= PORTUGUESE BEACH CAFE THEME ============= */
-/* Deep house, sun-bleached, unhurried.
+/* ============= PORTUGUESE BEACH THEME — DEEP HOUSE SUNSET ============= */
+/* Algarve sunset, deep house, warm ocean.
    Palette:
-   Whitewash:        #F7F3EE  — primary background
-   Terracotta wall:  #C4714A  — accent, highlights
-   Deep ocean:       #1B3D5F  — headings, primary actions
-   Warm sand:        #E8D5B0  — secondary surfaces
-   Faded coral:      #E8907A  — warm accents
-   Driftwood:        #8C7B6B  — secondary text
-   Sea foam:         #A8C5B5  — subtle highlights
-   Font: Cormorant Garamond (display) + Inter (body)
+   Night Sky:      #0D1B2A  — deep navy, primary surfaces
+   Ocean Deep:     #1B3D5F  — secondary surfaces
+   Sunset Orange:  #FF6B35  — primary accent, buttons
+   Coral:          #FF8C61  — secondary accent
+   Warm Gold:      #FFB347  — highlights, prices
+   Teal:           #00B4D8  — cool contrast accent
+   Sand:           #FFF1E6  — light text, backgrounds
+   Font: DM Sans — modern, clean, premium lifestyle
 */
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&display=swap');
 
 body {
-  --cream:         #F7F3EE;
-  --warm-white:    #FDFAF6;
-  --stone:         #E8D5B0;
-  --stone-dark:    #D4BF98;
-  --ink:           #2C1810;
-  --ink-light:     #5C4033;
-  --ink-faint:     #8C7B6B;
-  --terracotta:    #C4714A;
-  --terra-light:   #F5E6D8;
-  --serif:         'Cormorant Garamond', Georgia, serif;
-  --sans:          'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #F7F3EE;
-  letter-spacing: 0.01em;
+  --cream:         #0D1B2A;
+  --warm-white:    #142535;
+  --stone:         #1E3448;
+  --stone-dark:    #2A4560;
+  --ink:           #FFF1E6;
+  --ink-light:     #CBDCE8;
+  --ink-faint:     #7A9BB5;
+  --terracotta:    #FF6B35;
+  --terra-light:   #2A1A10;
+  --serif:         'DM Sans', sans-serif;
+  --sans:          'DM Sans', sans-serif;
+  background: #0D1B2A;
+  font-family: 'DM Sans', sans-serif;
 }
 
 .site-header {
-  background: #1B3D5F;
-  border-bottom: none;
+  background: linear-gradient(135deg, #0D1B2A 0%, #1B3D5F 50%, #FF6B35 200%);
+  border-bottom: 1px solid rgba(255,107,53,0.3);
   padding: 3rem 1.5rem 2.5rem;
   position: relative;
   overflow: hidden;
 }
 
-.site-header::after {
+.site-header::before {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #C4714A, #E8907A, #A8C5B5, #C4714A);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #FF6B35, #FFB347, #FF8C61, transparent);
 }
 
 .site-header h1 {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 3.5rem;
-  font-weight: 300;
-  letter-spacing: 0.08em;
-  color: #F7F3EE;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 3.25rem;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  color: #FFF1E6;
   line-height: 1;
-  font-style: italic;
 }
 
 .site-header .subtitle {
-  font-family: 'Inter', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-style: normal;
-  font-weight: 400;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 4px;
   font-size: 0.65rem;
-  color: #A8C5B5;
+  color: #FF8C61;
   margin-top: 0.5rem;
 }
 
 h2 {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 300;
-  letter-spacing: 0.05em;
-  font-size: 2.25rem;
-  color: #1B3D5F;
-  font-style: italic;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-size: 1.75rem;
+  color: #FFF1E6;
 }
 
 .card {
-  background: #FDFAF6;
-  border-color: #E8D5B0;
-  border-radius: 2px;
-  box-shadow: 0 1px 8px rgba(44,24,16,0.06);
+  background: #142535;
+  border-color: #1E3448;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
 }
 
 .pizza-card {
-  background: #FDFAF6;
-  border-color: #E8D5B0;
-  border-radius: 2px;
-  box-shadow: 0 1px 8px rgba(44,24,16,0.06);
+  background: #142535;
+  border-color: #1E3448;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.pizza-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
 
 .pizza-card h3 {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  font-size: 1.4rem;
-  color: #1B3D5F;
-  font-style: italic;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  font-size: 1.15rem;
+  color: #FFF1E6;
 }
 
 .pizza-card .description {
-  color: #8C7B6B;
-  font-style: italic;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1rem;
-  line-height: 1.5;
+  color: #7A9BB5;
+  font-style: normal;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
 }
 
 .pizza-card .price {
-  color: #C4714A;
-  font-weight: 400;
+  color: #FFB347;
+  font-weight: 700;
   font-size: 1.2rem;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  letter-spacing: 0.05em;
+  font-family: 'DM Sans', sans-serif;
 }
 
 .slot-time {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 300;
-  font-size: 2.75rem;
-  letter-spacing: 0.05em;
-  color: #1B3D5F;
-  font-style: italic;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 2.5rem;
+  letter-spacing: -1px;
+  color: #FFF1E6;
 }
 
 .time-slot-card {
-  background: #FDFAF6;
-  border: 1px solid #E8D5B0;
-  border-radius: 2px;
-  box-shadow: 0 1px 6px rgba(44,24,16,0.05);
+  background: #142535;
+  border: 1px solid #1E3448;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
 }
 
 .time-slot-card.full {
-  background: #F0EBE3;
-  border-color: #D4BF98;
-  opacity: 0.7;
+  background: #0D1B2A;
+  border-color: #1E3448;
+  opacity: 0.5;
 }
 
-.slot-capacity { color: #8C7B6B; }
-.slot-capacity.low { color: #C4714A; font-style: italic; }
-.item-availability-note { color: #C4714A; font-style: italic; }
+.slot-capacity { color: #7A9BB5; font-weight: 500; }
+.slot-capacity.low { color: #FFB347; font-weight: 600; }
+.item-availability-note { color: #FFB347; font-weight: 500; }
 
 .time-navigation {
-  background: #FDFAF6;
-  border-color: #E8D5B0;
-  box-shadow: 0 1px 6px rgba(44,24,16,0.05);
+  background: #142535;
+  border-color: #1E3448;
+  border-radius: 12px;
 }
 
 .current-time-range {
-  color: #1B3D5F;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.75rem;
-  font-weight: 300;
-  font-style: italic;
-  letter-spacing: 0.05em;
+  color: #FFF1E6;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .button, .time-nav-button {
-  background: #1B3D5F !important;
-  color: #F7F3EE !important;
-  border-color: #1B3D5F !important;
-  border-radius: 2px !important;
-  letter-spacing: 0.08em;
-  font-weight: 500;
-  font-size: 0.8rem;
-  text-transform: uppercase;
+  background: #FF6B35 !important;
+  color: #ffffff !important;
+  border-color: #FF6B35 !important;
+  border-radius: 8px !important;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.3px;
 }
 
 .button:hover:not(:disabled), .time-nav-button:hover:not(:disabled) {
-  background: #142d47 !important;
-  border-color: #142d47 !important;
+  background: #FF6B35 !important;
+  border-color: #FF6B35 !important;
 }
 
 .button:disabled, .time-nav-button:disabled {
-  background: #E8D5B0 !important;
-  color: #8C7B6B !important;
-  border-color: #E8D5B0 !important;
+  background: #1E3448 !important;
+  color: #7A9BB5 !important;
+  border-color: #1E3448 !important;
 }
 
 .button.secondary {
   background: transparent !important;
-  color: #1B3D5F !important;
-  border: 1px solid #D4BF98 !important;
+  color: #FF6B35 !important;
+  border: 1.5px solid #FF6B35 !important;
 }
 
 .button.secondary:hover:not(:disabled) {
-  background: #F0EBE3 !important;
-  border-color: #1B3D5F !important;
+  background: rgba(255,107,53,0.1) !important;
 }
 
 .quantity-controls button {
-  background: #1B3D5F !important;
-  color: #F7F3EE !important;
-  border-color: #1B3D5F !important;
-  border-radius: 2px !important;
+  background: #FF6B35 !important;
+  color: #ffffff !important;
+  border-color: #FF6B35 !important;
+  border-radius: 6px !important;
+  font-weight: 600;
 }
 
-.quantity-controls button:hover:not(:disabled) { background: #142d47 !important; }
+.quantity-controls button:hover:not(:disabled) {
+  background: #FF6B35 !important;
+}
 
 .quantity-controls button:disabled {
-  background: #E8D5B0 !important;
-  color: #8C7B6B !important;
+  background: #1E3448 !important;
+  color: #7A9BB5 !important;
 }
 
 .quantity-controls .qty {
-  color: #2C1810;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.1rem;
+  color: #FFF1E6;
+  font-weight: 600;
 }
 
 .pizza-select-item {
-  background: #F7F3EE;
-  border-color: #E8D5B0;
+  background: #1E3448;
+  border-color: #2A4560;
+  border-radius: 8px;
 }
 
 .pizza-select-name {
-  color: #2C1810;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1rem;
-  font-weight: 400;
+  color: #FFF1E6;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
 }
 
 .pizza-select-price {
-  color: #C4714A;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1rem;
+  color: #FFB347;
+  font-weight: 700;
 }
 
-.step-number { border-color: #D4BF98; color: #8C7B6B; }
-.step.active .step-number { border-color: #1B3D5F; color: #1B3D5F; }
-.step.active { color: #1B3D5F; }
+.step-number { border-color: #2A4560; color: #7A9BB5; }
+.step.active .step-number { border-color: #FF6B35; color: #FF6B35; }
+.step.active { color: #FF6B35; }
 
 .step.completed .step-number {
-  background: #C4714A !important;
-  border-color: #C4714A !important;
+  background: #FF6B35 !important;
+  border-color: #FF6B35 !important;
   color: #ffffff !important;
 }
 
-.step.completed { color: #C4714A; }
-.step-divider { background: #E8D5B0; }
+.step.completed { color: #FF6B35; }
+.step-divider { background: #1E3448; }
 
 .cart-summary {
-  background: #1B3D5F;
-  border: none;
-  border-radius: 2px;
+  background: linear-gradient(135deg, #0D1B2A, #1B3D5F);
+  border: 1px solid rgba(255,107,53,0.3);
+  border-radius: 12px;
 }
 
-.cart-item { border-bottom-color: rgba(247,243,238,0.1); }
+.cart-item { border-bottom-color: rgba(255,255,255,0.06); }
 
 .pizza-mod-item {
-  background: #FDFAF6;
-  border-color: #E8D5B0;
+  background: #1E3448;
+  border-color: #2A4560;
+  border-radius: 10px;
 }
 
-.pizza-mod-header { border-bottom-color: #E8D5B0; }
+.pizza-mod-header { border-bottom-color: #2A4560; }
 
 .pizza-mod-title {
-  color: #1B3D5F;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.3rem;
-  font-weight: 400;
-  font-style: italic;
+  color: #FFF1E6;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
 }
 
-.pizza-mod-slot { color: #8C7B6B; }
+.pizza-mod-slot { color: #00B4D8; font-weight: 500; }
 
 .checkbox-group label {
-  background: #F7F3EE;
-  border-color: #E8D5B0;
-  color: #2C1810;
+  background: #1E3448;
+  border-color: #2A4560;
+  color: #FFF1E6;
+  border-radius: 6px;
+  font-weight: 500;
 }
 
-.checkbox-group label:hover { border-color: #C4714A; }
-.checkbox-group input[type="checkbox"] { accent-color: #C4714A; }
+.checkbox-group label:hover { border-color: #FF6B35; }
+.checkbox-group input[type="checkbox"] { accent-color: #FF6B35; }
 
-.form-group label { color: #5C4033; font-weight: 400; }
+.form-group label {
+  color: #CBDCE8;
+  font-weight: 500;
+}
 
 input, select, textarea {
-  background: #FDFAF6 !important;
-  border-color: #D4BF98 !important;
-  color: #2C1810 !important;
+  background: #1E3448 !important;
+  border-color: #2A4560 !important;
+  color: #FFF1E6 !important;
+  border-radius: 8px !important;
+  font-family: 'DM Sans', sans-serif !important;
 }
 
 input::placeholder, textarea::placeholder {
-  color: #8C7B6B !important;
-  font-style: italic;
+  color: #7A9BB5 !important;
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: #1B3D5F !important;
+  border-color: #FF6B35 !important;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(27,61,95,0.08);
+  box-shadow: 0 0 0 3px rgba(255,107,53,0.15);
 }
 
 .order-summary-box {
-  background: #F0EBE3;
-  border-color: #E8D5B0;
+  background: #142535;
+  border-color: #1E3448;
+  border-radius: 10px;
 }
 
 .order-summary-box h3 {
-  color: #1B3D5F;
-  border-bottom-color: #E8D5B0;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-style: italic;
-  font-weight: 400;
+  color: #FFF1E6;
+  border-bottom-color: #1E3448;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
 }
 
-.order-summary-item { border-bottom-color: #E8D5B0; color: #5C4033; }
+.order-summary-item { border-bottom-color: #1E3448; color: #CBDCE8; }
 
 .contact-note {
-  background: #F5E6D8;
-  border-left-color: #C4714A;
-  color: #5C4033;
+  background: rgba(255,107,53,0.1);
+  border-left-color: #FF6B35;
+  color: #CBDCE8;
+  border-radius: 0 8px 8px 0;
 }
 
-.contact-note strong { color: #C4714A; }
+.contact-note strong { color: #FF6B35; }
 
 .error {
-  background: #FDF0ED;
-  border-color: #E8907A;
-  border-left-color: #C4714A;
-  color: #7A2A1A;
+  background: rgba(255,50,50,0.1);
+  border-color: rgba(255,50,50,0.3);
+  border-left-color: #FF3232;
+  color: #FF9090;
+  border-radius: 6px;
 }
 
 .no-slots-message {
-  color: #8C7B6B;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-style: italic;
-  font-size: 1.3rem;
+  color: #7A9BB5;
+  font-family: 'DM Sans', sans-serif;
+  font-style: normal;
+  font-weight: 500;
 }
 
 #service-date-select {
-  background: #FDFAF6 !important;
-  border-color: #D4BF98 !important;
-  color: #2C1810 !important;
+  background: #1E3448 !important;
+  border-color: #2A4560 !important;
+  color: #FFF1E6 !important;
 }
 
 .slot-full {
-  color: #8C7B6B;
-  font-style: italic;
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  color: #7A9BB5;
+  font-weight: 500;
 }
