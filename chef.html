@@ -380,7 +380,7 @@
               <h4>About Themes</h4>
               <p>Choose how your customer ordering page looks. Changes take effect immediately when saved.</p>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
               <label style="cursor:pointer;">
                 <input type="radio" name="settings-theme" id="theme-classic" value="classic" style="display:none;">
                 <div id="theme-classic-preview" style="border:2px solid var(--stone);border-radius:4px;padding:1.25rem;text-align:center;transition:border-color 0.15s;">
@@ -412,6 +412,18 @@
                   </div>
                   <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Portuguese</div>
                   <div style="font-size:0.75rem;color:var(--ink-faint);">Beach cafe, deep house</div>
+                </div>
+              </label>
+            </div>
+              <label style="cursor:pointer;">
+                <input type="radio" name="settings-theme" id="theme-enterprise" value="enterprise" style="display:none;">
+                <div id="theme-enterprise-preview" style="border:2px solid var(--stone);border-radius:4px;padding:1.25rem;text-align:center;transition:border-color 0.15s;">
+                  <div style="background:#6B5CE7;border:1px solid #5a4bd6;border-radius:6px;padding:1rem;margin-bottom:0.75rem;">
+                    <div style="font-family:'Figtree',sans-serif;font-size:0.85rem;font-weight:900;color:#ffffff;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.25rem;">Enterprise</div>
+                    <div style="font-size:0.75rem;color:rgba(255,255,255,0.8);font-weight:700;">£12.00</div>
+                  </div>
+                  <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Enterprise</div>
+                  <div style="font-size:0.75rem;color:var(--ink-faint);">Bold, modern, SaaS</div>
                 </div>
               </label>
             </div>
@@ -845,7 +857,7 @@
     }
 
     function updateThemePreviews(theme) {
-      ['classic', 'rockandroll', 'portuguese'].forEach(t => {
+      ['classic', 'rockandroll', 'portuguese', 'enterprise'].forEach(t => {
         const preview = document.getElementById(`theme-${t}-preview`);
         if (preview) {
           preview.style.borderColor = t === theme ? 'var(--ink)' : 'var(--stone)';
@@ -952,7 +964,7 @@
       document.querySelectorAll('input[name="settings-theme"]').forEach(radio => {
         radio.addEventListener('change', () => updateThemePreviews(radio.value));
       });
-      ['classic', 'rockandroll', 'portuguese'].forEach(t => {
+      ['classic', 'rockandroll', 'portuguese', 'enterprise'].forEach(t => {
         const preview = document.getElementById(`theme-${t}-preview`);
         if (preview) preview.addEventListener('click', () => {
           document.getElementById(`theme-${t}`).checked = true;
