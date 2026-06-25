@@ -318,7 +318,7 @@
           const logoImg = document.createElement('img');
           logoImg.src = settings.logo;
           logoImg.alt = businessName;
-          logoImg.style.cssText = 'max-height:80px;max-width:280px;object-fit:contain;margin-bottom:0.5rem;';
+          logoImg.style.cssText = 'max-height:160px;max-width:360px;width:auto;object-fit:contain;margin:0 auto 0.5rem;display:block;';
           document.querySelector('.site-header').insertBefore(logoImg, document.getElementById('business-name'));
         } else {
           document.getElementById('business-name').textContent = businessName;
@@ -821,7 +821,7 @@
         const logoImg = document.createElement('img');
         logoImg.src = settings.logo;
         logoImg.alt = settings.businessName || '';
-        logoImg.style.cssText = 'max-height:80px;max-width:280px;object-fit:contain;margin-bottom:0.5rem;';
+        logoImg.style.cssText = 'max-height:160px;max-width:360px;width:auto;object-fit:contain;margin:0 auto 0.5rem;display:block;';
         document.querySelector('#success-page .site-header').insertBefore(logoImg, document.getElementById('success-business-name'));
       } else {
         document.getElementById('success-business-name').textContent = settings.businessName || 'Pizza Truck no.1';
