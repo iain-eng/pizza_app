@@ -173,9 +173,10 @@ h2 {
 }
 
 .button:disabled, .time-nav-button:disabled {
-  background: #1E3448 !important;
-  color: #7A9BB5 !important;
-  border-color: #1E3448 !important;
+  background: rgba(255,255,255,0.08) !important;
+  color: rgba(255,255,255,0.3) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  cursor: not-allowed;
 }
 
 .button.secondary {
@@ -201,8 +202,10 @@ h2 {
 }
 
 .quantity-controls button:disabled {
-  background: #1E3448 !important;
-  color: #7A9BB5 !important;
+  background: rgba(255,255,255,0.08) !important;
+  color: rgba(255,255,255,0.3) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  cursor: not-allowed;
 }
 
 .quantity-controls .qty {
