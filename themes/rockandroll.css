@@ -134,8 +134,8 @@ h2 {
 }
 
 .button:hover:not(:disabled), .time-nav-button:hover:not(:disabled) {
-  background: #d4b530 !important;
-  border-color: #d4b530 !important;
+  background: #F1D04A !important;
+  border-color: #F1D04A !important;
 }
 
 .button:disabled, .time-nav-button:disabled {
@@ -158,7 +158,7 @@ h2 {
   font-weight: 700;
 }
 
-.quantity-controls button:hover:not(:disabled) { background: #d4b530 !important; }
+.quantity-controls button:hover:not(:disabled) { background: #F1D04A !important; }
 
 .quantity-controls button:disabled {
   background: #4a7acc !important;
