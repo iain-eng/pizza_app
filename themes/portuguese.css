@@ -167,26 +167,10 @@ h2 {
   letter-spacing: 0.3px;
 }
 
-.button:hover:not(:disabled), .time-nav-button:hover:not(:disabled) {
-  background: #FF6B35 !important;
-  border-color: #FF6B35 !important;
-}
-
-.button:disabled, .time-nav-button:disabled {
-  background: rgba(255,255,255,0.08) !important;
-  color: rgba(255,255,255,0.3) !important;
-  border: 1px solid rgba(255,255,255,0.15) !important;
-  cursor: not-allowed;
-}
-
 .button.secondary {
   background: transparent !important;
   color: #FF6B35 !important;
   border: 1.5px solid #FF6B35 !important;
-}
-
-.button.secondary:hover:not(:disabled) {
-  background: rgba(255,107,53,0.1) !important;
 }
 
 .quantity-controls button {
@@ -195,17 +179,6 @@ h2 {
   border-color: #FF6B35 !important;
   border-radius: 6px !important;
   font-weight: 600;
-}
-
-.quantity-controls button:hover:not(:disabled) {
-  background: #FF6B35 !important;
-}
-
-.quantity-controls button:disabled {
-  background: rgba(255,255,255,0.08) !important;
-  color: rgba(255,255,255,0.3) !important;
-  border: 1px solid rgba(255,255,255,0.15) !important;
-  cursor: not-allowed;
 }
 
 .quantity-controls .qty {
