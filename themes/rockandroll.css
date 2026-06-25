@@ -139,9 +139,9 @@ h2 {
 }
 
 .button:disabled, .time-nav-button:disabled {
-  background: #4a7acc !important;
-  color: #b8cef0 !important;
-  border-color: #4a7acc !important;
+  background: rgba(255,255,255,0.15) !important;
+  color: rgba(255,255,255,0.4) !important;
+  border-color: rgba(255,255,255,0.2) !important;
 }
 
 .button.secondary {
