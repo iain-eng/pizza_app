@@ -305,7 +305,6 @@
         extras = await extrasRes.json();
         capacityMode = settings.capacityMode || 'total';
 
-        // Pull capacityMode from slots response if available
         if (slots.length > 0 && slots[0].capacityMode) {
           capacityMode = slots[0].capacityMode;
         }
@@ -325,13 +324,11 @@
             background-repeat: no-repeat;
             position: relative;
           `;
-          // Dark overlay so text remains readable
           header.style.setProperty('--header-overlay', 'rgba(0,0,0,0.45)');
           const overlay = document.createElement('div');
           overlay.style.cssText = 'position:absolute;inset:0;background:var(--header-overlay);z-index:0;';
           header.style.position = 'relative';
           header.insertBefore(overlay, header.firstChild);
-          // Bring text above overlay
           document.getElementById('business-name').style.cssText = 'position:relative;z-index:1;color:#ffffff;text-shadow:0 2px 8px rgba(0,0,0,0.4);';
           document.getElementById('business-tagline').style.cssText = 'position:relative;z-index:1;color:rgba(255,255,255,0.85);text-shadow:0 1px 4px rgba(0,0,0,0.4);';
         }
@@ -398,19 +395,16 @@
         serviceDate.setHours(23, 59, 59);
         if (now > serviceDate) return false;
 
-        // Check ordersCloseAt — if set and past, orders are closed
         if (schedule.ordersCloseAt) {
           const closeAt = new Date(schedule.ordersCloseAt);
           if (now > closeAt) return false;
         }
 
-        // Early access: use earlyAccessOpenAt if code is valid and date is set
         if (codeValid && schedule.earlyAccessOpenAt) {
           const earlyOpen = new Date(schedule.earlyAccessOpenAt);
           return now >= earlyOpen;
         }
 
-        // Standard: use ordersOpenAt
         const ordersOpenAt = new Date(schedule.ordersOpenAt);
         return now >= ordersOpenAt;
       }).sort((a, b) => new Date(a.serviceDate) - new Date(b.serviceDate));
@@ -429,7 +423,6 @@
         const now = new Date();
         const futureSchedules = settings.serviceSchedule.filter(s => {
           if (!s.enabled) return false;
-          // Use earlyAccessOpenAt if code valid, else ordersOpenAt
           const openAt = (codeValid && s.earlyAccessOpenAt)
             ? new Date(s.earlyAccessOpenAt)
             : new Date(s.ordersOpenAt);
@@ -445,8 +438,7 @@
         : null;
 
       let html = `<div class="card" style="text-align:center; padding: 3rem;">
-        <h2 style="font-size:2rem; margin-bottom:1rem;">Orders are currently closed</h2>
-        <p style="color: var(--ink-light); font-family: var(--serif); font-style:italic; font-size:1.1rem; margin-bottom:1.5rem;">We're not currently taking orders.</p>`;
+        <h2 style="font-size:2rem; margin-bottom:1rem;">Orders are currently closed</h2>`;
       if (nextOpening && openAt) {
         const serviceDate = new Date(nextOpening.serviceDate);
         html += `<div style="background:var(--cream); border:1px solid var(--stone); border-radius:4px; padding:1.5rem; max-width:400px; margin:0 auto; text-align:center;">
@@ -471,13 +463,11 @@
       `).join('');
     }
 
-    // Get how many of a specific item are in the cart for a given slot
     function getItemCartCount(slotId, menuId) {
       const key = `${slotId}-${menuId}`;
       return cart[key] ? cart[key].quantity : 0;
     }
 
-    // Check if a specific item can be added in a slot (handles both capacity modes)
     function canAddItem(slot, menuId) {
       if (capacityMode === 'per-item') {
         const itemAvail = slot.itemAvailability ? slot.itemAvailability[menuId] : null;
@@ -485,17 +475,16 @@
           const inCart = getItemCartCount(slot.id, menuId);
           return (itemAvail.remaining - inCart) > 0;
         }
-        return true; // null remaining = unlimited
+        return true;
       } else {
         return getSlotTotal(slot.id) < slot.remaining;
       }
     }
 
-    // Get remaining for display in per-item mode
     function getItemRemaining(slot, menuId) {
       if (capacityMode !== 'per-item') return null;
       const itemAvail = slot.itemAvailability ? slot.itemAvailability[menuId] : null;
-      if (!itemAvail || itemAvail.remaining === null) return null; // unlimited
+      if (!itemAvail || itemAvail.remaining === null) return null;
       const inCart = getItemCartCount(slot.id, menuId);
       return Math.max(0, itemAvail.remaining - inCart);
     }
@@ -517,13 +506,10 @@
       const availableMenu = menu.filter(item => item.available);
 
       display.innerHTML = currentRange.slots.map(slot => {
-        // In total mode, check overall slot capacity
-        // In per-item mode, slot is "full" only if ALL limited items are at 0
         let slotIsFull = false;
         if (capacityMode === 'total') {
           slotIsFull = slot.remaining <= 0;
         } else {
-          // Full if every item with a limit has 0 remaining (unlimited items always available)
           const limitedItems = availableMenu.filter(m => {
             const avail = slot.itemAvailability ? slot.itemAvailability[m.id] : null;
             return avail && avail.remaining !== null;
@@ -645,14 +631,12 @@
       const allAvailableExtras = extras.filter(e => e.available);
       let html = '';
 
-      // Helper: get extras applicable to a specific menu item
       function getExtrasForItem(menuId) {
         return allAvailableExtras.filter(e =>
           !e.menuItems || e.menuItems.length === 0 || e.menuItems.includes(menuId)
         );
       }
 
-      // Check if any item has any extras at all
       const anyExtras = Object.keys(cart).some(key => getExtrasForItem(cart[key].menuId).length > 0);
 
       if (!anyExtras) {
