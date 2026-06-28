@@ -398,6 +398,12 @@
         serviceDate.setHours(23, 59, 59);
         if (now > serviceDate) return false;
 
+        // Check ordersCloseAt — if set and past, orders are closed
+        if (schedule.ordersCloseAt) {
+          const closeAt = new Date(schedule.ordersCloseAt);
+          if (now > closeAt) return false;
+        }
+
         // Early access: use earlyAccessOpenAt if code is valid and date is set
         if (codeValid && schedule.earlyAccessOpenAt) {
           const earlyOpen = new Date(schedule.earlyAccessOpenAt);
