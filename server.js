@@ -345,7 +345,7 @@ app.get("/api/extras", (req, res) => res.json(getExtras()));
 app.post("/api/extras", (req, res) => {
   const settings = readJSON(SETTINGS_FILE);
   if (!settings.extras) settings.extras = [];
-  const newExtra = { id: Date.now().toString(), name: req.body.name, price: parseFloat(req.body.price), available: req.body.available !== false };
+  const newExtra = { id: Date.now().toString(), name: req.body.name, price: parseFloat(req.body.price), available: req.body.available !== false, menuItems: req.body.menuItems || [] };
   settings.extras.push(newExtra);
   writeJSON(SETTINGS_FILE, settings);
   res.json(newExtra);
@@ -360,7 +360,8 @@ app.put("/api/extras/:id", (req, res) => {
     ...settings.extras[index],
     name: req.body.name !== undefined ? req.body.name : settings.extras[index].name,
     price: req.body.price !== undefined ? parseFloat(req.body.price) : settings.extras[index].price,
-    available: req.body.available !== undefined ? req.body.available : settings.extras[index].available
+    available: req.body.available !== undefined ? req.body.available : settings.extras[index].available,
+    menuItems: req.body.menuItems !== undefined ? req.body.menuItems : (settings.extras[index].menuItems || [])
   };
   writeJSON(SETTINGS_FILE, settings);
   res.json(settings.extras[index]);
