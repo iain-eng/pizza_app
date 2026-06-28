@@ -214,7 +214,7 @@
         <div id="service-date-tabs"></div>
         <button class="tab" onclick="switchTab('service')">Live Orders</button>
         <button class="tab" onclick="switchTab('menu')">Menu</button>
-        <button class="tab" onclick="switchTab('slots')">Time Slots</button>
+        <button class="tab" onclick="switchTab('schedule')">Schedule</button>
         <button class="tab" onclick="switchTab('extras')">Extras</button>
         <button class="tab" onclick="switchTab('settings')">Settings</button>
       </div>
@@ -279,7 +279,24 @@
       </div>
 
       <!-- Slots Tab -->
-      <div id="slots-tab" class="tab-content">
+      <!-- Schedule Tab (Service Dates + Time Slots) -->
+      <div id="schedule-tab" class="tab-content">
+
+        <!-- Service Dates -->
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <h2 style="margin:0;border:none;">Service Dates</h2>
+            <button class="primary" onclick="addScheduleItem()">+ Add Date</button>
+          </div>
+          <div class="info-box">
+            <h4>About Service Dates</h4>
+            <p>Set when customers can place orders. Orders open and close times control the ordering window. Save settings after making changes.</p>
+          </div>
+          <div id="schedule-list-tab" style="margin-bottom:1rem;"></div>
+          <button type="button" class="secondary" onclick="saveScheduleFromTab()" style="width:100%;">Save Service Dates</button>
+        </div>
+
+        <!-- Capacity Mode -->
         <div class="card">
           <h2>Capacity Mode</h2>
           <div class="info-box">
@@ -299,6 +316,7 @@
           </div>
         </div>
 
+        <!-- Time Slots -->
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
             <h2 style="margin:0;border:none;">Time Slots</h2>
@@ -455,13 +473,6 @@
                 </div>
               </div>
             </div>
-            <h3 style="margin-top:30px;margin-bottom:15px;border-bottom:1px solid var(--stone);padding-bottom:10px;">Service Schedule</h3>
-            <div class="info-box">
-              <h4>About Service Schedule</h4>
-              <p>Control when customers can place orders. Add service dates and set when orders open for each date.</p>
-            </div>
-            <div id="schedule-list" style="margin-bottom:20px;"></div>
-            <button type="button" class="secondary" onclick="addScheduleItem()" style="width:100%;margin-bottom:20px;">+ Add Service Date</button>
             <div class="button-group">
               <button type="submit" class="primary">Save Settings</button>
               <button type="button" class="secondary" onclick="loadSettings()">Reset</button>
@@ -780,18 +791,23 @@
       tbody.innerHTML = sortedSchedule.map(schedule => {
         const serviceDate = new Date(schedule.serviceDate);
         const ordersOpenAt = new Date(schedule.ordersOpenAt);
+        const ordersCloseAt = schedule.ordersCloseAt ? new Date(schedule.ordersCloseAt) : null;
         let statusBadge, statusClass;
         if (!schedule.enabled) { statusBadge = 'Disabled'; statusClass = 'status-cancelled'; }
         else if (now < ordersOpenAt) { statusBadge = 'Scheduled'; statusClass = 'status-confirmed'; }
+        else if (ordersCloseAt && now > ordersCloseAt) { statusBadge = 'Closed'; statusClass = 'status-completed'; }
         else if (now >= ordersOpenAt && now <= serviceDate) { statusBadge = 'Open'; statusClass = 'status-ready'; }
         else { statusBadge = 'Closed'; statusClass = 'status-completed'; }
         const dateOrders = orders.filter(o => o.serviceDate === schedule.serviceDate && o.status !== 'completed' && o.status !== 'cancelled');
         const revenue = dateOrders.reduce((sum, o) => sum + o.total, 0);
+        const closeDisplay = ordersCloseAt
+          ? `${ordersCloseAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} at ${ordersCloseAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
+          : 'End of service day';
         return `<tr>
           <td style="padding:0.875rem;"><div style="font-weight:600;font-size:0.95rem;">${serviceDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div></td>
           <td style="padding:0.875rem;"><span class="status-badge ${statusClass}">${statusBadge}</span></td>
           <td style="padding:0.875rem;font-size:0.875rem;color:var(--ink-light);">${ordersOpenAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} at ${ordersOpenAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</td>
-          <td style="padding:0.875rem;font-size:0.875rem;color:var(--ink-light);">${serviceDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} 23:59</td>
+          <td style="padding:0.875rem;font-size:0.875rem;color:var(--ink-light);">${closeDisplay}</td>
           <td style="padding:0.875rem;text-align:center;"><span style="font-weight:600;">${countUniqueOrders(dateOrders)}</span></td>
           <td style="padding:0.875rem;text-align:right;font-weight:600;">${revenue > 0 ? `£${revenue.toFixed(2)}` : '—'}</td>
         </tr>`;
@@ -878,32 +894,72 @@
     }
 
     function renderSchedule() {
-      const scheduleList = document.getElementById('schedule-list');
-      if (settings.serviceSchedule.length === 0) { scheduleList.innerHTML = '<p style="color:var(--ink-faint);text-align:center;padding:20px;">No service dates scheduled. Add one below!</p>'; return; }
-      scheduleList.innerHTML = settings.serviceSchedule.map((schedule, index) => {
-        const serviceDate = new Date(schedule.serviceDate);
-        const hasEarlyAccess = !!schedule.earlyAccessOpenAt;
-        return `<div style="background:var(--cream);border:1px solid var(--stone);border-radius:4px;padding:1.25rem;margin-bottom:1rem;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-            <strong>Service: ${serviceDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</strong>
-            <button type="button" class="small danger" onclick="removeScheduleItem(${index})">Delete</button>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-            <div class="form-group" style="margin:0;"><label>Service Date</label><input type="date" value="${schedule.serviceDate}" onchange="updateScheduleItem(${index}, 'serviceDate', this.value)"></div>
-            <div class="form-group" style="margin:0;"><label>Orders Open At</label><input type="datetime-local" value="${schedule.ordersOpenAt.slice(0, 16)}" onchange="updateScheduleItem(${index}, 'ordersOpenAt', this.value)"><small>When the public can start ordering</small></div>
-          </div>
-          <div class="form-group" style="margin-top:0.75rem;margin-bottom:0.75rem;">
-            <label><input type="checkbox" ${hasEarlyAccess ? 'checked' : ''} onchange="toggleEarlyAccess(${index}, this.checked)"> Enable early access for this date</label>
-          </div>
-          ${hasEarlyAccess ? `
-          <div class="form-group" style="margin:0;background:var(--warm-white);border:1px solid var(--stone);border-radius:3px;padding:0.875rem;">
-            <label>Early Access Opens At</label>
-            <input type="datetime-local" value="${schedule.earlyAccessOpenAt ? schedule.earlyAccessOpenAt.slice(0, 16) : ''}" onchange="updateScheduleItem(${index}, 'earlyAccessOpenAt', this.value)">
-            <small>Customers with the early access code can order from this time</small>
-          </div>` : ''}
-          <div class="form-group" style="margin-top:0.75rem;margin-bottom:0;"><label><input type="checkbox" ${schedule.enabled ? 'checked' : ''} onchange="updateScheduleItem(${index}, 'enabled', this.checked)"> Enable this service date</label></div>
-        </div>`;
-      }).join('');
+      // Render in both the Schedule tab and keep settings in sync
+      const scheduleListTab = document.getElementById('schedule-list-tab');
+      const scheduleListSettings = document.getElementById('schedule-list');
+
+      const html = settings.serviceSchedule.length === 0
+        ? '<p style="color:var(--ink-faint);text-align:center;padding:20px;">No service dates yet. Click "+ Add Date" to get started.</p>'
+        : settings.serviceSchedule.map((schedule, index) => {
+            const serviceDate = new Date(schedule.serviceDate);
+            const hasEarlyAccess = !!schedule.earlyAccessOpenAt;
+            return `<div style="background:var(--cream);border:1px solid var(--stone);border-radius:4px;padding:1.25rem;margin-bottom:1rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <strong>${serviceDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</strong>
+                <button type="button" class="small danger" onclick="removeScheduleItem(${index})">Delete</button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:0.75rem;">
+                <div class="form-group" style="margin:0;">
+                  <label>Service Date</label>
+                  <input type="date" value="${schedule.serviceDate}" onchange="updateScheduleItem(${index}, 'serviceDate', this.value)">
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label><input type="checkbox" ${schedule.enabled ? 'checked' : ''} onchange="updateScheduleItem(${index}, 'enabled', this.checked)"> Enable this date</label>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:0.75rem;">
+                <div class="form-group" style="margin:0;">
+                  <label>Orders Open At</label>
+                  <input type="datetime-local" value="${schedule.ordersOpenAt ? schedule.ordersOpenAt.slice(0, 16) : ''}" onchange="updateScheduleItem(${index}, 'ordersOpenAt', this.value)">
+                  <small>When the public can start ordering</small>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label>Orders Close At</label>
+                  <input type="datetime-local" value="${schedule.ordersCloseAt ? schedule.ordersCloseAt.slice(0, 16) : ''}" onchange="updateScheduleItem(${index}, 'ordersCloseAt', this.value)">
+                  <small>Leave blank to stay open until end of service date</small>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom:0.75rem;">
+                <label><input type="checkbox" ${hasEarlyAccess ? 'checked' : ''} onchange="toggleEarlyAccess(${index}, this.checked)"> Enable early access for this date</label>
+              </div>
+              ${hasEarlyAccess ? `
+              <div class="form-group" style="margin:0;background:var(--warm-white);border:1px solid var(--stone);border-radius:3px;padding:0.875rem;">
+                <label>Early Access Opens At</label>
+                <input type="datetime-local" value="${schedule.earlyAccessOpenAt ? schedule.earlyAccessOpenAt.slice(0, 16) : ''}" onchange="updateScheduleItem(${index}, 'earlyAccessOpenAt', this.value)">
+                <small>Customers with the early access code can order from this time</small>
+              </div>` : ''}
+            </div>`;
+          }).join('');
+
+      if (scheduleListTab) scheduleListTab.innerHTML = html;
+      if (scheduleListSettings) scheduleListSettings.innerHTML = html;
+    }
+
+    async function saveScheduleFromTab() {
+      try {
+        const response = await fetch(`${API_URL}/settings`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ serviceSchedule: settings.serviceSchedule })
+        });
+        if (response.ok) {
+          settings = await response.json();
+          showSettingsMessage('Service dates saved!', 'success');
+          createServiceDateTabs();
+        } else {
+          showSettingsMessage('Failed to save', 'error');
+        }
+      } catch (error) { showSettingsMessage('Error saving: ' + error.message, 'error'); }
     }
 
     function toggleEarlyAccess(index, enabled) {
@@ -923,12 +979,19 @@
       const daysUntilFriday = (5 - today.getDay() + 7) % 7 || 7;
       const nextFriday = new Date(today); nextFriday.setDate(today.getDate() + daysUntilFriday);
       const tuesdayBefore = new Date(nextFriday); tuesdayBefore.setDate(nextFriday.getDate() - 3); tuesdayBefore.setHours(10, 0, 0, 0);
-      settings.serviceSchedule.push({ serviceDate: nextFriday.toISOString().split('T')[0], ordersOpenAt: tuesdayBefore.toISOString().slice(0, 16), earlyAccessOpenAt: null, enabled: true });
+      settings.serviceSchedule.push({
+        serviceDate: nextFriday.toISOString().split('T')[0],
+        ordersOpenAt: tuesdayBefore.toISOString().slice(0, 16),
+        ordersCloseAt: null,
+        earlyAccessOpenAt: null,
+        enabled: true
+      });
       renderSchedule();
     }
 
     function updateScheduleItem(index, field, value) {
-      settings.serviceSchedule[index][field] = (field === 'ordersOpenAt' || field === 'earlyAccessOpenAt') ? value + ':00' : value;
+      const dateTimeFields = ['ordersOpenAt', 'earlyAccessOpenAt', 'ordersCloseAt'];
+      settings.serviceSchedule[index][field] = dateTimeFields.includes(field) && value ? value + ':00' : value;
       renderSchedule();
     }
 
