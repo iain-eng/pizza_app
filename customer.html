@@ -3,1706 +3,870 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chef Dashboard</title>
+  <title>Order Pizza</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { overflow-y: scroll; -webkit-overflow-scrolling: touch; }
+
     :root {
-      --cream:      #faf8f4;
-      --warm-white: #ffffff;
-      --stone:      #e8e2d9;
-      --stone-dark: #d4ccbf;
-      --ink:        #1c1917;
-      --ink-light:  #57534e;
-      --ink-faint:  #a8a29e;
-      --terracotta: #c2714f;
-      --terra-light:#f0e6e0;
-      --serif:      'Playfair Display', Georgia, serif;
-      --sans:       'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --cream:         #faf8f4;
+      --warm-white:    #ffffff;
+      --stone:         #e8e2d9;
+      --stone-dark:    #d4ccbf;
+      --ink:           #1c1917;
+      --ink-light:     #57534e;
+      --ink-faint:     #a8a29e;
+      --terracotta:    #c2714f;
+      --terra-light:   #f0e6e0;
+      --serif:         'Playfair Display', Georgia, serif;
+      --sans:          'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
-    body { font-family: var(--sans); background: var(--cream); color: var(--ink); line-height: 1.6; }
-    .header { background: var(--warm-white); color: var(--ink); padding: 1.5rem 2rem; border-bottom: 1px solid var(--stone); }
-    .header h1 { font-family: var(--serif); font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--ink); }
-    .header p { color: var(--ink-faint); font-size: 0.875rem; }
-    .container { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--stone); flex-wrap: wrap; }
-    .tab { padding: 0.75rem 1.5rem; background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--ink-faint); transition: all 0.15s ease; font-family: var(--sans); }
-    .tab:hover { color: var(--ink); }
-    .tab.active { color: var(--ink); border-bottom-color: var(--ink); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    .card { background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px; padding: 1.5rem; margin-bottom: 1.5rem; }
-    .card h2 { font-family: var(--serif); font-size: 1.4rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--ink); border-bottom: 1px solid var(--stone); padding-bottom: 0.75rem; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-    .stat-card { background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px; padding: 1.5rem; text-align: center; }
-    .stat-value { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--ink); }
-    .stat-label { font-size: 0.875rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
-    .pizza-breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
-    .pizza-stat { background: var(--cream); padding: 1rem; border: 1px solid var(--stone); border-radius: 6px; }
-    .pizza-stat-name { font-weight: 500; color: var(--ink-light); margin-bottom: 0.5rem; font-size: 0.9rem; }
-    .pizza-stat-count { font-size: 1.75rem; font-weight: 700; color: var(--ink); }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; background: var(--warm-white); border: 1px solid var(--stone); border-radius: 6px; overflow: hidden; }
-    thead { background: var(--cream); border-bottom: 2px solid var(--stone); }
-    th, td { padding: 0.875rem 1rem; text-align: left; border-bottom: 1px solid var(--stone); }
-    th { font-weight: 600; font-size: 0.8rem; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.5px; }
-    tbody tr:hover { background: var(--cream); }
-    tbody tr:last-child td { border-bottom: none; }
-    .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .status-confirmed { background: #bee3f8; color: #2c5282; }
-    .status-preparing { background: #feebc8; color: #7c2d12; }
-    .status-ready { background: #c6f6d5; color: #22543d; }
-    .status-completed { background: var(--stone); color: var(--ink); }
-    .status-cancelled { background: #fed7d7; color: #742a2a; }
-    button { padding: 0.625rem 1.25rem; border: 1px solid var(--stone); border-radius: 3px; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.15s ease; font-family: var(--sans); background: var(--warm-white); color: var(--ink); }
-    button.primary { background: var(--ink) !important; color: #ffffff !important; border-color: var(--ink); }
-    button.primary:hover { background: #2d2926 !important; }
-    button.secondary { background: var(--warm-white) !important; color: var(--ink-light) !important; border-color: var(--stone-dark); }
-    button.secondary:hover { background: var(--cream) !important; border-color: var(--ink); color: var(--ink) !important; }
-    button.danger { background: var(--warm-white) !important; color: #dc2626 !important; border-color: #dc2626; }
-    button.danger:hover { background: #dc2626 !important; color: #ffffff !important; }
-    button.small { padding: 0.375rem 0.875rem; font-size: 0.85rem; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-    .form-group { margin-bottom: 1.25rem; }
-    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--ink); font-size: 0.875rem; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--stone-dark); border-radius: 3px; font-size: 0.9rem; font-family: var(--sans); background: var(--warm-white); transition: border-color 0.15s; color: var(--ink); }
+
+    body { font-family: var(--sans); background: var(--cream); color: var(--ink); min-height: 100vh; padding-bottom: 120px; }
+
+    .site-header { background: var(--warm-white); border-bottom: 1px solid var(--stone); padding: 2.5rem 1.5rem 2rem; text-align: center; }
+    .site-header h1 { font-family: var(--serif); font-size: 2.75rem; font-weight: 700; color: var(--ink); letter-spacing: -0.5px; line-height: 1.1; margin-bottom: 0.5rem; }
+    .site-header .subtitle { font-family: var(--serif); font-style: italic; font-size: 1.1rem; color: var(--ink-light); }
+
+    .container { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    .step-indicator { display: flex; justify-content: center; align-items: center; margin-bottom: 2.5rem; }
+    .step { display: flex; align-items: center; gap: 0.625rem; color: var(--ink-faint); font-size: 0.85rem; font-weight: 500; }
+    .step.active { color: var(--ink); }
+    .step.completed { color: var(--terracotta); }
+    .step-number { width: 28px; height: 28px; border: 1.5px solid currentColor; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; flex-shrink: 0; }
+    .step.completed .step-number { background: var(--terracotta) !important; border-color: var(--terracotta); color: #ffffff !important; }
+    .step-divider { width: 40px; height: 1px; background: var(--stone-dark); margin: 0 0.5rem; }
+
+    h2 { font-family: var(--serif); font-size: 1.75rem; font-weight: 700; color: var(--ink); margin-bottom: 1.25rem; letter-spacing: -0.3px; }
+
+    .card { background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px; padding: 2rem; margin-bottom: 1.5rem; }
+
+    .menu-preview { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .pizza-card { border: 1px solid var(--stone); border-radius: 4px; padding: 1.25rem; text-align: center; background: var(--warm-white); }
+    .pizza-image { width: 100%; height: 140px; object-fit: cover; margin-bottom: 0.875rem; background: var(--stone); border-radius: 2px; }
+    .pizza-card h3 { font-family: var(--serif); color: var(--ink); font-size: 1.2rem; margin-bottom: 0.375rem; font-weight: 600; }
+    .pizza-card .description { color: var(--ink-light); font-size: 0.875rem; margin-bottom: 0.625rem; font-style: italic; font-family: var(--serif); }
+    .pizza-card .price { color: var(--terracotta); font-size: 1.25rem; font-weight: 600; }
+
+    .time-navigation { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding: 1rem 1.25rem; background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px; }
+    .time-nav-button { background: var(--ink); color: #ffffff; border: none; padding: 0.5rem 1.25rem; font-size: 0.9rem; cursor: pointer; font-weight: 500; font-family: var(--sans); border-radius: 3px; }
+    .time-nav-button:disabled { background: var(--stone); color: var(--ink-faint); cursor: not-allowed; opacity: 0.5; }
+    .current-time-range { font-family: var(--serif); color: var(--ink); font-size: 1.3rem; font-weight: 600; text-align: center; flex: 1; }
+
+    .time-slots-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .time-slot-card { background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px; padding: 1.5rem; position: relative; transition: border-color 0.15s; }
+    .time-slot-card:not(.full):hover { border-color: var(--stone-dark); }
+    .time-slot-card.full { opacity: 0.45; background: var(--cream); }
+    .slot-time { font-family: var(--serif); font-size: 2rem; font-weight: 700; color: var(--ink); margin-bottom: 0.375rem; text-align: center; }
+    .slot-capacity { text-align: center; font-size: 0.85rem; color: var(--ink-light); margin-bottom: 1rem; }
+    .slot-capacity.low { color: var(--terracotta); font-weight: 600; }
+    .slot-full { text-align: center; color: var(--ink-faint); font-size: 0.95rem; padding: 1rem 0; }
+
+    .pizza-selector { border-top: 1px solid var(--stone); padding-top: 1rem; }
+    .pizza-select-item { display: flex; justify-content: space-between; align-items: center; padding: 0.625rem 0.75rem; margin-bottom: 0.5rem; background: var(--cream); border: 1px solid var(--stone); border-radius: 3px; }
+    .pizza-select-item.item-unavailable { opacity: 0.5; }
+    .pizza-select-name { font-weight: 500; color: var(--ink); flex: 1; font-size: 0.875rem; }
+    .pizza-select-price { color: var(--terracotta); font-weight: 600; margin-right: 1rem; font-size: 0.875rem; }
+    .item-availability-note { font-size: 0.75rem; color: var(--terracotta); margin-top: 2px; }
+    .quantity-controls { display: flex; align-items: center; gap: 0.625rem; }
+    .quantity-controls button { background: var(--ink); color: #ffffff; border: none; width: 28px; height: 28px; font-size: 1rem; cursor: pointer; font-weight: 500; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-family: var(--sans); }
+    .quantity-controls button:disabled { background: var(--stone); color: var(--ink-faint); cursor: not-allowed; opacity: 0.5; }
+    .quantity-controls .qty { font-weight: 600; color: var(--ink); min-width: 22px; text-align: center; font-size: 0.9rem; }
+
+    .modifications-section { display: none; }
+    .modifications-section.show { display: block; }
+    .pizza-mod-item { background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px; padding: 1.5rem; margin-bottom: 1rem; }
+    .pizza-mod-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.875rem; border-bottom: 1px solid var(--stone); }
+    .pizza-mod-title { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; color: var(--ink); }
+    .pizza-mod-slot { font-size: 0.85rem; color: var(--ink-faint); }
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 0.625rem; margin-bottom: 1rem; }
+    .checkbox-group label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 0.875rem; background: var(--cream); border: 1px solid var(--stone); border-radius: 3px; transition: border-color 0.15s; font-size: 0.875rem; }
+    .checkbox-group label:hover { border-color: var(--ink); }
+    .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--terracotta); }
+
+    .customer-form { display: grid; gap: 1rem; margin-bottom: 1.5rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group label { display: block; color: var(--ink); font-weight: 500; margin-bottom: 0.375rem; font-size: 0.875rem; }
+    .form-group input, .form-group textarea { width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--stone-dark); border-radius: 3px; font-size: 0.9rem; transition: border-color 0.15s; font-family: var(--sans); background: var(--warm-white); color: var(--ink); }
     .form-group textarea { resize: vertical; min-height: 80px; }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--ink); }
-    .form-group small { display: block; margin-top: 0.375rem; color: var(--ink-faint); font-size: 0.8rem; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-    .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 1rem; }
-    .modal.show { display: flex; }
-    .modal-content { background: var(--warm-white); padding: 2rem; border-radius: 4px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; }
-    .modal-content h3 { margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 600; color: var(--ink); border-bottom: 2px solid var(--stone); padding-bottom: 0.75rem; }
-    .button-group { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
-    .login-container { min-height: 100vh; display: flex; justify-content: center; align-items: center; background: var(--cream); padding: 1rem; }
-    .login-box { background: var(--warm-white); padding: 2.5rem; border: 1px solid var(--stone); border-radius: 4px; width: 100%; max-width: 400px; }
-    .login-box h1 { text-align: center; margin-bottom: 0.5rem; color: var(--ink); font-family: var(--serif); font-size: 1.75rem; font-weight: 700; }
-    .login-box .login-subtitle { text-align: center; color: var(--ink-faint); font-size: 0.875rem; margin-bottom: 2rem; }
-    .error-message { background: #fed7d7; color: #742a2a; padding: 0.875rem; border-radius: 6px; margin-bottom: 1rem; display: none; font-size: 0.9rem; border-left: 4px solid #e53e3e; }
-    .error-message.show { display: block; }
-    .success-message { background: #c6f6d5; color: #22543d; padding: 0.875rem; border-radius: 6px; margin-bottom: 1rem; display: none; font-weight: 500; font-size: 0.9rem; border-left: 4px solid #48bb78; }
-    .success-message.show { display: block; }
-    #app { display: none; }
-    #app.show { display: block; }
-    .pizza-image-preview { max-width: 200px; max-height: 200px; border: 1px solid var(--stone); border-radius: 6px; margin-top: 0.75rem; display: none; }
-    .pizza-image-preview.show { display: block; }
-    .order-mods { font-size: 0.85rem; color: var(--ink-faint); font-style: italic; margin-top: 0.25rem; }
-    .order-comments { background: #fef5e7; padding: 0.625rem; border-radius: 4px; border-left: 3px solid #ed8936; font-size: 0.875rem; margin-top: 0.5rem; color: #744210; }
-    .archive-section { background: #fef5e7; border: 1px solid #f6e05e; border-left: 4px solid #ed8936; border-radius: 6px; padding: 1.5rem; margin-bottom: 1.5rem; }
-    .archive-section h3 { color: var(--ink); margin-bottom: 0.75rem; font-size: 1.125rem; font-weight: 600; }
-    .archive-warning { color: #c53030; font-weight: 500; margin: 0.75rem 0; font-size: 0.9rem; }
-    .settings-preview { background: var(--cream); border: 1px solid var(--stone); border-radius: 6px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; }
-    .settings-preview h3 { font-size: 1.75rem; color: var(--ink); margin-bottom: 0.5rem; font-weight: 700; }
-    .settings-preview p { font-size: 1rem; color: var(--ink-faint); margin-bottom: 1rem; }
-    .settings-preview img { max-width: 200px; max-height: 200px; border: 1px solid var(--stone); border-radius: 6px; }
-    .info-box { background: var(--cream); border: 1px solid var(--stone); border-radius: 6px; padding: 1rem; margin-bottom: 1.5rem; }
-    .info-box h4 { margin-bottom: 0.5rem; color: var(--ink); font-weight: 600; font-size: 0.95rem; }
-    .info-box p { color: var(--ink-light); font-size: 0.875rem; line-height: 1.5; }
-    .extras-list-item { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; border-bottom: 1px solid var(--stone); }
-    .extras-list-item:last-child { border-bottom: none; }
-    .extra-name { font-weight: 500; color: var(--ink); }
-    .extra-price { color: var(--terracotta); font-weight: 600; font-size: 1rem; }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--ink); }
 
-    /* Capacity mode toggle */
-    .capacity-mode-toggle { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: var(--cream); border: 1px solid var(--stone); border-radius: 4px; margin-bottom: 1.5rem; }
-    .toggle-switch { position: relative; width: 48px; height: 26px; flex-shrink: 0; }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--stone-dark); border-radius: 26px; transition: 0.2s; }
-    .toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.2s; }
-    input:checked + .toggle-slider { background: var(--ink); }
-    input:checked + .toggle-slider:before { transform: translateX(22px); }
-    .toggle-label { font-size: 0.9rem; font-weight: 500; color: var(--ink); }
-    .toggle-description { font-size: 0.8rem; color: var(--ink-faint); margin-top: 2px; }
+    .cart-summary { background: #1c1917; color: #ffffff; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 4px; }
+    .cart-summary h3 { font-family: var(--serif); margin-bottom: 1rem; font-size: 1.4rem; color: #ffffff; font-weight: 600; }
+    .cart-items { margin-bottom: 1rem; max-height: 300px; overflow-y: auto; }
+    .cart-item { display: flex; justify-content: space-between; padding: 0.625rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; color: #ffffff; }
+    .cart-total { font-family: var(--serif); font-size: 1.75rem; font-weight: 700; text-align: right; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.15); color: #ffffff; }
 
-    /* Per-item limit badge in slots table */
-    .item-limit-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.75rem; font-weight: 600; background: var(--terra-light); color: var(--terracotta); margin-left: 0.375rem; }
+    .button { width: 100%; padding: 1rem 1.5rem; background: var(--ink); color: #ffffff; border: none; border-radius: 3px; font-size: 0.95rem; font-weight: 600; cursor: pointer; font-family: var(--sans); letter-spacing: 0.3px; }
+    .button:disabled { background: var(--stone); color: var(--ink-faint); cursor: not-allowed; opacity: 0.5; }
+    .button.secondary { background: var(--warm-white); color: var(--ink); border: 1px solid var(--stone-dark); }
 
-    /* Live Orders / Service view */
-    .service-slot-header { font-family: var(--serif); font-size: 1.2rem; font-weight: 700; color: var(--ink); padding: 0.75rem 0 0.5rem; border-bottom: 2px solid var(--ink); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: baseline; }
-    .service-slot-count { font-family: var(--sans); font-size: 0.8rem; font-weight: 500; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.5px; }
-    .service-slot-section { margin-bottom: 2rem; }
-    .order-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-    .order-card { background: var(--warm-white); border: 1px solid var(--stone); border-radius: 4px; padding: 1.25rem; position: relative; }
-    .order-card.status-completed { opacity: 0.5; }
-    .order-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.875rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--stone); }
-    .order-card-customer { font-weight: 700; font-size: 1.05rem; color: var(--ink); }
-    .order-card-id { font-size: 0.75rem; color: var(--ink-faint); margin-top: 0.2rem; }
-    .order-card-total { font-family: var(--serif); font-size: 1.1rem; font-weight: 700; color: var(--ink); text-align: right; }
-    .order-card-items { margin-bottom: 1rem; }
-    .order-card-item { padding: 0.375rem 0; border-bottom: 1px solid var(--stone); font-size: 0.875rem; color: var(--ink); }
-    .order-card-item:last-child { border-bottom: none; }
-    .order-card-item-name { font-weight: 600; }
-    .order-card-item-mods { font-size: 0.8rem; color: var(--terracotta); margin-top: 0.15rem; }
-    .order-card-item-note { font-size: 0.78rem; color: var(--ink-faint); font-style: italic; margin-top: 0.1rem; }
-    .order-card-comments { background: var(--terra-light); border-left: 3px solid var(--terracotta); padding: 0.5rem 0.75rem; border-radius: 0 3px 3px 0; font-size: 0.8rem; color: var(--ink-light); margin-bottom: 1rem; }
-    .order-card-grouped { border-left: 3px solid var(--ink); }
-    .order-card-collect-btn { width: 100%; padding: 0.625rem; background: var(--ink) !important; color: #ffffff !important; border: none; border-radius: 3px; font-size: 0.875rem; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: background 0.15s; }
-    .order-card-collect-btn:hover { background: #2d2926 !important; }
-    .order-card-collect-btn.collected { background: var(--stone) !important; color: var(--ink-faint) !important; cursor: default; }
-    .service-empty { text-align: center; padding: 3rem; color: var(--ink-faint); font-family: var(--serif); font-style: italic; font-size: 1.1rem; }
+    .error { background: #fef2f2; color: #991b1b; padding: 1rem; margin-bottom: 1.5rem; border: 1px solid #fecaca; border-left: 3px solid #ef4444; border-radius: 3px; display: none; font-size: 0.9rem; }
+    .error.show { display: block; }
+    .order-summary-box { background: var(--cream); border: 1px solid var(--stone); border-radius: 4px; padding: 1.25rem; margin: 1.25rem 0; text-align: left; }
+    .order-summary-box h3 { font-family: var(--serif); margin-bottom: 0.875rem; color: var(--ink); border-bottom: 1px solid var(--stone); padding-bottom: 0.625rem; font-size: 1.1rem; }
+    .order-summary-item { padding: 0.5rem 0; border-bottom: 1px solid var(--stone); font-size: 0.9rem; color: var(--ink-light); }
+    .order-summary-item:last-child { border-bottom: none; }
+    .contact-note { background: var(--terra-light); border-left: 3px solid var(--terracotta); padding: 0.875rem 1rem; margin: 1.25rem 0; border-radius: 0 3px 3px 0; font-size: 0.875rem; color: var(--ink-light); text-align: left; }
+    .contact-note strong { color: var(--terracotta); }
+    .no-slots-message { text-align: center; padding: 3rem; color: var(--ink-faint); font-style: italic; font-family: var(--serif); font-size: 1.1rem; }
 
-    /* Print styles */
-    @media print {
-      body * { visibility: hidden; }
-      #print-run-sheet, #print-run-sheet * { visibility: visible; }
-      #print-run-sheet { position: absolute; left: 0; top: 0; width: 100%; }
-      .no-print { display: none !important; }
-    }
-    #print-run-sheet { display: none; }
+    #service-date-select { width: 100%; padding: 0.75rem 0.875rem; border: 1px solid var(--stone-dark); border-radius: 3px; font-size: 0.9rem; font-family: var(--sans); background: var(--warm-white); color: var(--ink); }
 
     @media (max-width: 768px) {
-      .tabs { flex-direction: column; }
+      .site-header h1 { font-size: 2rem; }
+      body { padding-bottom: 100px; }
+      .menu-preview { grid-template-columns: 1fr; }
       .form-row { grid-template-columns: 1fr; }
-      table { font-size: 0.85rem; }
-      th, td { padding: 0.625rem 0.75rem; }
-      .pizza-breakdown { grid-template-columns: 1fr; }
-      .header h1 { font-size: 1.5rem; }
-      .container { padding: 1rem; }
-      .order-cards-grid { grid-template-columns: 1fr; }
+      .time-slots-grid { grid-template-columns: 1fr; }
+      .card { padding: 1.25rem; }
+      .step-divider { width: 20px; }
+      .time-navigation { flex-direction: column; gap: 0.75rem; }
+      .time-nav-button { width: 100%; padding: 0.75rem; }
+    }
+    @media (hover: none) and (pointer: coarse) {
+      .quantity-controls button { width: 38px; height: 38px; font-size: 1.2rem; }
+      .checkbox-group label { padding: 0.75rem 1rem; }
+      button, .button { min-height: 44px; }
+    }
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .time-slots-grid { grid-template-columns: repeat(2, 1fr); }
+      .menu-preview { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
 <body>
-  <!-- Login Screen -->
-  <div id="login" class="login-container">
-    <div class="login-box">
-      <h1>Chef Dashboard</h1>
-      <p class="login-subtitle">Enter your password to continue</p>
-      <div id="login-error" class="error-message"></div>
-      <form onsubmit="login(event)">
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="password" required autofocus>
-        </div>
-        <button type="submit" class="primary" style="width: 100%;">Login</button>
-      </form>
-    </div>
+
+  <div class="site-header">
+    <h1 id="business-name">Loading...</h1>
+    <p class="subtitle" id="business-tagline">Loading...</p>
   </div>
 
-  <!-- Main App -->
-  <div id="app">
-    <div class="header">
-      <h1>Chef Dashboard</h1>
-      <p>Manage orders, menu, time slots, and extras</p>
+  <div class="container">
+    <div id="error" class="error"></div>
+
+    <div class="step-indicator">
+      <div class="step active" id="step-1"><span class="step-number">1</span><span>Choose items</span></div>
+      <div class="step-divider"></div>
+      <div class="step" id="step-2"><span class="step-number">2</span><span>Customise</span></div>
+      <div class="step-divider"></div>
+      <div class="step" id="step-3"><span class="step-number">3</span><span>Your details</span></div>
     </div>
 
-    <div class="container">
-      <!-- Stats -->
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-value" id="stat-orders">0</div><div class="stat-label">Today's Orders</div></div>
-        <div class="stat-card"><div class="stat-value" id="stat-revenue">£0</div><div class="stat-label">Revenue</div></div>
-        <div class="stat-card"><div class="stat-value" id="stat-pizzas">0</div><div class="stat-label">Total Items to Make</div></div>
-      </div>
-
-      <!-- Item Breakdown -->
+    <!-- Step 1 -->
+    <div id="selection-section">
       <div class="card">
-        <h2>Item Breakdown (Active Orders)</h2>
-        <div id="pizza-breakdown" class="pizza-breakdown"></div>
+        <h2>Our Menu</h2>
+        <div id="menu-preview" class="menu-preview"></div>
       </div>
 
-      <!-- Archive Section -->
-      <div class="archive-section">
-        <h3>Archive Completed Services</h3>
-        <p>Archive orders from past service dates to keep your dashboard clean.</p>
-        <div id="archive-options" style="margin-top: 15px;"></div>
+      <div class="card">
+        <h2>Choose Your Pickup Time</h2>
+        <div id="service-date-selector" style="display:none; margin-bottom: 1.5rem;">
+          <label style="display:block; font-weight:500; margin-bottom:0.5rem; font-size:0.875rem;">Select Service Date</label>
+          <select id="service-date-select" onchange="changeServiceDate()"></select>
+        </div>
+        <p style="color: var(--ink-light); margin-bottom: 1.25rem; font-size:0.9rem;">Select a time slot and add items below:</p>
+        <div class="time-navigation">
+          <button class="time-nav-button" id="prev-hour" onclick="changeHour(-1)">← Previous</button>
+          <div class="current-time-range" id="current-hour-range">Loading...</div>
+          <button class="time-nav-button" id="next-hour" onclick="changeHour(1)">Next →</button>
+        </div>
+        <div id="time-slots-display" class="time-slots-grid"></div>
       </div>
 
-      <!-- Tabs -->
-      <div class="tabs">
-        <button class="tab active" onclick="switchTab('overview')">Overview</button>
-        <div id="service-date-tabs"></div>
-        <button class="tab" onclick="switchTab('service')">Live Orders</button>
-        <button class="tab" onclick="switchTab('menu')">Menu</button>
-        <button class="tab" onclick="switchTab('schedule')">Schedule</button>
-        <button class="tab" onclick="switchTab('extras')">Extras</button>
-        <button class="tab" onclick="switchTab('settings')">Settings</button>
+      <button id="next-to-mods" class="button" disabled>Next: Customise</button>
+    </div>
+
+    <!-- Step 2: Modifications -->
+    <div id="modifications-section" class="modifications-section">
+      <div class="card">
+        <h2>Customise Your Order</h2>
+        <div id="modifications-list"></div>
       </div>
-
-      <!-- Overview Tab -->
-      <div id="overview-tab" class="tab-content active">
-        <div class="card">
-          <h2>Upcoming Service Dates</h2>
-          <p style="color: var(--ink-light); margin-bottom: 1.5rem; font-size: 0.875rem;">Manage your scheduled service dates. Click individual date tabs above to view orders for that service.</p>
-          <div style="overflow-x: auto;">
-            <table id="service-schedule-table" style="min-width: 600px;">
-              <thead><tr><th>Service Date</th><th>Status</th><th>Orders Open</th><th>Orders Close</th><th>Orders</th><th>Revenue</th></tr></thead>
-              <tbody id="service-schedule-list"><tr><td colspan="6" style="text-align:center;color:var(--ink-faint);padding:2rem;">Loading service schedule...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
+      <div style="display: flex; gap: 1rem;">
+        <button id="back-to-selection" class="button secondary" style="width: auto; padding-left: 1.5rem; padding-right: 1.5rem;">Back</button>
+        <button id="next-to-checkout" class="button">Next: Your Details</button>
       </div>
+    </div>
 
-      <!-- Dynamic Service Date Order Tabs -->
-      <div id="service-date-order-tabs"></div>
-
-      <!-- Orders Tab (legacy) -->
-      <div id="orders-tab" class="tab-content">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-            <h2 style="margin:0;border:none;">Orders (Sorted by Time Slot)</h2>
-            <button class="secondary" onclick="downloadKitchenTickets()">Download Kitchen Tickets</button>
+    <!-- Step 3: Checkout -->
+    <div id="checkout-section" class="modifications-section">
+      <div class="card">
+        <h2>Your Details</h2>
+        <div class="customer-form">
+          <div class="form-row">
+            <div class="form-group"><label for="name">Name *</label><input type="text" id="name" placeholder="Your name" required></div>
+            <div class="form-group"><label for="phone">Phone *</label><input type="tel" id="phone" placeholder="+44 7..." required></div>
           </div>
-          <div style="overflow-x:auto;">
-            <table id="orders-table" style="min-width:600px;">
-              <thead><tr><th>Time</th><th>Order</th><th>Customer</th><th>Total</th><th>Pager</th></tr></thead>
-              <tbody id="orders-list"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Service / Live Orders Tab -->
-      <div id="service-tab" class="tab-content">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem;">
-          <div>
-            <h2 style="font-family:var(--serif);font-size:1.4rem;font-weight:700;color:var(--ink);margin:0;">Live Orders</h2>
-            <p style="color:var(--ink-faint);font-size:0.8rem;margin-top:0.25rem;">Auto-refreshes every 15 seconds</p>
-          </div>
-          <button class="secondary" onclick="printRunSheet()">Print Run Sheet</button>
-        </div>
-        <div id="service-orders-container"></div>
-      </div>
-
-      <!-- Menu Tab -->
-      <div id="menu-tab" class="tab-content">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-            <h2 style="margin:0;border:none;">Menu Items</h2>
-            <button class="primary" onclick="openAddMenu()">+ Add Item</button>
-          </div>
-          <table>
-            <thead><tr><th>Image</th><th>Name</th><th>Description</th><th>Price</th><th>Slot Limit</th><th>Available</th><th>Actions</th></tr></thead>
-            <tbody id="menu-list"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Slots Tab -->
-      <!-- Schedule Tab (Service Dates + Time Slots) -->
-      <div id="schedule-tab" class="tab-content">
-
-        <!-- Service Dates -->
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-            <h2 style="margin:0;border:none;">Service Dates</h2>
-            <button class="primary" onclick="addScheduleItem()">+ Add Date</button>
-          </div>
-          <div class="info-box">
-            <h4>About Service Dates</h4>
-            <p>Set when customers can place orders. Orders open and close times control the ordering window. Save settings after making changes.</p>
-          </div>
-          <div id="schedule-list-tab" style="margin-bottom:1rem;"></div>
-          <button type="button" class="secondary" onclick="saveScheduleFromTab()" style="width:100%;">Save Service Dates</button>
+          <div class="form-group"><label for="email">Email *</label><input type="email" id="email" placeholder="you@example.com" required></div>
+          <div class="form-group"><label for="comments">Additional Instructions (Optional)</label><textarea id="comments" placeholder="Any other requests or special instructions..."></textarea></div>
         </div>
 
-        <!-- Capacity Mode -->
-        <div class="card">
-          <h2>Capacity Mode</h2>
-          <div class="info-box">
-            <h4>Total vs Per-Item Capacity</h4>
-            <p><strong>Total mode:</strong> each slot has one overall capacity limit — e.g. max 8 items across all orders in that slot.<br><br>
-            <strong>Per-item mode:</strong> each menu item has its own limit per slot — e.g. max 2 Thai curries, max 4 loaded fries per slot. Items with no limit set are unlimited.</p>
-          </div>
-          <div class="capacity-mode-toggle">
-            <label class="toggle-switch">
-              <input type="checkbox" id="capacity-mode-toggle" onchange="toggleCapacityMode(this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-            <div>
-              <div class="toggle-label" id="capacity-mode-label">Total capacity mode</div>
-              <div class="toggle-description" id="capacity-mode-desc">Each slot has a single capacity limit</div>
-            </div>
-          </div>
+        <div class="cart-summary">
+          <h3>Your Order</h3>
+          <div id="cart-items" class="cart-items"></div>
+          <div class="cart-total">Total: £<span id="total">0.00</span></div>
         </div>
 
-        <!-- Time Slots -->
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-            <h2 style="margin:0;border:none;">Time Slots</h2>
-            <button class="primary" onclick="openAddSlot()">+ Add Slot</button>
-          </div>
-          <table>
-            <thead><tr><th>Time</th><th>Capacity</th><th>Current Orders</th><th>Remaining</th><th>Actions</th></tr></thead>
-            <tbody id="slots-list"></tbody>
-          </table>
-        </div>
+        <p style="text-align: center; color: var(--ink-faint); margin: 1rem 0; font-size: 0.875rem; font-style: italic;">
+          Please review your order carefully before submitting
+        </p>
 
-        <!-- Per-item limits (shown in per-item mode) -->
-        <div class="card" id="per-item-limits-card" style="display:none;">
-          <h2>Per-Item Slot Limits</h2>
-          <div class="info-box">
-            <h4>Set limits per menu item</h4>
-            <p>These limits apply per slot. Leave blank for unlimited. Edit the item in the Menu tab to update its limit.</p>
-          </div>
-          <table>
-            <thead><tr><th>Item</th><th>Limit per Slot</th><th></th></tr></thead>
-            <tbody id="per-item-limits-list"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Extras Tab -->
-      <div id="extras-tab" class="tab-content">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-            <h2 style="margin:0;border:none;">Customisation Extras</h2>
-            <button class="primary" onclick="openAddExtra()">+ Add Extra</button>
-          </div>
-          <div class="info-box">
-            <h4>About Extras</h4>
-            <p>Extras appear as optional add-ons on the customer customise screen. Prices are added to the order total automatically. Toggle availability to show or hide an extra without deleting it.</p>
-          </div>
-          <table>
-            <thead><tr><th>Name</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="extras-list"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Settings Tab -->
-      <div id="settings-tab" class="tab-content">
-        <div class="card">
-          <h2>Business Settings</h2>
-          <div id="settings-success" class="success-message"></div>
-          <div id="settings-error" class="error-message"></div>
-          <div class="info-box">
-            <h4>About Settings</h4>
-            <p>These settings control how your business appears to customers on the ordering page. Changes take effect immediately.</p>
-          </div>
-          <div class="settings-preview" id="settings-preview">
-            <h3 id="preview-name">Loading...</h3>
-            <p id="preview-tagline">Loading tagline...</p>
-            <img id="preview-logo" style="display:none;" alt="Business Logo">
-          </div>
-          <form onsubmit="saveSettings(event)">
-            <div class="form-group">
-              <label>Business Name *</label>
-              <input type="text" id="settings-name" placeholder="e.g., Pizza Trucker" required>
-              <small>This appears as the main title on your ordering page</small>
-            </div>
-            <div class="form-group">
-              <label>Tagline</label>
-              <input type="text" id="settings-tagline" placeholder="e.g., Fresh. Fast. Delicious.">
-            </div>
-            <div class="form-group">
-              <label>Logo URL (optional)</label>
-              <input type="url" id="settings-logo" placeholder="https://example.com/logo.png" onchange="previewSettings()">
-            </div>
-            <div class="form-group">
-              <label>Chef Password</label>
-              <input type="password" id="settings-password" placeholder="Leave blank to keep current password">
-            </div>
-            <h3 style="margin-top:30px;margin-bottom:15px;border-bottom:1px solid var(--stone);padding-bottom:10px;">Customer Page Theme</h3>
-            <div class="info-box">
-              <h4>About Themes</h4>
-              <p>Choose how your customer ordering page looks. Changes take effect immediately when saved.</p>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:1.5rem;">
-              <label style="cursor:pointer;">
-                <input type="radio" name="settings-theme" id="theme-classic" value="classic" style="display:none;">
-                <div id="theme-classic-preview" style="border:2px solid var(--stone);border-radius:4px;padding:1.25rem;text-align:center;transition:border-color 0.15s;">
-                  <div style="background:#faf8f4;border:1px solid #e8e2d9;border-radius:3px;padding:1rem;margin-bottom:0.75rem;">
-                    <div style="font-family:Georgia,serif;font-size:1rem;font-weight:700;color:#1c1917;margin-bottom:0.25rem;">Classic</div>
-                    <div style="font-size:0.75rem;color:#c2714f;font-weight:600;">£12.00</div>
-                  </div>
-                  <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Classic</div>
-                  <div style="font-size:0.75rem;color:var(--ink-faint);">Warm, elegant, serif</div>
-                </div>
-              </label>
-              <label style="cursor:pointer;">
-                <input type="radio" name="settings-theme" id="theme-rockandroll" value="rockandroll" style="display:none;">
-                <div id="theme-rockandroll-preview" style="border:2px solid var(--stone);border-radius:4px;padding:1.25rem;text-align:center;transition:border-color 0.15s;">
-                  <div style="background:#3D6BBC;border:1px solid #4a7acc;border-radius:3px;padding:1rem;margin-bottom:0.75rem;">
-                    <div style="font-family:'Lilita One',sans-serif;font-size:1.1rem;font-weight:400;color:#ffffff;letter-spacing:2px;margin-bottom:0.25rem;">Rock & Roll</div>
-                    <div style="font-size:0.75rem;color:#F1D04A;font-weight:700;">£12.00</div>
-                  </div>
-                  <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Rock & Roll</div>
-                  <div style="font-size:0.75rem;color:var(--ink-faint);">Bold, vibrant, hip hop</div>
-                </div>
-              </label>
-              <label style="cursor:pointer;">
-                <input type="radio" name="settings-theme" id="theme-portuguese" value="portuguese" style="display:none;">
-                <div id="theme-portuguese-preview" style="border:2px solid var(--stone);border-radius:4px;padding:1.25rem;text-align:center;transition:border-color 0.15s;">
-                  <div style="background:linear-gradient(135deg,#0D1B2A,#1B3D5F);border:1px solid #1E3448;border-radius:8px;padding:1rem;margin-bottom:0.75rem;">
-                    <div style="font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;color:#FFF1E6;letter-spacing:-0.5px;margin-bottom:0.25rem;">Sunset</div>
-                    <div style="font-size:0.75rem;color:#FFB347;font-weight:700;">£12.00</div>
-                  </div>
-                  <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Sunset</div>
-                  <div style="font-size:0.75rem;color:var(--ink-faint);">Deep house, beach</div>
-                </div>
-              </label>
-            </div>
-              <label style="cursor:pointer;">
-                <input type="radio" name="settings-theme" id="theme-enterprise" value="enterprise" style="display:none;">
-                <div id="theme-enterprise-preview" style="border:2px solid var(--stone);border-radius:4px;padding:1.25rem;text-align:center;transition:border-color 0.15s;">
-                  <div style="background:#6B5CE7;border:1px solid #5a4bd6;border-radius:6px;padding:1rem;margin-bottom:0.75rem;">
-                    <div style="font-family:'Figtree',sans-serif;font-size:0.85rem;font-weight:900;color:#ffffff;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.25rem;">Enterprise</div>
-                    <div style="font-size:0.75rem;color:rgba(255,255,255,0.8);font-weight:700;">£12.00</div>
-                  </div>
-                  <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Enterprise</div>
-                  <div style="font-size:0.75rem;color:var(--ink-faint);">Bold, modern, SaaS</div>
-                </div>
-              </label>
-              <label style="cursor:pointer;">
-                <input type="radio" name="settings-theme" id="theme-highland" value="highland" style="display:none;">
-                <div id="theme-highland-preview" style="border:2px solid var(--stone);border-radius:4px;padding:1.25rem;text-align:center;transition:border-color 0.15s;">
-                  <div style="background:#1E1E1E;border:1px solid #D4A017;border-radius:4px;padding:1rem;margin-bottom:0.75rem;">
-                    <div style="font-family:'Montserrat',sans-serif;font-size:0.7rem;font-weight:800;color:#FFFFFF;text-transform:uppercase;letter-spacing:3px;margin-bottom:0.25rem;">Highland</div>
-                    <div style="font-size:0.75rem;color:#D4A017;font-weight:700;">£12.00</div>
-                  </div>
-                  <div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Highland</div>
-                  <div style="font-size:0.75rem;color:var(--ink-faint);">Dark, gold, branded</div>
-                </div>
-              </label>
-            </div>
-            <h3 style="margin-top:30px;margin-bottom:15px;border-bottom:1px solid var(--stone);padding-bottom:10px;">Early Access</h3>
-            <div class="info-box">
-              <h4>About Early Access</h4>
-              <p>Generate a code to share with select customers (e.g. the venue). They visit your ordering page with <strong>?code=XXXXXX</strong> appended to the URL and can order before the public window opens. Set an early access open time per service date below.</p>
-            </div>
-            <div style="background:var(--cream);border:1px solid var(--stone);border-radius:4px;padding:1.25rem;margin-bottom:1rem;">
-              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
-                <div>
-                  <div style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-faint);margin-bottom:0.375rem;">Current Code</div>
-                  <div id="early-access-code-display" style="font-size:1.5rem;font-weight:700;font-family:monospace;color:var(--ink);letter-spacing:2px;">—</div>
-                </div>
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                  <button type="button" class="small secondary" onclick="copyEarlyAccessLink()">Copy Link</button>
-                  <button type="button" class="small primary" onclick="generateEarlyAccessCode()">Generate New Code</button>
-                </div>
-              </div>
-            </div>
-            <div class="button-group">
-              <button type="submit" class="primary">Save Settings</button>
-              <button type="button" class="secondary" onclick="loadSettings()">Reset</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="card" style="margin-top:20px;">
-          <h2>Reset to Defaults</h2>
-          <div class="info-box">
-            <h4>Reset Menu & Time Slots</h4>
-            <p>This will replace your current menu and time slots with default values. Your orders, extras and settings will NOT be affected.</p>
-          </div>
-          <button class="danger" onclick="resetToDefaults()" style="width:100%;">Reset Menu & Time Slots to Defaults</button>
+        <div style="display: flex; gap: 1rem;">
+          <button id="back-to-mods" class="button secondary" style="flex: 1;">Back</button>
+          <button id="order-button" class="button" style="flex: 2;">Confirm & Place Order</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Menu Modal -->
-  <div id="menu-modal" class="modal">
-    <div class="modal-content">
-      <h3 id="menu-modal-title">Add Item</h3>
-      <form onsubmit="saveMenuItem(event)">
-        <input type="hidden" id="menu-id">
-        <div class="form-group"><label>Name *</label><input type="text" id="menu-name" required></div>
-        <div class="form-group"><label>Description</label><input type="text" id="menu-desc"></div>
-        <div class="form-group"><label>Price (£) *</label><input type="number" id="menu-price" step="0.01" min="0" required></div>
-        <div class="form-group">
-          <label>Image URL (optional)</label>
-          <input type="url" id="menu-image" placeholder="https://example.com/item.jpg" onchange="previewImage()">
-          <img id="image-preview" class="pizza-image-preview" alt="Preview">
-        </div>
-        <div class="form-group" id="slot-limit-group">
-          <label>Max per Slot (per-item mode only)</label>
-          <input type="number" id="menu-slot-limit" min="1" placeholder="Leave blank for unlimited">
-          <small>When per-item capacity mode is on, this limits how many of this item can be ordered per time slot.</small>
-        </div>
-        <div class="form-group"><label><input type="checkbox" id="menu-available" checked> Available for ordering</label></div>
-        <div class="button-group">
-          <button type="submit" class="primary">Save</button>
-          <button type="button" class="secondary" onclick="closeModal('menu-modal')">Cancel</button>
-        </div>
-      </form>
+  <!-- Success Page -->
+  <div id="success-page" style="display: none;">
+    <div class="site-header">
+      <h1 id="success-business-name"></h1>
+      <p class="subtitle">Order confirmed</p>
     </div>
-  </div>
-
-  <!-- Slot Modal -->
-  <div id="slot-modal" class="modal">
-    <div class="modal-content">
-      <h3 id="slot-modal-title">Add Time Slot</h3>
-      <form onsubmit="saveSlot(event)">
-        <input type="hidden" id="slot-id">
-        <div class="form-group"><label>Time *</label><input type="time" id="slot-time" required></div>
-        <div class="form-group" id="slot-capacity-group">
-          <label>Capacity (total items) *</label>
-          <input type="number" id="slot-capacity" min="1" required>
-          <small id="slot-capacity-hint">Maximum number of items across all orders in this slot</small>
+    <div class="container">
+      <div class="card" style="max-width: 640px; margin: 3rem auto; text-align: center; padding: 3rem 2rem;">
+        <h2 style="font-size: 2.25rem; margin-bottom: 1rem; border: none; padding: 0;">Thank you for your order</h2>
+        <div id="success-main-text" style="color: var(--ink-light); margin: 1.5rem 0; font-size: 1rem; line-height: 1.7;"></div>
+        <div id="success-order-summary" class="order-summary-box" style="margin: 2rem 0; text-align: left;"></div>
+        <div class="contact-note" style="text-align: left;">
+          <strong>Need to change something?</strong><br>
+          Please contact us as soon as possible. We'll do our best to accommodate changes before we start preparing your order.
         </div>
-        <div class="button-group">
-          <button type="submit" class="primary">Save</button>
-          <button type="button" class="secondary" onclick="closeModal('slot-modal')">Cancel</button>
+        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--stone);">
+          <a href="javascript:location.reload()" style="color: var(--ink-faint); font-size: 0.875rem; text-decoration: none; border-bottom: 1px solid var(--stone-dark); padding-bottom: 1px;">Place another order</a>
         </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Extras Modal -->
-  <div id="extras-modal" class="modal">
-    <div class="modal-content">
-      <h3 id="extras-modal-title">Add Extra</h3>
-      <form onsubmit="saveExtra(event)">
-        <input type="hidden" id="extra-id">
-        <div class="form-group">
-          <label>Name *</label>
-          <input type="text" id="extra-name" placeholder="e.g. Gluten Free Base" required>
-        </div>
-        <div class="form-group">
-          <label>Price (£) *</label>
-          <input type="number" id="extra-price" step="0.50" min="0" placeholder="e.g. 2.00" required>
-          <small>Additional charge added to the item price when this extra is selected</small>
-        </div>
-        <div class="form-group">
-          <label><input type="checkbox" id="extra-available" checked> Available to customers</label>
-        </div>
-        <div class="button-group">
-          <button type="submit" class="primary">Save</button>
-          <button type="button" class="secondary" onclick="closeModal('extras-modal')">Cancel</button>
-        </div>
-      </form>
+      </div>
     </div>
   </div>
 
   <script>
     const API_URL = '/api';
-    let authenticated = false;
-    let orders = [], menu = [], slots = [], settings = {}, extras = [];
+    let menu = [];
+    let slots = [];
+    let extras = [];
+    let cart = {};
+    let pizzaModifications = {};
+    let settings = {};
     let capacityMode = 'total';
+    let currentStep = 1;
+    let currentHourIndex = 0;
+    let hourRanges = [];
+    let availableServiceDates = [];
+    let selectedServiceDate = null;
+    const earlyAccessCode = new URLSearchParams(window.location.search).get('code') || null;
 
-    async function login(e) {
-      e.preventDefault();
-      const password = document.getElementById('password').value;
-      try {
-        const response = await fetch(`${API_URL}/auth/chef`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
-        if (response.ok) {
-          authenticated = true;
-          document.getElementById('login').style.display = 'none';
-          document.getElementById('app').classList.add('show');
-          init();
-        } else { showLoginError('Invalid password'); }
-      } catch (error) { showLoginError('Connection error'); }
+    function calculateModPrice(mods) {
+      if (!mods || mods.length === 0) return 0;
+      return mods.reduce((total, modName) => {
+        const extra = extras.find(e => e.name === modName && e.available);
+        return total + (extra ? extra.price : 0);
+      }, 0);
     }
 
-    function showLoginError(msg) {
-      const errorEl = document.getElementById('login-error');
-      errorEl.textContent = msg; errorEl.classList.add('show');
-      setTimeout(() => errorEl.classList.remove('show'), 3000);
+    function groupSlotsByHour() {
+      const grouped = {};
+      slots.forEach(slot => {
+        const hour = parseInt(slot.time.split(':')[0]);
+        if (!grouped[hour]) grouped[hour] = [];
+        grouped[hour].push(slot);
+      });
+      hourRanges = Object.keys(grouped).sort((a, b) => a - b).map(hour => ({
+        hour: parseInt(hour),
+        label: `${hour}:00 – ${hour}:59`,
+        slots: grouped[hour]
+      }));
+      return hourRanges;
     }
 
     async function init() {
-      await loadData();
-      await loadSettings();
-      await loadExtras();
-      createServiceDateTabs();
-      renderStats(); renderPizzaBreakdown(); renderOverview();
-      renderOrders(); renderMenu(); renderSlots(); renderExtras();
-      renderCapacityModeToggle(); renderServiceView();
-      populateArchiveOptions();
-      setInterval(async () => {
-        await loadData();
-        renderStats(); renderPizzaBreakdown(); renderOverview();
-        renderOrdersForAllServiceDates(); renderServiceView(); populateArchiveOptions();
-      }, 15000);
-    }
-
-    async function loadData() {
       try {
-        const [ordersRes, menuRes, slotsRes] = await Promise.all([
-          fetch(`${API_URL}/orders`), fetch(`${API_URL}/menu`), fetch(`${API_URL}/slots`)
+        const [menuRes, slotsRes, settingsRes, extrasRes] = await Promise.all([
+          fetch(`${API_URL}/menu`, { cache: 'no-store' }),
+          fetch(`${API_URL}/slots`, { cache: 'no-store' }),
+          fetch(`${API_URL}/settings`, { cache: 'no-store' }),
+          fetch(`${API_URL}/extras`, { cache: 'no-store' })
         ]);
-        orders = await ordersRes.json();
+
+        if (!menuRes.ok || !slotsRes.ok || !settingsRes.ok || !extrasRes.ok) {
+          throw new Error('Failed to load data from server');
+        }
+
         menu = await menuRes.json();
         slots = await slotsRes.json();
+        settings = await settingsRes.json();
+        extras = await extrasRes.json();
+        capacityMode = settings.capacityMode || 'total';
+
+        // Pull capacityMode from slots response if available
         if (slots.length > 0 && slots[0].capacityMode) {
           capacityMode = slots[0].capacityMode;
         }
-      } catch (error) { console.error('Failed to load data:', error); }
-    }
 
-    async function loadExtras() {
-      try {
-        const res = await fetch(`${API_URL}/extras`);
-        extras = await res.json();
-      } catch (error) { console.error('Failed to load extras:', error); extras = []; }
-    }
+        const businessName = settings.businessName || 'Pizza Truck no.1';
+        document.title = businessName;
 
-    // ============= CAPACITY MODE =============
-    function renderCapacityModeToggle() {
-      const toggle = document.getElementById('capacity-mode-toggle');
-      const label = document.getElementById('capacity-mode-label');
-      const desc = document.getElementById('capacity-mode-desc');
-      const perItemCard = document.getElementById('per-item-limits-card');
-      const isPerItem = capacityMode === 'per-item';
+        document.getElementById('business-name').textContent = businessName;
+        document.getElementById('business-tagline').textContent = settings.tagline || '';
 
-      toggle.checked = isPerItem;
-      label.textContent = isPerItem ? 'Per-item capacity mode' : 'Total capacity mode';
-      desc.textContent = isPerItem
-        ? 'Each menu item has its own limit per slot'
-        : 'Each slot has a single capacity limit';
-      perItemCard.style.display = isPerItem ? 'block' : 'none';
+        if (settings.logo) {
+          const header = document.querySelector('.site-header');
+          header.style.cssText += `
+            background-image: url('${settings.logo}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+          `;
+          // Dark overlay so text remains readable
+          header.style.setProperty('--header-overlay', 'rgba(0,0,0,0.45)');
+          const overlay = document.createElement('div');
+          overlay.style.cssText = 'position:absolute;inset:0;background:var(--header-overlay);z-index:0;';
+          header.style.position = 'relative';
+          header.insertBefore(overlay, header.firstChild);
+          // Bring text above overlay
+          document.getElementById('business-name').style.cssText = 'position:relative;z-index:1;color:#ffffff;text-shadow:0 2px 8px rgba(0,0,0,0.4);';
+          document.getElementById('business-tagline').style.cssText = 'position:relative;z-index:1;color:rgba(255,255,255,0.85);text-shadow:0 1px 4px rgba(0,0,0,0.4);';
+        }
 
-      if (isPerItem) renderPerItemLimits();
-    }
+        if (!checkOrderingAvailable()) { showOrderingClosedMessage(); return; }
 
-    async function toggleCapacityMode(isPerItem) {
-      capacityMode = isPerItem ? 'per-item' : 'total';
-      try {
-        await fetch(`${API_URL}/settings`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ capacityMode })
-        });
-        renderCapacityModeToggle();
-        renderSlots();
-      } catch (error) { alert('Failed to update capacity mode'); }
-    }
+        if (availableServiceDates.length > 1) {
+          populateServiceDateSelector();
+        } else if (availableServiceDates.length === 1) {
+          selectedServiceDate = availableServiceDates[0].serviceDate;
+        }
 
-    function renderPerItemLimits() {
-      const tbody = document.getElementById('per-item-limits-list');
-      const availableMenu = menu.filter(item => item.available);
-      if (availableMenu.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--ink-faint);padding:1.5rem;">No menu items</td></tr>';
-        return;
+        groupSlotsByHour();
+        renderMenuPreview();
+        renderCurrentHourSlots();
+        updateStepIndicator();
+      } catch (error) {
+        console.error('Init error:', error);
+        showError('Failed to load menu. Please refresh the page.');
       }
-      tbody.innerHTML = availableMenu.map(item => `
-        <tr>
-          <td><strong>${item.name}</strong></td>
-          <td>
-            ${item.slotLimit !== null && item.slotLimit !== undefined
-              ? `<span class="item-limit-badge">${item.slotLimit} per slot</span>`
-              : '<span style="color:var(--ink-faint);font-size:0.875rem;">Unlimited</span>'}
-          </td>
-          <td><button class="small secondary" onclick="editMenuItem('${item.id}')">Edit limit</button></td>
-        </tr>
-      `).join('');
     }
 
-    // ============= EXTRAS =============
-    function renderExtras() {
-      const tbody = document.getElementById('extras-list');
-      if (!extras || extras.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--ink-faint);">No extras yet. Click "+ Add Extra" to create your first customisation option.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = extras.map(extra => `
-        <tr>
-          <td><strong>${extra.name}</strong></td>
-          <td><span style="color:var(--terracotta);font-weight:600;font-size:1rem;">+£${extra.price.toFixed(2)}</span></td>
-          <td><span class="status-badge ${extra.available ? 'status-ready' : 'status-cancelled'}">${extra.available ? 'Shown' : 'Hidden'}</span></td>
-          <td style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-            <button class="small secondary" onclick="editExtra('${extra.id}')">Edit</button>
-            <button class="small secondary" onclick="toggleExtra('${extra.id}', ${!extra.available})">${extra.available ? 'Hide' : 'Show'}</button>
-            <button class="small danger" onclick="deleteExtra('${extra.id}')">Delete</button>
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    function openAddExtra() {
-      document.getElementById('extras-modal-title').textContent = 'Add Extra';
-      document.getElementById('extra-id').value = '';
-      document.getElementById('extra-name').value = '';
-      document.getElementById('extra-price').value = '';
-      document.getElementById('extra-available').checked = true;
-      openModal('extras-modal');
-    }
-
-    function editExtra(id) {
-      const extra = extras.find(e => e.id === id); if (!extra) return;
-      document.getElementById('extras-modal-title').textContent = 'Edit Extra';
-      document.getElementById('extra-id').value = extra.id;
-      document.getElementById('extra-name').value = extra.name;
-      document.getElementById('extra-price').value = extra.price;
-      document.getElementById('extra-available').checked = extra.available;
-      openModal('extras-modal');
-    }
-
-    async function saveExtra(e) {
-      e.preventDefault();
-      const id = document.getElementById('extra-id').value;
-      const data = { name: document.getElementById('extra-name').value, price: parseFloat(document.getElementById('extra-price').value), available: document.getElementById('extra-available').checked };
-      try {
-        if (id) await fetch(`${API_URL}/extras/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        else await fetch(`${API_URL}/extras`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        closeModal('extras-modal'); await loadExtras(); renderExtras();
-      } catch (error) { alert('Failed to save extra'); }
-    }
-
-    async function toggleExtra(id, available) {
-      try {
-        await fetch(`${API_URL}/extras/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ available }) });
-        await loadExtras(); renderExtras();
-      } catch (error) { alert('Failed to update extra'); }
-    }
-
-    async function deleteExtra(id) {
-      const extra = extras.find(e => e.id === id);
-      if (!confirm(`Delete "${extra ? extra.name : 'this extra'}"?\n\nNote: existing orders with this extra will not be affected.`)) return;
-      try {
-        await fetch(`${API_URL}/extras/${id}`, { method: 'DELETE' });
-        await loadExtras(); renderExtras();
-      } catch (error) { alert('Failed to delete extra'); }
-    }
-
-    // ============= SERVICE DATE TABS =============
-    function createServiceDateTabs() {
-      const tabContainer = document.getElementById('service-date-tabs');
-      const contentContainer = document.getElementById('service-date-order-tabs');
-      if (!settings.serviceSchedule || settings.serviceSchedule.length === 0) { tabContainer.innerHTML = ''; return; }
-      settings.serviceSchedule.forEach((schedule, index) => {
+    function populateServiceDateSelector() {
+      const selector = document.getElementById('service-date-selector');
+      const select = document.getElementById('service-date-select');
+      selector.style.display = 'block';
+      select.innerHTML = availableServiceDates.map((schedule, index) => {
         const date = new Date(schedule.serviceDate);
-        const dateStr = date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-        const tabId = `service-date-${schedule.serviceDate}`;
-        const tabButton = document.createElement('button');
-        tabButton.className = 'tab'; tabButton.textContent = dateStr;
-        tabButton.onclick = () => switchTab(tabId);
-        tabContainer.appendChild(tabButton);
-        const tabContent = document.createElement('div');
-        tabContent.id = `${tabId}-tab`; tabContent.className = 'tab-content';
-        tabContent.innerHTML = `
-          <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-              <h2 style="margin:0;border:none;">${date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} Orders</h2>
-              <button class="secondary" onclick="downloadKitchenTicketsForDate('${schedule.serviceDate}')">Download Kitchen Tickets</button>
-            </div>
-            <div style="overflow-x:auto;">
-              <table id="orders-table-${schedule.serviceDate}" class="service-date-orders-table" style="min-width:600px;">
-                <thead><tr><th>Time</th><th>Order</th><th>Customer</th><th>Total</th><th>Pager</th></tr></thead>
-                <tbody id="orders-list-${schedule.serviceDate}"></tbody>
-              </table>
-            </div>
-          </div>`;
-        contentContainer.appendChild(tabContent);
-      });
-      renderOrdersForAllServiceDates();
+        const dateStr = date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+        return `<option value="${schedule.serviceDate}" ${index === 0 ? 'selected' : ''}>${dateStr}</option>`;
+      }).join('');
+      selectedServiceDate = availableServiceDates[0].serviceDate;
     }
 
-    function renderOverview() {
-      const tbody = document.getElementById('service-schedule-list');
+    function changeServiceDate() {
+      selectedServiceDate = document.getElementById('service-date-select').value;
+      if (Object.keys(cart).length > 0) {
+        if (confirm('Changing service date will clear your current selections. Continue?')) {
+          cart = {}; pizzaModifications = {};
+        } else {
+          document.getElementById('service-date-select').value = selectedServiceDate;
+          return;
+        }
+      }
+      currentHourIndex = 0;
+      groupSlotsByHour();
+      renderCurrentHourSlots();
+      updateNextButton();
+    }
+
+    function checkOrderingAvailable() {
       if (!settings.serviceSchedule || settings.serviceSchedule.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--ink-faint);">No service dates scheduled. Add them in Settings.</td></tr>';
-        return;
+        availableServiceDates = [];
+        return true;
       }
       const now = new Date();
-      const sortedSchedule = [...settings.serviceSchedule].sort((a, b) => new Date(a.serviceDate) - new Date(b.serviceDate));
-      tbody.innerHTML = sortedSchedule.map(schedule => {
+      const codeValid = earlyAccessCode &&
+        settings.earlyAccessCode &&
+        earlyAccessCode.toUpperCase() === settings.earlyAccessCode.toUpperCase();
+
+      availableServiceDates = settings.serviceSchedule.filter(schedule => {
+        if (!schedule.enabled) return false;
         const serviceDate = new Date(schedule.serviceDate);
+        serviceDate.setHours(23, 59, 59);
+        if (now > serviceDate) return false;
+
+        // Check ordersCloseAt — if set and past, orders are closed
+        if (schedule.ordersCloseAt) {
+          const closeAt = new Date(schedule.ordersCloseAt);
+          if (now > closeAt) return false;
+        }
+
+        // Early access: use earlyAccessOpenAt if code is valid and date is set
+        if (codeValid && schedule.earlyAccessOpenAt) {
+          const earlyOpen = new Date(schedule.earlyAccessOpenAt);
+          return now >= earlyOpen;
+        }
+
+        // Standard: use ordersOpenAt
         const ordersOpenAt = new Date(schedule.ordersOpenAt);
-        const ordersCloseAt = schedule.ordersCloseAt ? new Date(schedule.ordersCloseAt) : null;
-        let statusBadge, statusClass;
-        if (!schedule.enabled) { statusBadge = 'Disabled'; statusClass = 'status-cancelled'; }
-        else if (now < ordersOpenAt) { statusBadge = 'Scheduled'; statusClass = 'status-confirmed'; }
-        else if (ordersCloseAt && now > ordersCloseAt) { statusBadge = 'Closed'; statusClass = 'status-completed'; }
-        else if (now >= ordersOpenAt && now <= serviceDate) { statusBadge = 'Open'; statusClass = 'status-ready'; }
-        else { statusBadge = 'Closed'; statusClass = 'status-completed'; }
-        const dateOrders = orders.filter(o => o.serviceDate === schedule.serviceDate && o.status !== 'completed' && o.status !== 'cancelled');
-        const revenue = dateOrders.reduce((sum, o) => sum + o.total, 0);
-        const closeDisplay = ordersCloseAt
-          ? `${ordersCloseAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} at ${ordersCloseAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
-          : 'End of service day';
-        return `<tr>
-          <td style="padding:0.875rem;"><div style="font-weight:600;font-size:0.95rem;">${serviceDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div></td>
-          <td style="padding:0.875rem;"><span class="status-badge ${statusClass}">${statusBadge}</span></td>
-          <td style="padding:0.875rem;font-size:0.875rem;color:var(--ink-light);">${ordersOpenAt.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} at ${ordersOpenAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</td>
-          <td style="padding:0.875rem;font-size:0.875rem;color:var(--ink-light);">${closeDisplay}</td>
-          <td style="padding:0.875rem;text-align:center;"><span style="font-weight:600;">${countUniqueOrders(dateOrders)}</span></td>
-          <td style="padding:0.875rem;text-align:right;font-weight:600;">${revenue > 0 ? `£${revenue.toFixed(2)}` : '—'}</td>
-        </tr>`;
+        return now >= ordersOpenAt;
+      }).sort((a, b) => new Date(a.serviceDate) - new Date(b.serviceDate));
+
+      return availableServiceDates.length > 0;
+    }
+
+    function showOrderingClosedMessage() {
+      const container = document.querySelector('.container');
+      let nextOpening = null;
+      const codeValid = earlyAccessCode &&
+        settings.earlyAccessCode &&
+        earlyAccessCode.toUpperCase() === settings.earlyAccessCode.toUpperCase();
+
+      if (settings.serviceSchedule && settings.serviceSchedule.length > 0) {
+        const now = new Date();
+        const futureSchedules = settings.serviceSchedule.filter(s => {
+          if (!s.enabled) return false;
+          // Use earlyAccessOpenAt if code valid, else ordersOpenAt
+          const openAt = (codeValid && s.earlyAccessOpenAt)
+            ? new Date(s.earlyAccessOpenAt)
+            : new Date(s.ordersOpenAt);
+          return openAt > now;
+        }).sort((a, b) => new Date(a.ordersOpenAt) - new Date(b.ordersOpenAt));
+        if (futureSchedules.length > 0) nextOpening = futureSchedules[0];
+      }
+
+      const openAt = nextOpening
+        ? ((codeValid && nextOpening.earlyAccessOpenAt)
+            ? new Date(nextOpening.earlyAccessOpenAt)
+            : new Date(nextOpening.ordersOpenAt))
+        : null;
+
+      let html = `<div class="card" style="text-align:center; padding: 3rem;">
+        <h2 style="font-size:2rem; margin-bottom:1rem;">Orders are currently closed</h2>
+        <p style="color: var(--ink-light); font-family: var(--serif); font-style:italic; font-size:1.1rem; margin-bottom:1.5rem;">We're not currently taking orders.</p>`;
+      if (nextOpening && openAt) {
+        const serviceDate = new Date(nextOpening.serviceDate);
+        html += `<div style="background:var(--cream); border:1px solid var(--stone); border-radius:4px; padding:1.5rem; max-width:400px; margin:0 auto; text-align:center;">
+          <p style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:var(--ink-faint); margin-bottom:0.5rem;">Next service</p>
+          <p style="font-family:var(--serif); font-size:1.4rem; font-weight:600; margin-bottom:0.5rem;">${serviceDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <p style="color:var(--ink-light); font-size:0.875rem;">Orders open ${openAt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} at ${openAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
+        </div>`;
+      }
+      html += `<p style="color:var(--ink-faint); margin-top:2rem; font-size:0.875rem;">Check back soon.</p></div>`;
+      container.innerHTML = html;
+    }
+
+    function renderMenuPreview() {
+      const preview = document.getElementById('menu-preview');
+      preview.innerHTML = menu.filter(item => item.available).map(item => `
+        <div class="pizza-card">
+          ${item.image ? `<img src="${item.image}" alt="${item.name}" class="pizza-image">` : '<div class="pizza-image"></div>'}
+          <h3>${item.name}</h3>
+          <p class="description">${item.description}</p>
+          <span class="price">£${item.price.toFixed(2)}</span>
+        </div>
+      `).join('');
+    }
+
+    // Get how many of a specific item are in the cart for a given slot
+    function getItemCartCount(slotId, menuId) {
+      const key = `${slotId}-${menuId}`;
+      return cart[key] ? cart[key].quantity : 0;
+    }
+
+    // Check if a specific item can be added in a slot (handles both capacity modes)
+    function canAddItem(slot, menuId) {
+      if (capacityMode === 'per-item') {
+        const itemAvail = slot.itemAvailability ? slot.itemAvailability[menuId] : null;
+        if (itemAvail && itemAvail.remaining !== null) {
+          const inCart = getItemCartCount(slot.id, menuId);
+          return (itemAvail.remaining - inCart) > 0;
+        }
+        return true; // null remaining = unlimited
+      } else {
+        return getSlotTotal(slot.id) < slot.remaining;
+      }
+    }
+
+    // Get remaining for display in per-item mode
+    function getItemRemaining(slot, menuId) {
+      if (capacityMode !== 'per-item') return null;
+      const itemAvail = slot.itemAvailability ? slot.itemAvailability[menuId] : null;
+      if (!itemAvail || itemAvail.remaining === null) return null; // unlimited
+      const inCart = getItemCartCount(slot.id, menuId);
+      return Math.max(0, itemAvail.remaining - inCart);
+    }
+
+    function renderCurrentHourSlots() {
+      if (hourRanges.length === 0) {
+        document.getElementById('time-slots-display').innerHTML = '<div class="no-slots-message">No time slots available</div>';
+        document.getElementById('current-hour-range').textContent = 'No slots available';
+        document.getElementById('prev-hour').disabled = true;
+        document.getElementById('next-hour').disabled = true;
+        return;
+      }
+      const currentRange = hourRanges[currentHourIndex];
+      document.getElementById('current-hour-range').textContent = currentRange.label;
+      document.getElementById('prev-hour').disabled = currentHourIndex === 0;
+      document.getElementById('next-hour').disabled = currentHourIndex === hourRanges.length - 1;
+
+      const display = document.getElementById('time-slots-display');
+      const availableMenu = menu.filter(item => item.available);
+
+      display.innerHTML = currentRange.slots.map(slot => {
+        // In total mode, check overall slot capacity
+        // In per-item mode, slot is "full" only if ALL limited items are at 0
+        let slotIsFull = false;
+        if (capacityMode === 'total') {
+          slotIsFull = slot.remaining <= 0;
+        } else {
+          // Full if every item with a limit has 0 remaining (unlimited items always available)
+          const limitedItems = availableMenu.filter(m => {
+            const avail = slot.itemAvailability ? slot.itemAvailability[m.id] : null;
+            return avail && avail.remaining !== null;
+          });
+          slotIsFull = limitedItems.length > 0 && limitedItems.every(m => {
+            const inCart = getItemCartCount(slot.id, m.id);
+            const avail = slot.itemAvailability[m.id];
+            return (avail.remaining - inCart) <= 0;
+          });
+        }
+
+        const inCart = getSlotTotal(slot.id);
+        const displayRemaining = Math.max(0, slot.remaining - inCart);
+        const isLow = capacityMode === 'total' && displayRemaining <= 2 && displayRemaining > 0;
+
+        if (slotIsFull) {
+          return `<div class="time-slot-card full">
+            <div class="slot-time">${slot.time}</div>
+            <div class="slot-full">Fully booked</div>
+          </div>`;
+        }
+
+        const capacityLine = capacityMode === 'total'
+          ? `<div class="slot-capacity ${isLow ? 'low' : ''}">${displayRemaining} of ${slot.capacity} available</div>`
+          : `<div class="slot-capacity">Select items below</div>`;
+
+        return `<div class="time-slot-card">
+          <div class="slot-time">${slot.time}</div>
+          ${capacityLine}
+          <div class="pizza-selector">
+            ${availableMenu.map(pizza => {
+              const qty = getItemCartCount(slot.id, pizza.id);
+              const remaining = getItemRemaining(slot, pizza.id);
+              const canAdd = canAddItem(slot, pizza.id);
+              const isItemFull = remaining !== null && remaining <= 0 && qty === 0;
+
+              let availNote = '';
+              if (capacityMode === 'per-item' && remaining !== null) {
+                if (remaining === 0 && qty === 0) {
+                  availNote = `<div class="item-availability-note">Sold out this slot</div>`;
+                } else if (remaining <= 2 && remaining > 0) {
+                  availNote = `<div class="item-availability-note">${remaining} left this slot</div>`;
+                }
+              }
+
+              return `<div class="pizza-select-item${isItemFull ? ' item-unavailable' : ''}">
+                <div style="flex:1;">
+                  <div class="pizza-select-name">${pizza.name}</div>
+                  ${availNote}
+                </div>
+                <div class="pizza-select-price">£${pizza.price.toFixed(2)}</div>
+                <div class="quantity-controls">
+                  <button onclick="changeQuantity('${slot.id}', '${pizza.id}', -1)" ${qty === 0 ? 'disabled' : ''}>−</button>
+                  <span class="qty">${qty}</span>
+                  <button onclick="changeQuantity('${slot.id}', '${pizza.id}', 1)" ${!canAdd ? 'disabled' : ''}>+</button>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
       }).join('');
     }
 
-    function renderOrdersForAllServiceDates() {
-      if (!settings.serviceSchedule || settings.serviceSchedule.length === 0) { renderOrders(); return; }
-      settings.serviceSchedule.forEach(schedule => renderOrdersForServiceDate(schedule.serviceDate));
+    function changeHour(delta) {
+      currentHourIndex = Math.max(0, Math.min(hourRanges.length - 1, currentHourIndex + delta));
+      renderCurrentHourSlots();
     }
 
-    function renderOrdersForServiceDate(serviceDate) {
-      const tbody = document.getElementById(`orders-list-${serviceDate}`);
-      const table = document.getElementById(`orders-table-${serviceDate}`);
-      if (!tbody || !table) return;
-      const thead = table.querySelector('thead tr');
-      const dateOrders = orders.filter(o => o.serviceDate === serviceDate && o.status !== 'completed' && o.status !== 'cancelled');
-      const availableMenu = menu.filter(item => item.available);
-      thead.innerHTML = `<th style="width:50px;font-size:0.85em;">Time</th><th style="width:60px;font-size:0.85em;">Order</th><th style="width:100px;font-size:0.85em;">Customer</th>${availableMenu.map(pizza => `<th style="min-width:100px;font-size:0.85em;">${pizza.name}</th>`).join('')}<th style="width:60px;font-size:0.85em;">Items</th><th style="width:60px;font-size:0.85em;">Total</th><th style="width:80px;font-size:0.85em;">Pager</th>`;
-      if (dateOrders.length === 0) { tbody.innerHTML = `<tr><td colspan="${3 + availableMenu.length + 2}" style="text-align:center;padding:30px;color:var(--ink-faint);">No orders for this date</td></tr>`; return; }
-      renderOrdersTable(tbody, dateOrders, availableMenu);
+    function getSlotTotal(slotId) {
+      let total = 0;
+      Object.keys(cart).forEach(key => { if (key.startsWith(slotId + '-')) total += cart[key].quantity; });
+      return total;
     }
 
-    async function loadSettings() {
-      try {
-        const response = await fetch(`${API_URL}/settings`);
-        settings = await response.json();
-        capacityMode = settings.capacityMode || 'total';
-        document.getElementById('settings-name').value = settings.businessName || '';
-        document.getElementById('settings-tagline').value = settings.tagline || '';
-        document.getElementById('settings-logo').value = settings.logo || '';
-        document.getElementById('settings-password').value = '';
-        if (!settings.serviceSchedule) settings.serviceSchedule = [];
-        setThemeRadio(settings.theme || 'classic');
-        updateEarlyAccessCodeDisplay();
-        renderSchedule(); previewSettings();
-      } catch (error) { console.error('Failed to load settings:', error); }
-    }
+    function changeQuantity(slotId, menuId, delta) {
+      const key = `${slotId}-${menuId}`;
+      const slot = slots.find(s => s.id === slotId);
+      const pizza = menu.find(p => p.id === menuId);
+      if (!slot || !pizza) return;
+      const current = cart[key] ? cart[key].quantity : 0;
+      const newQty = Math.max(0, current + delta);
 
-    function updateEarlyAccessCodeDisplay() {
-      const display = document.getElementById('early-access-code-display');
-      if (display) display.textContent = settings.earlyAccessCode || '—';
-    }
+      if (delta > 0 && !canAddItem(slot, menuId)) return;
 
-    async function generateEarlyAccessCode() {
-      try {
-        const response = await fetch(`${API_URL}/settings/generate-code`, { method: 'POST' });
-        if (response.ok) {
-          settings = await response.json();
-          updateEarlyAccessCodeDisplay();
-          showSettingsMessage('New early access code generated!', 'success');
-        }
-      } catch (error) { alert('Failed to generate code'); }
-    }
-
-    function copyEarlyAccessLink() {
-      if (!settings.earlyAccessCode) {
-        alert('Generate a code first');
-        return;
-      }
-      const link = `${window.location.origin}/?code=${settings.earlyAccessCode}`;
-      navigator.clipboard.writeText(link).then(() => {
-        showSettingsMessage('Early access link copied to clipboard!', 'success');
-      }).catch(() => {
-        prompt('Copy this link:', link);
-      });
-    }
-
-    function setThemeRadio(theme) {
-      document.querySelectorAll('input[name="settings-theme"]').forEach(radio => {
-        radio.checked = radio.value === theme;
-      });
-      updateThemePreviews(theme);
-    }
-
-    function updateThemePreviews(theme) {
-      ['classic', 'rockandroll', 'portuguese', 'enterprise', 'highland'].forEach(t => {
-        const preview = document.getElementById(`theme-${t}-preview`);
-        if (preview) {
-          preview.style.borderColor = t === theme ? 'var(--ink)' : 'var(--stone)';
-          preview.style.background = t === theme ? 'var(--cream)' : '';
-        }
-      });
-    }
-
-    function renderSchedule() {
-      // Render in both the Schedule tab and keep settings in sync
-      const scheduleListTab = document.getElementById('schedule-list-tab');
-      const scheduleListSettings = document.getElementById('schedule-list');
-
-      const html = settings.serviceSchedule.length === 0
-        ? '<p style="color:var(--ink-faint);text-align:center;padding:20px;">No service dates yet. Click "+ Add Date" to get started.</p>'
-        : settings.serviceSchedule.map((schedule, index) => {
-            const serviceDate = new Date(schedule.serviceDate);
-            const hasEarlyAccess = !!schedule.earlyAccessOpenAt;
-            return `<div style="background:var(--cream);border:1px solid var(--stone);border-radius:4px;padding:1.25rem;margin-bottom:1rem;">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-                <strong>${serviceDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</strong>
-                <button type="button" class="small danger" onclick="removeScheduleItem(${index})">Delete</button>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:0.75rem;">
-                <div class="form-group" style="margin:0;">
-                  <label>Service Date</label>
-                  <input type="date" value="${schedule.serviceDate}" onchange="updateScheduleItem(${index}, 'serviceDate', this.value)">
-                </div>
-                <div class="form-group" style="margin:0;">
-                  <label><input type="checkbox" ${schedule.enabled ? 'checked' : ''} onchange="updateScheduleItem(${index}, 'enabled', this.checked)"> Enable this date</label>
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:0.75rem;">
-                <div class="form-group" style="margin:0;">
-                  <label>Orders Open At</label>
-                  <input type="datetime-local" value="${schedule.ordersOpenAt ? schedule.ordersOpenAt.slice(0, 16) : ''}" onchange="updateScheduleItem(${index}, 'ordersOpenAt', this.value)">
-                  <small>When the public can start ordering</small>
-                </div>
-                <div class="form-group" style="margin:0;">
-                  <label>Orders Close At</label>
-                  <input type="datetime-local" value="${schedule.ordersCloseAt ? schedule.ordersCloseAt.slice(0, 16) : ''}" onchange="updateScheduleItem(${index}, 'ordersCloseAt', this.value)">
-                  <small>Leave blank to stay open until end of service date</small>
-                </div>
-              </div>
-              <div class="form-group" style="margin-bottom:0.75rem;">
-                <label><input type="checkbox" ${hasEarlyAccess ? 'checked' : ''} onchange="toggleEarlyAccess(${index}, this.checked)"> Enable early access for this date</label>
-              </div>
-              ${hasEarlyAccess ? `
-              <div class="form-group" style="margin:0;background:var(--warm-white);border:1px solid var(--stone);border-radius:3px;padding:0.875rem;">
-                <label>Early Access Opens At</label>
-                <input type="datetime-local" value="${schedule.earlyAccessOpenAt ? schedule.earlyAccessOpenAt.slice(0, 16) : ''}" onchange="updateScheduleItem(${index}, 'earlyAccessOpenAt', this.value)">
-                <small>Customers with the early access code can order from this time</small>
-              </div>` : ''}
-            </div>`;
-          }).join('');
-
-      if (scheduleListTab) scheduleListTab.innerHTML = html;
-      if (scheduleListSettings) scheduleListSettings.innerHTML = html;
-    }
-
-    async function saveScheduleFromTab() {
-      try {
-        const response = await fetch(`${API_URL}/settings`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ serviceSchedule: settings.serviceSchedule })
-        });
-        if (response.ok) {
-          settings = await response.json();
-          showSettingsMessage('Service dates saved!', 'success');
-          createServiceDateTabs();
-        } else {
-          showSettingsMessage('Failed to save', 'error');
-        }
-      } catch (error) { showSettingsMessage('Error saving: ' + error.message, 'error'); }
-    }
-
-    function toggleEarlyAccess(index, enabled) {
-      if (enabled) {
-        // Default early access to 2 days before ordersOpenAt
-        const openAt = new Date(settings.serviceSchedule[index].ordersOpenAt);
-        openAt.setDate(openAt.getDate() - 2);
-        settings.serviceSchedule[index].earlyAccessOpenAt = openAt.toISOString().slice(0, 16);
+      if (newQty === 0) {
+        delete cart[key];
+        Object.keys(pizzaModifications).forEach(modKey => { if (modKey.startsWith(key + '-')) delete pizzaModifications[modKey]; });
       } else {
-        settings.serviceSchedule[index].earlyAccessOpenAt = null;
+        cart[key] = { quantity: newQty, slotId, menuId, slotTime: slot.time, pizzaName: pizza.name, price: pizza.price };
       }
-      renderSchedule();
+      renderCurrentHourSlots();
+      updateNextButton();
     }
 
-    function addScheduleItem() {
-      const today = new Date();
-      const daysUntilFriday = (5 - today.getDay() + 7) % 7 || 7;
-      const nextFriday = new Date(today); nextFriday.setDate(today.getDate() + daysUntilFriday);
-      const tuesdayBefore = new Date(nextFriday); tuesdayBefore.setDate(nextFriday.getDate() - 3); tuesdayBefore.setHours(10, 0, 0, 0);
-      settings.serviceSchedule.push({
-        serviceDate: nextFriday.toISOString().split('T')[0],
-        ordersOpenAt: tuesdayBefore.toISOString().slice(0, 16),
-        ordersCloseAt: null,
-        earlyAccessOpenAt: null,
-        enabled: true
+    function updateNextButton() {
+      document.getElementById('next-to-mods').disabled = Object.keys(cart).length === 0;
+    }
+
+    function updateStepIndicator() {
+      [1, 2, 3].forEach(step => {
+        const el = document.getElementById(`step-${step}`);
+        el.classList.remove('active', 'completed');
+        if (step < currentStep) el.classList.add('completed');
+        if (step === currentStep) el.classList.add('active');
       });
-      renderSchedule();
     }
 
-    function updateScheduleItem(index, field, value) {
-      const dateTimeFields = ['ordersOpenAt', 'earlyAccessOpenAt', 'ordersCloseAt'];
-      settings.serviceSchedule[index][field] = dateTimeFields.includes(field) && value ? value + ':00' : value;
-      renderSchedule();
-    }
-
-    function removeScheduleItem(index) {
-      if (confirm('Remove this service date?')) { settings.serviceSchedule.splice(index, 1); renderSchedule(); }
-    }
-
-    function previewSettings() {
-      const name = document.getElementById('settings-name').value || 'Your Business Name';
-      const tagline = document.getElementById('settings-tagline').value || 'Your tagline here';
-      const logo = document.getElementById('settings-logo').value;
-      document.getElementById('preview-name').textContent = name;
-      document.getElementById('preview-tagline').textContent = tagline;
-      const logoImg = document.getElementById('preview-logo');
-      if (logo) { logoImg.src = logo; logoImg.style.display = 'block'; } else { logoImg.style.display = 'none'; }
-    }
-
-    async function saveSettings(e) {
-      e.preventDefault();
-      const selectedTheme = document.querySelector('input[name="settings-theme"]:checked');
-      const data = { businessName: document.getElementById('settings-name').value, tagline: document.getElementById('settings-tagline').value, logo: document.getElementById('settings-logo').value, serviceSchedule: settings.serviceSchedule, theme: selectedTheme ? selectedTheme.value : 'classic' };
-      const password = document.getElementById('settings-password').value;
-      if (password) data.chefPassword = password;
-      try {
-        const response = await fetch(`${API_URL}/settings`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (response.ok) { settings = await response.json(); showSettingsMessage('Settings saved successfully!', 'success'); previewSettings(); renderSchedule(); }
-        else { showSettingsMessage('Failed to save settings', 'error'); }
-      } catch (error) { showSettingsMessage('Error saving settings: ' + error.message, 'error'); }
-    }
-
-    function showSettingsMessage(msg, type) {
-      const successEl = document.getElementById('settings-success'); const errorEl = document.getElementById('settings-error');
-      successEl.classList.remove('show'); errorEl.classList.remove('show');
-      if (type === 'success') { successEl.textContent = msg; successEl.classList.add('show'); setTimeout(() => successEl.classList.remove('show'), 5000); }
-      else { errorEl.textContent = msg; errorEl.classList.add('show'); setTimeout(() => errorEl.classList.remove('show'), 5000); }
+    function goToModifications() {
+      renderModifications();
+      document.getElementById('selection-section').style.display = 'none';
+      document.getElementById('modifications-section').classList.add('show');
+      document.getElementById('checkout-section').classList.remove('show');
+      currentStep = 2; updateStepIndicator();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-      const nameInput = document.getElementById('settings-name');
-      const taglineInput = document.getElementById('settings-tagline');
-      if (nameInput) nameInput.addEventListener('input', previewSettings);
-      if (taglineInput) taglineInput.addEventListener('input', previewSettings);
-      document.querySelectorAll('input[name="settings-theme"]').forEach(radio => {
-        radio.addEventListener('change', () => updateThemePreviews(radio.value));
-      });
-      ['classic', 'rockandroll', 'portuguese', 'enterprise', 'highland'].forEach(t => {
-        const preview = document.getElementById(`theme-${t}-preview`);
-        if (preview) preview.addEventListener('click', () => {
-          document.getElementById(`theme-${t}`).checked = true;
-          updateThemePreviews(t);
-        });
-      });
-    });
+    function renderModifications() {
+      const modList = document.getElementById('modifications-list');
+      const availableExtras = extras.filter(e => e.available);
+      let html = '';
 
-    function countUniqueOrders(orderList) {
-      const seenGroups = new Set();
-      let count = 0;
-      orderList.forEach(o => {
-        if (o.groupId) {
-          if (!seenGroups.has(o.groupId)) { seenGroups.add(o.groupId); count++; }
-        } else {
-          count++;
-        }
-      });
-      return count;
-    }
-
-    function renderStats() {
-      const today = new Date().toISOString().split('T')[0];
-      const todayOrders = orders.filter(o => o.createdAt.startsWith(today) && o.status !== 'cancelled');
-      const revenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
-      const items = todayOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0);
-      document.getElementById('stat-orders').textContent = countUniqueOrders(todayOrders);
-      document.getElementById('stat-revenue').textContent = `£${revenue.toFixed(0)}`;
-      document.getElementById('stat-pizzas').textContent = items;
-    }
-
-    function renderPizzaBreakdown() {
-      const activeOrders = orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled');
-      const itemCounts = {};
-      activeOrders.forEach(order => order.items.forEach(item => { itemCounts[item.name] = (itemCounts[item.name] || 0) + item.quantity; }));
-      const breakdownDiv = document.getElementById('pizza-breakdown');
-      if (Object.keys(itemCounts).length === 0) { breakdownDiv.innerHTML = '<p style="color:var(--ink-faint);text-align:center;padding:20px;">No active orders</p>'; return; }
-      breakdownDiv.innerHTML = Object.entries(itemCounts).sort((a, b) => b[1] - a[1]).map(([name, count]) => `<div class="pizza-stat"><div class="pizza-stat-name">${name}</div><div class="pizza-stat-count">${count}</div></div>`).join('');
-    }
-
-    function renderOrders() {
-      const tbody = document.getElementById('orders-list');
-      const activeOrders = orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled');
-      if (activeOrders.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--ink-faint);">No active orders</td></tr>'; return; }
-      const sortedOrders = activeOrders.sort((a, b) => { const slotA = slots.find(s => s.id === a.slotId); const slotB = slots.find(s => s.id === b.slotId); return (slotA ? slotA.time : '99:99').localeCompare(slotB ? slotB.time : '99:99'); });
-      tbody.innerHTML = sortedOrders.map(order => {
-        const itemsHtml = order.items.map(item => {
-          const modsText = item.modifications && item.modifications.length > 0 ? ` <span class="order-mods">(${item.modifications.join(', ')})</span>` : '';
-          const commentText = item.pizzaComments ? ` <span class="order-mods">"${item.pizzaComments}"</span>` : '';
-          return `${item.name} x${item.quantity} — £${item.price.toFixed(2)}${modsText}${commentText}`;
-        }).join('<br>');
-        const commentsText = order.comments ? `<div class="order-comments">${order.comments}</div>` : '';
-        return `<tr>
-          <td><strong>${order.slotTime}</strong></td>
-          <td><strong>#${order.id.slice(-6)}</strong></td>
-          <td>${order.customer.name}<br><small style="color:var(--ink-faint);">${order.customer.phone || order.customer.email}</small></td>
-          <td>${itemsHtml}${commentsText}</td>
-          <td><strong>£${order.total.toFixed(2)}</strong></td>
-          <td><span class="status-badge status-${order.status}">${order.status}</span></td>
-          <td><select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:5px;border:1px solid var(--stone-dark);font-family:inherit;">
-            <option value="">Update...</option>
-            <option value="confirmed">Confirmed</option><option value="preparing">Preparing</option>
-            <option value="ready">Ready</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
-          </select></td>
-        </tr>`;
-      }).join('');
-    }
-
-    function renderOrdersTable(tbody, ordersToRender, availableMenu) {
-      const sortedOrders = ordersToRender.sort((a, b) => { const slotA = slots.find(s => s.id === a.slotId); const slotB = slots.find(s => s.id === b.slotId); return (slotA ? slotA.time : '99:99').localeCompare(slotB ? slotB.time : '99:99'); });
-
-      // Column totals for summary row
-      const columnTotals = {}; // menuItem.name -> total qty
-      availableMenu.forEach(m => { columnTotals[m.name] = 0; });
-      let grandTotalItems = 0;
-      let grandTotalRevenue = 0;
-
-      const rows = sortedOrders.map(order => {
-        const itemCounts = {};
-        order.items.forEach(item => {
-          if (!itemCounts[item.name]) itemCounts[item.name] = [];
-          itemCounts[item.name].push({ quantity: item.quantity, mods: item.modifications || [], comments: item.pizzaComments || '' });
-        });
-
-        let orderItemTotal = 0;
-        const itemColumns = availableMenu.map(menuItem => {
-          const orderedItems = itemCounts[menuItem.name];
-          if (!orderedItems || orderedItems.length === 0) return '<td style="background:#f5f5f5;text-align:center;color:#ccc;font-size:0.9em;">—</td>';
-          const totalQty = orderedItems.reduce((sum, p) => sum + p.quantity, 0);
-          columnTotals[menuItem.name] += totalQty;
-          orderItemTotal += totalQty;
-          const itemDetails = orderedItems.map(i => {
-            let details = [];
-            if (i.mods.length > 0) details.push(`<div style="font-size:0.75em;color:var(--terracotta);margin-top:2px;">${i.mods.join(', ')}</div>`);
-            if (i.comments) details.push(`<div style="font-size:0.7em;color:var(--ink-faint);font-style:italic;margin-top:2px;">"${i.comments}"</div>`);
-            return details.join('');
-          }).join('');
-          return `<td style="vertical-align:top;padding:8px;"><div style="font-weight:bold;font-size:1.4em;color:var(--ink);">${totalQty}</div>${itemDetails}</td>`;
-        }).join('');
-
-        grandTotalItems += orderItemTotal;
-        grandTotalRevenue += order.total;
-
-        const generalComments = order.comments ? `<div style="margin-top:3px;font-size:0.7em;color:var(--terracotta);">${order.comments}</div>` : '';
-        const pagerNumber = order.pagerNumber || '';
-        return `<tr>
-          <td style="vertical-align:top;font-size:0.9em;padding:8px;"><strong>${order.slotTime}</strong></td>
-          <td style="vertical-align:top;font-size:0.7em;padding:8px;color:var(--ink-faint);">#${order.id.slice(-6)}</td>
-          <td style="vertical-align:top;padding:8px;"><div style="font-weight:600;font-size:0.85em;">${order.customer.name}</div><div style="font-size:0.7em;color:var(--ink-faint);">${order.customer.phone || order.customer.email}</div>${generalComments}</td>
-          ${itemColumns}
-          <td style="vertical-align:top;padding:8px;font-size:0.9em;text-align:center;"><strong>${orderItemTotal}</strong></td>
-          <td style="vertical-align:top;padding:8px;font-size:0.9em;"><strong>£${order.total.toFixed(2)}</strong></td>
-          <td style="vertical-align:top;padding:8px;">
-            <select onchange="updatePager('${order.id}', this.value)" style="padding:4px;border:1px solid var(--stone-dark);font-family:inherit;font-size:0.85em;width:100%;">
-              <option value="">Set #</option>
-              ${Array.from({length: 99}, (_, i) => i + 1).map(num => `<option value="${num}" ${pagerNumber == num ? 'selected' : ''}>${num}</option>`).join('')}
-            </select>
-          </td>
-        </tr>`;
-      }).join('');
-
-      // Summary footer row
-      const summaryColumns = availableMenu.map(menuItem =>
-        `<td style="padding:8px;text-align:center;font-weight:700;font-size:1.1em;color:var(--ink);border-top:2px solid var(--stone);">${columnTotals[menuItem.name] || '—'}</td>`
-      ).join('');
-
-      const summaryRow = `<tr style="background:var(--cream);">
-        <td colspan="3" style="padding:8px;font-weight:700;font-size:0.85em;border-top:2px solid var(--stone);text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-light);">Totals</td>
-        ${summaryColumns}
-        <td style="padding:8px;text-align:center;font-weight:700;font-size:1.1em;color:var(--ink);border-top:2px solid var(--stone);">${grandTotalItems}</td>
-        <td style="padding:8px;font-weight:700;font-size:1em;color:var(--ink);border-top:2px solid var(--stone);">£${grandTotalRevenue.toFixed(2)}</td>
-        <td style="border-top:2px solid var(--stone);"></td>
-      </tr>`;
-
-      tbody.innerHTML = rows + summaryRow;
-    }
-
-    async function updatePager(orderId, pagerNumber) {
-      if (!pagerNumber) return;
-      const orderIndex = orders.findIndex(o => o.id === orderId);
-      if (orderIndex !== -1) { orders[orderIndex].pagerNumber = pagerNumber; renderOrders(); }
-    }
-
-    async function updateOrderStatus(orderId, status) {
-      if (!status) return;
-      try {
-        await fetch(`${API_URL}/orders/${orderId}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
-        await loadData(); renderStats(); renderPizzaBreakdown(); renderOrders();
-      } catch (error) { alert('Failed to update order status'); }
-    }
-
-    function populateArchiveOptions() {
-      const archiveDiv = document.getElementById('archive-options');
-      if (!settings.serviceSchedule || settings.serviceSchedule.length === 0) {
-        archiveDiv.innerHTML = `<p class="archive-warning">Archive all completed and cancelled orders</p><button class="danger" onclick="archiveAllOrders()" style="margin-top:10px;">Archive All Orders</button>`;
+      if (availableExtras.length === 0) {
+        html = `<p style="color:var(--ink-faint); text-align:center; padding: 1rem;">No customisation options available. Click Next to continue.</p>`;
+        modList.innerHTML = html;
         return;
       }
-      const ordersByDate = {};
-      orders.forEach(order => {
-        if (!order.serviceDate) return;
-        if (!ordersByDate[order.serviceDate]) ordersByDate[order.serviceDate] = { total: 0, completed: 0, cancelled: 0, active: 0 };
-        ordersByDate[order.serviceDate].total++;
-        if (order.status === 'completed') ordersByDate[order.serviceDate].completed++;
-        else if (order.status === 'cancelled') ordersByDate[order.serviceDate].cancelled++;
-        else ordersByDate[order.serviceDate].active++;
+
+      Object.keys(cart).forEach(key => {
+        const item = cart[key];
+        for (let i = 0; i < item.quantity; i++) {
+          const uniqueId = `${key}-${i}`;
+          const mods = pizzaModifications[uniqueId] || { mods: [], comments: '' };
+          const modPrice = calculateModPrice(mods.mods);
+          const totalPrice = item.price + modPrice;
+          html += `<div class="pizza-mod-item">
+            <div class="pizza-mod-header">
+              <div class="pizza-mod-title">${item.pizzaName} #${i + 1}</div>
+              <div class="pizza-mod-slot">Pickup ${item.slotTime} &middot; £${totalPrice.toFixed(2)}</div>
+            </div>
+            <div class="checkbox-group">
+              ${availableExtras.map(extra => `
+                <label>
+                  <input type="checkbox" value="${extra.name}" onchange="updateModification('${uniqueId}', this)" ${mods.mods.includes(extra.name) ? 'checked' : ''}>
+                  <span>${extra.name} (+£${extra.price.toFixed(2)})</span>
+                </label>
+              `).join('')}
+            </div>
+            <div class="form-group">
+              <label>Special instructions for this item</label>
+              <input type="text" id="comment-${uniqueId}" value="${mods.comments}" placeholder="e.g. Extra crispy, no sauce..." onchange="updatePizzaComment('${uniqueId}', this.value)">
+            </div>
+          </div>`;
+        }
       });
-      const now = new Date();
-      const archivableServices = settings.serviceSchedule.filter(schedule => { const sd = new Date(schedule.serviceDate); sd.setHours(23, 59, 59); return sd < now; }).sort((a, b) => new Date(b.serviceDate) - new Date(a.serviceDate));
-      if (archivableServices.length === 0) { archiveDiv.innerHTML = '<p style="color:var(--ink-faint);font-style:italic;">No past service dates to archive yet.</p>'; return; }
-      let html = '<div style="display:flex;flex-direction:column;gap:10px;">';
-      archivableServices.forEach(schedule => {
-        const dateStr = new Date(schedule.serviceDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-        const stats = ordersByDate[schedule.serviceDate] || { total: 0, completed: 0, cancelled: 0, active: 0 };
-        html += `<div style="background:var(--cream);border:1px solid var(--stone);padding:1rem;display:flex;justify-content:space-between;align-items:center;border-radius:4px;">
-          <div><strong>${dateStr}</strong><br><small style="color:var(--ink-faint);">${stats.total} orders: ${stats.completed} completed, ${stats.cancelled} cancelled${stats.active > 0 ? `, <span style="color:var(--terracotta);font-weight:600;">${stats.active} still active</span>` : ''}</small></div>
-          <button class="secondary small" onclick="archiveServiceDate('${schedule.serviceDate}')">Archive</button>
-        </div>`;
-      });
-      html += '</div>';
-      const totalArchivable = archivableServices.reduce((sum, s) => sum + (ordersByDate[s.serviceDate] || { total: 0 }).total, 0);
-      if (totalArchivable > 0) html += `<div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--stone);"><button class="danger" onclick="archiveAllPastServices()" style="width:100%;">Archive All Past Services (${totalArchivable} orders)</button></div>`;
-      archiveDiv.innerHTML = html;
+      modList.innerHTML = html || '<p style="color:var(--ink-faint)">No items selected</p>';
     }
 
-    async function archiveServiceDate(serviceDate) {
-      const dateStr = new Date(serviceDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-      const ordersToArchive = orders.filter(o => o.serviceDate === serviceDate);
-      const activeOrders = ordersToArchive.filter(o => o.status !== 'completed' && o.status !== 'cancelled');
-      let confirmMessage = `Archive orders from ${dateStr}?\n\n${ordersToArchive.length} total orders`;
-      if (activeOrders.length > 0) confirmMessage += `\n\nWARNING: ${activeOrders.length} orders are still ACTIVE.`;
-      if (!confirm(confirmMessage)) return;
-      try {
-        const response = await fetch(`${API_URL}/orders/archive`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serviceDate }) });
-        if (response.ok) { const result = await response.json(); alert(`Archived ${result.archived} orders from ${dateStr}!`); await loadData(); renderStats(); renderPizzaBreakdown(); renderOverview(); renderOrdersForAllServiceDates(); populateArchiveOptions(); }
-        else { alert('Failed to archive orders'); }
-      } catch (error) { alert('Error archiving orders: ' + error.message); }
-    }
-
-    async function archiveAllPastServices() {
-      const now = new Date();
-      const pastServices = settings.serviceSchedule.filter(schedule => { const sd = new Date(schedule.serviceDate); sd.setHours(23, 59, 59); return sd < now; });
-      if (pastServices.length === 0) { alert('No past services to archive'); return; }
-      const totalOrders = orders.filter(o => pastServices.some(s => s.serviceDate === o.serviceDate)).length;
-      if (!confirm(`Archive ALL orders from ${pastServices.length} past service date(s)?\n\nThis will archive ${totalOrders} orders.`)) return;
-      try {
-        const response = await fetch(`${API_URL}/orders/archive`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serviceDates: pastServices.map(s => s.serviceDate) }) });
-        if (response.ok) { const result = await response.json(); alert(`Archived ${result.archived} orders!`); await loadData(); renderStats(); renderPizzaBreakdown(); renderOverview(); renderOrdersForAllServiceDates(); populateArchiveOptions(); }
-      } catch (error) { alert('Error archiving orders: ' + error.message); }
-    }
-
-    async function archiveAllOrders() {
-      if (!confirm('Archive ALL orders?\n\nThis will clear them from the dashboard.')) return;
-      try {
-        const response = await fetch(`${API_URL}/orders/archive`, { method: 'POST' });
-        if (response.ok) { const result = await response.json(); alert(`Archived ${result.archived} orders.`); await loadData(); renderStats(); renderPizzaBreakdown(); renderOverview(); renderOrdersForAllServiceDates(); populateArchiveOptions(); }
-      } catch (error) { alert('Error archiving orders: ' + error.message); }
-    }
-
-    function renderMenu() {
-      const tbody = document.getElementById('menu-list');
-      if (!menu || menu.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--ink-faint);">No menu items found. Click "+ Add Item" to create one.</td></tr>'; return; }
-      tbody.innerHTML = menu.map(item => {
-        const limitDisplay = (item.slotLimit !== null && item.slotLimit !== undefined)
-          ? `<span class="item-limit-badge">${item.slotLimit}</span>`
-          : '<span style="color:var(--ink-faint);font-size:0.8rem;">—</span>';
-        return `<tr>
-          <td>${item.image ? `<img src="${item.image}" alt="${item.name}" style="width:60px;height:60px;object-fit:cover;border:1px solid var(--stone);">` : '<div style="width:60px;height:60px;background:var(--stone);border-radius:2px;"></div>'}</td>
-          <td><strong>${item.name}</strong></td>
-          <td>${item.description}</td>
-          <td><strong>£${item.price.toFixed(2)}</strong></td>
-          <td>${limitDisplay}</td>
-          <td>${item.available ? 'Yes' : 'No'}</td>
-          <td><button class="small secondary" onclick="editMenuItem('${item.id}')">Edit</button> <button class="small danger" onclick="deleteMenuItem('${item.id}')">Delete</button></td>
-        </tr>`;
-      }).join('');
-    }
-
-    function openAddMenu() {
-      document.getElementById('menu-modal-title').textContent = 'Add Item';
-      document.getElementById('menu-id').value = '';
-      document.getElementById('menu-name').value = '';
-      document.getElementById('menu-desc').value = '';
-      document.getElementById('menu-price').value = '';
-      document.getElementById('menu-image').value = '';
-      document.getElementById('menu-slot-limit').value = '';
-      document.getElementById('menu-available').checked = true;
-      document.getElementById('image-preview').classList.remove('show');
-      openModal('menu-modal');
-    }
-
-    function editMenuItem(id) {
-      const item = menu.find(m => m.id === id); if (!item) return;
-      document.getElementById('menu-modal-title').textContent = 'Edit Item';
-      document.getElementById('menu-id').value = item.id;
-      document.getElementById('menu-name').value = item.name;
-      document.getElementById('menu-desc').value = item.description;
-      document.getElementById('menu-price').value = item.price;
-      document.getElementById('menu-image').value = item.image || '';
-      document.getElementById('menu-slot-limit').value = (item.slotLimit !== null && item.slotLimit !== undefined) ? item.slotLimit : '';
-      document.getElementById('menu-available').checked = item.available;
-      if (item.image) { document.getElementById('image-preview').src = item.image; document.getElementById('image-preview').classList.add('show'); }
-      else { document.getElementById('image-preview').classList.remove('show'); }
-      openModal('menu-modal');
-    }
-
-    function previewImage() {
-      const url = document.getElementById('menu-image').value;
-      const preview = document.getElementById('image-preview');
-      if (url) { preview.src = url; preview.classList.add('show'); } else { preview.classList.remove('show'); }
-    }
-
-    async function saveMenuItem(e) {
-      e.preventDefault();
-      const id = document.getElementById('menu-id').value;
-      const slotLimitVal = document.getElementById('menu-slot-limit').value;
-      const data = {
-        name: document.getElementById('menu-name').value,
-        description: document.getElementById('menu-desc').value,
-        price: parseFloat(document.getElementById('menu-price').value),
-        image: document.getElementById('menu-image').value,
-        available: document.getElementById('menu-available').checked,
-        slotLimit: slotLimitVal !== '' ? parseInt(slotLimitVal) : null
-      };
-      try {
-        if (id) await fetch(`${API_URL}/menu/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        else await fetch(`${API_URL}/menu`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        closeModal('menu-modal'); await loadData(); renderMenu(); renderSlots();
-        if (capacityMode === 'per-item') { renderCapacityModeToggle(); }
-      } catch (error) { alert('Failed to save menu item'); }
-    }
-
-    async function deleteMenuItem(id) {
-      if (!confirm('Delete this item?')) return;
-      try { await fetch(`${API_URL}/menu/${id}`, { method: 'DELETE' }); await loadData(); renderMenu(); }
-      catch (error) { alert('Failed to delete menu item'); }
-    }
-
-    function renderSlots() {
-      const tbody = document.getElementById('slots-list');
-      if (!slots || slots.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--ink-faint);">No time slots found. Click "+ Add Slot" to create one.</td></tr>'; return; }
-      const sortedSlots = [...slots].sort((a, b) => a.time.localeCompare(b.time));
-
-      if (capacityMode === 'per-item') {
-        // In per-item mode show item-level availability
-        tbody.innerHTML = sortedSlots.map(slot => {
-          const itemSummary = menu.filter(m => m.available && m.slotLimit !== null && m.slotLimit !== undefined).map(m => {
-            const avail = slot.itemAvailability ? slot.itemAvailability[m.id] : null;
-            const remaining = avail ? avail.remaining : m.slotLimit;
-            return `<span style="font-size:0.8rem;color:var(--ink-light);">${m.name}: <strong>${remaining !== null ? remaining : '∞'}</strong> left</span>`;
-          }).join(' &nbsp;·&nbsp; ');
-          return `<tr>
-            <td><strong>${slot.time}</strong></td>
-            <td colspan="2" style="font-size:0.85rem;">${itemSummary || '<span style="color:var(--ink-faint);">No limits set — all items unlimited</span>'}</td>
-            <td>—</td>
-            <td><button class="small secondary" onclick="editSlot('${slot.id}')">Edit</button> <button class="small danger" onclick="deleteSlot('${slot.id}')">Delete</button></td>
-          </tr>`;
-        }).join('');
+    function updateModification(uniqueId, checkbox) {
+      if (!pizzaModifications[uniqueId]) pizzaModifications[uniqueId] = { mods: [], comments: '' };
+      if (checkbox.checked) {
+        if (!pizzaModifications[uniqueId].mods.includes(checkbox.value)) pizzaModifications[uniqueId].mods.push(checkbox.value);
       } else {
-        tbody.innerHTML = sortedSlots.map(slot => `
-          <tr>
-            <td><strong>${slot.time}</strong></td><td>${slot.capacity}</td><td>${slot.currentOrders}</td><td><strong>${slot.remaining}</strong></td>
-            <td><button class="small secondary" onclick="editSlot('${slot.id}')">Edit</button> <button class="small danger" onclick="deleteSlot('${slot.id}')">Delete</button></td>
-          </tr>`).join('');
+        pizzaModifications[uniqueId].mods = pizzaModifications[uniqueId].mods.filter(m => m !== checkbox.value);
       }
+      renderModifications();
     }
 
-    function openAddSlot() {
-      document.getElementById('slot-modal-title').textContent = 'Add Time Slot';
-      document.getElementById('slot-id').value = '';
-      document.getElementById('slot-time').value = '';
-      document.getElementById('slot-capacity').value = '8';
-      openModal('slot-modal');
+    function updatePizzaComment(uniqueId, comment) {
+      if (!pizzaModifications[uniqueId]) pizzaModifications[uniqueId] = { mods: [], comments: '' };
+      pizzaModifications[uniqueId].comments = comment;
     }
 
-    function editSlot(id) {
-      const slot = slots.find(s => s.id === id); if (!slot) return;
-      document.getElementById('slot-modal-title').textContent = 'Edit Time Slot';
-      document.getElementById('slot-id').value = slot.id;
-      document.getElementById('slot-time').value = slot.time;
-      document.getElementById('slot-capacity').value = slot.capacity;
-      openModal('slot-modal');
+    function goToCheckout() {
+      renderCart();
+      document.getElementById('selection-section').style.display = 'none';
+      document.getElementById('modifications-section').classList.remove('show');
+      document.getElementById('checkout-section').classList.add('show');
+      currentStep = 3; updateStepIndicator();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    async function saveSlot(e) {
-      e.preventDefault();
-      const id = document.getElementById('slot-id').value;
-      const data = { time: document.getElementById('slot-time').value, capacity: parseInt(document.getElementById('slot-capacity').value) };
-      try {
-        if (id) await fetch(`${API_URL}/slots/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        else await fetch(`${API_URL}/slots`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        closeModal('slot-modal'); await loadData(); renderSlots();
-      } catch (error) { alert('Failed to save slot'); }
+    function backToSelection() {
+      document.getElementById('selection-section').style.display = 'block';
+      document.getElementById('modifications-section').classList.remove('show');
+      document.getElementById('checkout-section').classList.remove('show');
+      currentStep = 1; updateStepIndicator();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    async function deleteSlot(id) {
-      if (!confirm('Delete this time slot?')) return;
-      try {
-        const response = await fetch(`${API_URL}/slots/${id}`, { method: 'DELETE' });
-        if (!response.ok) { const error = await response.json(); alert(error.error); return; }
-        await loadData(); renderSlots();
-      } catch (error) { alert('Failed to delete slot'); }
+    function backToModifications() {
+      document.getElementById('selection-section').style.display = 'none';
+      document.getElementById('modifications-section').classList.add('show');
+      document.getElementById('checkout-section').classList.remove('show');
+      currentStep = 2; updateStepIndicator();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function switchTab(tab) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      event.target.classList.add('active');
-      document.getElementById(`${tab}-tab`).classList.add('active');
-    }
-
-    async function resetToDefaults() {
-      if (!confirm('Reset menu and time slots to defaults?\n\nThis will DELETE all current menu items and time slots!')) return;
-      try {
-        const defaultMenu = [
-          { name: "Margherita", description: "Classic tomato & mozzarella", price: 12, available: true, image: "", slotLimit: null },
-          { name: "Pepperoni", description: "Spicy pepperoni & cheese", price: 14, available: true, image: "", slotLimit: null },
-          { name: "Veggie Supreme", description: "Bell peppers, mushrooms, olives", price: 13, available: true, image: "", slotLimit: null }
-        ];
-        const defaultSlots = [{ time: "17:00", capacity: 8 }, { time: "17:30", capacity: 8 }, { time: "18:00", capacity: 8 }, { time: "18:30", capacity: 8 }, { time: "19:00", capacity: 8 }, { time: "19:30", capacity: 8 }];
-        for (const item of menu) await fetch(`${API_URL}/menu/${item.id}`, { method: 'DELETE' });
-        for (const slot of slots) await fetch(`${API_URL}/slots/${slot.id}`, { method: 'DELETE' });
-        for (const item of defaultMenu) await fetch(`${API_URL}/menu`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
-        for (const slot of defaultSlots) await fetch(`${API_URL}/slots`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(slot) });
-        await loadData(); renderMenu(); renderSlots();
-        alert('Reset complete! Menu and time slots restored to defaults.');
-      } catch (error) { alert('Error resetting to defaults: ' + error.message); }
-    }
-
-    function openModal(id) { document.getElementById(id).classList.add('show'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-
-    function downloadKitchenTickets() { downloadKitchenTicketsForDate(null); }
-
-    function downloadKitchenTicketsForDate(serviceDate) {
-      let ordersToDownload = orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled');
-      if (serviceDate) ordersToDownload = ordersToDownload.filter(o => o.serviceDate === serviceDate);
-      if (ordersToDownload.length === 0) { alert('No active orders to download'); return; }
-      ordersToDownload.sort((a, b) => { const slotA = slots.find(s => s.id === a.slotId); const slotB = slots.find(s => s.id === b.slotId); return (slotA ? slotA.time : '').localeCompare(slotB ? slotB.time : ''); });
-      let text = serviceDate ? `KITCHEN TICKETS - ${new Date(serviceDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}\n` : 'KITCHEN TICKETS - ALL ORDERS\n';
-      text += '='.repeat(50) + '\n\n';
-      ordersToDownload.forEach(order => {
-        text += `ORDER #${order.id.slice(-6)} | ${order.slotTime}\n`;
-        text += `Customer: ${order.customer.name} | ${order.customer.phone || order.customer.email}\n`;
-        text += '-'.repeat(50) + '\n';
-        order.items.forEach(item => {
-          text += `${item.quantity}x ${item.name} - £${item.price.toFixed(2)}\n`;
-          if (item.modifications && item.modifications.length > 0) text += `  Extras: ${item.modifications.join(', ')}\n`;
-          if (item.pizzaComments) text += `  Note: ${item.pizzaComments}\n`;
-        });
-        if (order.comments) text += `\nOrder note: ${order.comments}\n`;
-        text += `\nTOTAL: £${order.total.toFixed(2)}\n`;
-        text += '='.repeat(50) + '\n\n';
-      });
-      const blob = new Blob([text], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = serviceDate ? `kitchen-tickets-${serviceDate}.txt` : `kitchen-tickets-${new Date().toISOString().split('T')[0]}.txt`;
-      a.click();
-    }
-
-    // ============= LIVE ORDERS / SERVICE VIEW =============
-    function renderServiceView() {
-      const container = document.getElementById('service-orders-container');
-      const activeOrders = orders.filter(o => o.status !== 'cancelled');
-
-      if (activeOrders.length === 0) {
-        container.innerHTML = '<div class="service-empty">No orders yet</div>';
-        return;
-      }
-
-      // Separate grouped orders (multi-slot) from single orders
-      const usedIds = new Set();
-      const displayItems = []; // each item is either a single order or an array of grouped orders
-
-      // First pass — collect groups
-      const groups = {};
-      activeOrders.forEach(order => {
-        if (order.groupId) {
-          if (!groups[order.groupId]) groups[order.groupId] = [];
-          groups[order.groupId].push(order);
-        }
-      });
-
-      // Build display list in slot-time order
-      // Get the earliest slot time per group for sorting
-      const getEarliestSlotTime = (groupOrders) => {
-        return groupOrders.map(o => o.slotTime || '99:99').sort()[0];
-      };
-
-      activeOrders.forEach(order => {
-        if (usedIds.has(order.id)) return;
-        if (order.groupId && groups[order.groupId] && groups[order.groupId].length > 1) {
-          const group = groups[order.groupId];
-          group.forEach(o => usedIds.add(o.id));
-          displayItems.push({ type: 'group', orders: group, sortTime: getEarliestSlotTime(group) });
-        } else {
-          usedIds.add(order.id);
-          displayItems.push({ type: 'single', orders: [order], sortTime: order.slotTime || '99:99' });
-        }
-      });
-
-      // Sort all display items by earliest slot time
-      displayItems.sort((a, b) => a.sortTime.localeCompare(b.sortTime));
-
-      // Group display items into slot-time sections (by earliest slot for groups)
+    function renderCart() {
+      const cartItemsDiv = document.getElementById('cart-items');
+      const totalSpan = document.getElementById('total');
+      let total = 0; let html = '';
       const bySlot = {};
-      displayItems.forEach(item => {
-        const time = item.sortTime;
-        if (!bySlot[time]) bySlot[time] = [];
-        bySlot[time].push(item);
+      Object.keys(cart).forEach(key => {
+        const item = cart[key];
+        if (!bySlot[item.slotId]) bySlot[item.slotId] = [];
+        bySlot[item.slotId].push(item);
       });
-
-      const sortedTimes = Object.keys(bySlot).sort();
-
-      container.innerHTML = sortedTimes.map(time => {
-        const slotItems = bySlot[time];
-        const activeCount = slotItems.filter(item =>
-          item.orders.every(o => o.status !== 'completed')
-        ).length;
-        return `
-          <div class="service-slot-section">
-            <div class="service-slot-header">
-              <span>${time}</span>
-              <span class="service-slot-count">${activeCount} remaining · ${slotItems.length} total</span>
-            </div>
-            <div class="order-cards-grid">
-              ${slotItems.map(item =>
-                item.type === 'group'
-                  ? renderGroupedOrderCard(item.orders)
-                  : renderOrderCard(item.orders[0])
-              ).join('')}
-            </div>
-          </div>`;
-      }).join('');
-    }
-
-    function renderGroupedOrderCard(groupOrders) {
-      const isCollected = groupOrders.every(o => o.status === 'completed');
-      const sortedOrders = [...groupOrders].sort((a, b) => (a.slotTime || '').localeCompare(b.slotTime || ''));
-      const firstOrder = sortedOrders[0];
-      const groupTotal = groupOrders.reduce((sum, o) => sum + o.total, 0);
-      const groupIds = groupOrders.map(o => `'${o.id}'`).join(',');
-
-      const slotsHtml = sortedOrders.map(order => {
-        const itemsHtml = order.items.map(item => {
-          const mods = item.modifications && item.modifications.length > 0
-            ? `<div class="order-card-item-mods">${item.modifications.join(', ')}</div>` : '';
-          const note = item.pizzaComments
-            ? `<div class="order-card-item-note">"${item.pizzaComments}"</div>` : '';
-          return `<div class="order-card-item">
-            <span class="order-card-item-name">${item.name}</span> ×${item.quantity}
-            ${mods}${note}
-          </div>`;
-        }).join('');
-
-        return `<div style="margin-bottom:0.75rem;">
-          <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-faint);margin-bottom:0.375rem;">Pickup ${order.slotTime}</div>
-          ${itemsHtml}
-        </div>`;
-      }).join('');
-
-      const commentsHtml = firstOrder.comments
-        ? `<div class="order-card-comments">${firstOrder.comments}</div>` : '';
-
-      return `<div class="order-card order-card-grouped${isCollected ? ' status-completed' : ''}">
-        <div class="order-card-header">
-          <div>
-            <div class="order-card-customer">${firstOrder.customer.name} <span style="display:inline-block;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:var(--terracotta);color:#fff;padding:0.15rem 0.45rem;border-radius:3px;vertical-align:middle;margin-left:0.375rem;">Split</span></div>
-            <div class="order-card-id">${firstOrder.customer.phone || firstOrder.customer.email} · ${sortedOrders.length} slots</div>
-          </div>
-          <div class="order-card-total">£${groupTotal.toFixed(2)}</div>
-        </div>
-        <div class="order-card-items">${slotsHtml}</div>
-        ${commentsHtml}
-        <button class="order-card-collect-btn${isCollected ? ' collected' : ''}"
-          onclick="${isCollected ? '' : `markGroupCollected([${groupIds}])`}"
-          ${isCollected ? 'disabled' : ''}>
-          ${isCollected ? 'Collected' : 'Mark All as Collected'}
-        </button>
-      </div>`;
-    }
-
-    function renderOrderCard(order) {
-      const isCollected = order.status === 'completed';
-      const itemsHtml = order.items.map(item => {
-        const mods = item.modifications && item.modifications.length > 0
-          ? `<div class="order-card-item-mods">${item.modifications.join(', ')}</div>` : '';
-        const note = item.pizzaComments
-          ? `<div class="order-card-item-note">"${item.pizzaComments}"</div>` : '';
-        return `<div class="order-card-item">
-          <span class="order-card-item-name">${item.name}</span> ×${item.quantity}
-          ${mods}${note}
-        </div>`;
-      }).join('');
-
-      const commentsHtml = order.comments
-        ? `<div class="order-card-comments">${order.comments}</div>` : '';
-
-      return `<div class="order-card${isCollected ? ' status-completed' : ''}">
-        <div class="order-card-header">
-          <div>
-            <div class="order-card-customer">${order.customer.name}</div>
-            <div class="order-card-id">#${order.id.slice(-6)} · ${order.customer.phone || order.customer.email}</div>
-          </div>
-          <div class="order-card-total">£${order.total.toFixed(2)}</div>
-        </div>
-        <div class="order-card-items">${itemsHtml}</div>
-        ${commentsHtml}
-        <button class="order-card-collect-btn${isCollected ? ' collected' : ''}"
-          onclick="${isCollected ? '' : `markCollected('${order.id}')`}"
-          ${isCollected ? 'disabled' : ''}>
-          ${isCollected ? 'Collected' : 'Mark as Collected'}
-        </button>
-      </div>`;
-    }
-
-    async function markCollected(orderId) {
-      try {
-        await fetch(`${API_URL}/orders/${orderId}/status`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'completed' })
+      Object.keys(bySlot).forEach(slotId => {
+        const items = bySlot[slotId];
+        html += `<div style="margin-bottom:0.75rem;"><span style="font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;opacity:0.6;">${items[0].slotTime}</span></div>`;
+        items.forEach(item => {
+          for (let i = 0; i < item.quantity; i++) {
+            const uniqueId = `${slotId}-${item.menuId}-${i}`;
+            const mods = pizzaModifications[uniqueId];
+            const modPrice = mods ? calculateModPrice(mods.mods) : 0;
+            const pizzaPrice = item.price + modPrice;
+            total += pizzaPrice;
+            const modsText = mods && mods.mods.length > 0 ? ` (${mods.mods.join(', ')})` : '';
+            const commentText = mods && mods.comments ? ` – "${mods.comments}"` : '';
+            html += `<div class="cart-item"><div>${item.pizzaName}${modsText}${commentText}</div><div>£${pizzaPrice.toFixed(2)}</div></div>`;
+          }
         });
-        await loadData();
-        renderServiceView();
-        renderStats();
-        renderPizzaBreakdown();
-      } catch (error) { alert('Failed to update order'); }
+      });
+      const comments = document.getElementById('comments').value.trim();
+      if (comments && Object.keys(cart).length > 0) {
+        html += `<div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.1);font-size:0.85rem;opacity:0.7;">Note: ${comments}</div>`;
+      }
+      cartItemsDiv.innerHTML = html || '<p style="opacity:0.6">No items selected yet</p>';
+      totalSpan.textContent = total.toFixed(2);
     }
 
-    async function markGroupCollected(orderIds) {
-      try {
-        await Promise.all(orderIds.map(id =>
-          fetch(`${API_URL}/orders/${id}/status`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'completed' })
-          })
-        ));
-        await loadData();
-        renderServiceView();
-        renderStats();
-        renderPizzaBreakdown();
-      } catch (error) { alert('Failed to update orders'); }
-    }
+    async function placeOrder() {
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      if (!name || !email || !phone) { showError('Please enter your name, email, and phone number'); return; }
+      if (!/^\S+@\S+\.\S+$/.test(email)) { showError('Please enter a valid email address'); return; }
 
-    function printRunSheet() {
-      const allOrders = [...orders].filter(o => o.status !== 'cancelled');
-      allOrders.sort((a, b) => {
-        const slotA = slots.find(s => s.id === a.slotId);
-        const slotB = slots.find(s => s.id === b.slotId);
-        return (slotA ? slotA.time : '99:99').localeCompare(slotB ? slotB.time : '99:99');
+      const ordersBySlot = {};
+      Object.keys(cart).forEach(key => {
+        const item = cart[key];
+        for (let i = 0; i < item.quantity; i++) {
+          const uniqueId = `${key}-${i}`;
+          const mods = pizzaModifications[uniqueId] || { mods: [], comments: '' };
+          if (!ordersBySlot[item.slotId]) ordersBySlot[item.slotId] = [];
+          ordersBySlot[item.slotId].push({ menuId: item.menuId, quantity: 1, modifications: mods.mods, pizzaComments: mods.comments });
+        }
       });
 
-      const businessName = settings.businessName || 'Run Sheet';
-      const printedAt = new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      const comments = document.getElementById('comments').value.trim();
+      let fullComments = comments;
+      if (selectedServiceDate) {
+        const serviceDate = new Date(selectedServiceDate);
+        const dateStr = serviceDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+        fullComments = `[Service Date: ${dateStr}] ${comments}`.trim();
+      }
 
-      const rows = allOrders.map(order => {
-        const itemLines = order.items.map(item => {
-          let line = `${item.quantity}× ${item.name}`;
-          if (item.modifications && item.modifications.length > 0) line += ` (${item.modifications.join(', ')})`;
-          if (item.pizzaComments) line += ` — "${item.pizzaComments}"`;
-          return line;
-        }).join('<br>');
-        const commentsLine = order.comments ? `<br><em style="color:#888;">${order.comments}</em>` : '';
-        const splitLabel = order.groupId ? `<br><strong style="color:#c2714f;font-size:0.8em;">SPLIT ORDER</strong>` : '';
-        const collected = order.status === 'completed'
-          ? '<span style="color:#22543d;font-weight:600;">Collected</span>' : '';
-        return `<tr style="border-bottom:1px solid #e0e0e0;">
-          <td style="padding:8px 10px;font-weight:700;white-space:nowrap;">${order.slotTime}</td>
-          <td style="padding:8px 10px;font-weight:600;">${order.customer.name}${splitLabel}<br><span style="font-weight:400;font-size:0.8em;color:#888;">${order.customer.phone || order.customer.email}</span></td>
-          <td style="padding:8px 10px;font-size:0.9em;">${itemLines}${commentsLine}</td>
-          <td style="padding:8px 10px;font-weight:700;white-space:nowrap;">£${order.total.toFixed(2)}</td>
-          <td style="padding:8px 10px;text-align:center;">${collected}</td>
-        </tr>`;
-      }).join('');
-
-      const sheet = document.getElementById('print-run-sheet');
-      sheet.innerHTML = `
-        <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;padding:20px;">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;border-bottom:2px solid #1c1917;padding-bottom:10px;">
-            <h1 style="font-family:Georgia,serif;font-size:22px;margin:0;">${businessName} — Run Sheet</h1>
-            <span style="font-size:12px;color:#888;">Printed ${printedAt} · ${allOrders.length} orders</span>
-          </div>
-          <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <thead>
-              <tr style="background:#f5f5f5;border-bottom:2px solid #1c1917;">
-                <th style="padding:8px 10px;text-align:left;">Time</th>
-                <th style="padding:8px 10px;text-align:left;">Customer</th>
-                <th style="padding:8px 10px;text-align:left;">Items</th>
-                <th style="padding:8px 10px;text-align:left;">Total</th>
-                <th style="padding:8px 10px;text-align:center;">Collected</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>`;
-      sheet.style.display = 'block';
-      window.print();
-      sheet.style.display = 'none';
+      try {
+        const groupId = Object.keys(ordersBySlot).length > 1 ? Date.now().toString() : null;
+        const orderPromises = Object.keys(ordersBySlot).map(slotId => {
+          return fetch(`${API_URL}/orders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slotId, items: ordersBySlot[slotId], customer: { name, email, phone }, comments: fullComments, serviceDate: selectedServiceDate, groupId })
+          });
+        });
+        const responses = await Promise.all(orderPromises);
+        for (const response of responses) {
+          if (!response.ok) {
+            let errorMsg = 'Failed to place order';
+            try { const error = await response.json(); errorMsg = error.error || errorMsg; } catch (e) {}
+            throw new Error(errorMsg);
+          }
+        }
+        const orders = await Promise.all(responses.map(r => r.json()));
+        showSuccess(orders);
+      } catch (error) {
+        showError(error.message || 'Failed to place order. Please try again.');
+      }
     }
+
+    function showSuccess(orders) {
+      const totalAmount = orders.reduce((sum, o) => sum + o.total, 0);
+      const slotTimes = orders.map(o => { const slot = slots.find(s => s.id === o.slotId); return slot ? slot.time : 'Unknown'; }).join(', ');
+      let serviceDateHtml = '';
+      if (selectedServiceDate) {
+        const serviceDate = new Date(selectedServiceDate);
+        const dateStr = serviceDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        serviceDateHtml = `<p><strong>Service date:</strong> ${dateStr}</p>`;
+      }
+      document.getElementById('success-main-text').innerHTML = `
+        <p>Your order <strong>#${orders[0].id.slice(-6)}</strong> has been confirmed.</p>
+        ${serviceDateHtml}
+        <p><strong>Pick up at ${slotTimes}</strong></p>
+        <p>A confirmation has been sent to ${orders[0].customer.email}</p>`;
+
+      let summaryHtml = '<h3>Order Summary</h3>';
+      orders.forEach(order => {
+        const slot = slots.find(s => s.id === order.slotId);
+        summaryHtml += `<div style="margin-bottom:0.75rem;font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--ink-faint);">${slot ? slot.time : 'Unknown'}</div>`;
+        order.items.forEach(item => {
+          const modsText = item.modifications && item.modifications.length > 0 ? ` (${item.modifications.join(', ')})` : '';
+          const commentText = item.pizzaComments ? ` – "${item.pizzaComments}"` : '';
+          summaryHtml += `<div class="order-summary-item">${item.name} x${item.quantity}${modsText}${commentText}<span style="float:right;font-weight:600;color:var(--ink);">£${item.price.toFixed(2)}</span></div>`;
+        });
+      });
+      if (orders[0].comments) {
+        summaryHtml += `<div style="margin-top:0.75rem;padding:0.75rem;background:var(--terra-light);border-radius:3px;font-size:0.875rem;color:var(--ink-light);">Note: ${orders[0].comments}</div>`;
+      }
+      summaryHtml += `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--stone);text-align:right;"><strong style="font-family:var(--serif);font-size:1.4rem;">Total: £${totalAmount.toFixed(2)}</strong></div>`;
+      document.getElementById('success-order-summary').innerHTML = summaryHtml;
+      document.getElementById('success-business-name').textContent = settings.businessName || 'Highland Slice';
+      if (settings.logo) {
+        const header = document.querySelector('#success-page .site-header');
+        header.style.cssText += `background-image:url('${settings.logo}');background-size:cover;background-position:center;background-repeat:no-repeat;position:relative;`;
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:0;';
+        header.insertBefore(overlay, header.firstChild);
+        document.getElementById('success-business-name').style.cssText = 'position:relative;z-index:1;color:#ffffff;text-shadow:0 2px 8px rgba(0,0,0,0.4);';
+      }
+
+      document.querySelector('.container').style.display = 'none';
+      document.querySelector('.site-header').style.display = 'none';
+      document.getElementById('success-page').style.display = 'block';
+      window.scrollTo({ top: 0 });
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('error');
+      errorDiv.textContent = message;
+      errorDiv.classList.add('show');
+      setTimeout(() => errorDiv.classList.remove('show'), 5000);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.getElementById('next-to-mods').addEventListener('click', goToModifications);
+    document.getElementById('back-to-selection').addEventListener('click', backToSelection);
+    document.getElementById('next-to-checkout').addEventListener('click', goToCheckout);
+    document.getElementById('back-to-mods').addEventListener('click', backToModifications);
+    document.getElementById('order-button').addEventListener('click', placeOrder);
+    document.getElementById('comments').addEventListener('input', renderCart);
+
+    init();
   </script>
 </body>
-<!-- Print run sheet (hidden, shown only during print) -->
-<div id="print-run-sheet"></div>
 </html>
