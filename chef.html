@@ -751,6 +751,9 @@
     function createServiceDateTabs() {
       const tabContainer = document.getElementById('service-date-tabs');
       const contentContainer = document.getElementById('service-date-order-tabs');
+      // Clear existing tabs and content to prevent duplication on re-render
+      tabContainer.innerHTML = '';
+      contentContainer.innerHTML = '';
       if (!settings.serviceSchedule || settings.serviceSchedule.length === 0) { tabContainer.innerHTML = ''; return; }
       settings.serviceSchedule.forEach((schedule, index) => {
         const date = new Date(schedule.serviceDate);
