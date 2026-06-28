@@ -896,7 +896,15 @@
       const thead = table.querySelector('thead tr');
       const dateOrders = orders.filter(o => o.serviceDate === serviceDate && o.status !== 'completed' && o.status !== 'cancelled');
       const availableMenu = menu.filter(item => item.available);
-      thead.innerHTML = `<th style="width:50px;font-size:0.85em;">Time</th><th style="width:60px;font-size:0.85em;">Order</th><th style="width:100px;font-size:0.85em;">Customer</th>${availableMenu.map(pizza => `<th style="min-width:100px;font-size:0.85em;">${pizza.name}</th>`).join('')}<th style="width:60px;font-size:0.85em;">Items</th><th style="width:60px;font-size:0.85em;">Total</th><th style="width:80px;font-size:0.85em;">Pager</th>`;
+      const colColours = [
+        { bg: '#EEF4FF', text: '#1e3a6e' },
+        { bg: '#FFF5E6', text: '#7a3d00' },
+        { bg: '#EDFAF3', text: '#1a5c38' },
+        { bg: '#FDF0F5', text: '#7a1a3d' },
+        { bg: '#F3EEFF', text: '#3d1a7a' },
+        { bg: '#FFF8E1', text: '#6b4a00' },
+      ];
+      thead.innerHTML = `<th style="width:50px;font-size:0.85em;">Time</th><th style="width:60px;font-size:0.85em;">Order</th><th style="width:100px;font-size:0.85em;">Customer</th>${availableMenu.map((pizza, i) => { const c = colColours[i % colColours.length]; return `<th style="min-width:100px;font-size:0.85em;background:${c.bg};color:${c.text};">${pizza.name}</th>`; }).join('')}<th style="width:60px;font-size:0.85em;">Items</th><th style="width:60px;font-size:0.85em;">Total</th><th style="width:80px;font-size:0.85em;">Pager</th>`;
       if (dateOrders.length === 0) { tbody.innerHTML = `<tr><td colspan="${3 + availableMenu.length + 2}" style="text-align:center;padding:30px;color:var(--ink-faint);">No orders for this date</td></tr>`; return; }
       renderOrdersTable(tbody, dateOrders, availableMenu);
     }
@@ -1194,19 +1202,30 @@
         });
 
         let orderItemTotal = 0;
-        const itemColumns = availableMenu.map(menuItem => {
+      // Alternating column colours for readability
+      const colColours = [
+        { bg: '#EEF4FF', text: '#1e3a6e' },  // soft blue
+        { bg: '#FFF5E6', text: '#7a3d00' },  // soft amber
+        { bg: '#EDFAF3', text: '#1a5c38' },  // soft green
+        { bg: '#FDF0F5', text: '#7a1a3d' },  // soft rose
+        { bg: '#F3EEFF', text: '#3d1a7a' },  // soft purple
+        { bg: '#FFF8E1', text: '#6b4a00' },  // soft gold
+      ];
+
+        const itemColumns = availableMenu.map((menuItem, colIndex) => {
+          const col = colColours[colIndex % colColours.length];
           const orderedItems = itemCounts[menuItem.name];
-          if (!orderedItems || orderedItems.length === 0) return '<td style="background:#f5f5f5;text-align:center;color:#ccc;font-size:0.9em;">—</td>';
+          if (!orderedItems || orderedItems.length === 0) return `<td style="background:${col.bg};text-align:center;color:#bbb;font-size:0.9em;opacity:0.5;">—</td>`;
           const totalQty = orderedItems.reduce((sum, p) => sum + p.quantity, 0);
           columnTotals[menuItem.name] += totalQty;
           orderItemTotal += totalQty;
           const itemDetails = orderedItems.map(i => {
             let details = [];
-            if (i.mods.length > 0) details.push(`<div style="font-size:0.75em;color:var(--terracotta);margin-top:2px;">${i.mods.join(', ')}</div>`);
-            if (i.comments) details.push(`<div style="font-size:0.7em;color:var(--ink-faint);font-style:italic;margin-top:2px;">"${i.comments}"</div>`);
+            if (i.mods.length > 0) details.push(`<div style="font-size:0.75em;color:${col.text};opacity:0.8;margin-top:2px;">${i.mods.join(', ')}</div>`);
+            if (i.comments) details.push(`<div style="font-size:0.7em;color:${col.text};opacity:0.6;font-style:italic;margin-top:2px;">"${i.comments}"</div>`);
             return details.join('');
           }).join('');
-          return `<td style="vertical-align:top;padding:8px;"><div style="font-weight:bold;font-size:1.4em;color:var(--ink);">${totalQty}</div>${itemDetails}</td>`;
+          return `<td style="vertical-align:top;padding:8px;background:${col.bg};"><div style="font-weight:bold;font-size:1.4em;color:${col.text};">${totalQty}</div>${itemDetails}</td>`;
         }).join('');
 
         grandTotalItems += orderItemTotal;
@@ -1230,10 +1249,11 @@
         </tr>`;
       }).join('');
 
-      // Summary footer row
-      const summaryColumns = availableMenu.map(menuItem =>
-        `<td style="padding:8px;text-align:center;font-weight:700;font-size:1.1em;color:var(--ink);border-top:2px solid var(--stone);">${columnTotals[menuItem.name] || '—'}</td>`
-      ).join('');
+      // Summary footer row with matching column colours
+      const summaryColumns = availableMenu.map((menuItem, colIndex) => {
+        const col = colColours[colIndex % colColours.length];
+        return `<td style="padding:8px;text-align:center;font-weight:700;font-size:1.1em;color:${col.text};background:${col.bg};border-top:2px solid var(--stone);">${columnTotals[menuItem.name] || '—'}</td>`;
+      }).join('');
 
       const summaryRow = `<tr style="background:var(--cream);">
         <td colspan="3" style="padding:8px;font-weight:700;font-size:0.85em;border-top:2px solid var(--stone);text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-light);">Totals</td>
