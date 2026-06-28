@@ -642,10 +642,20 @@
 
     function renderModifications() {
       const modList = document.getElementById('modifications-list');
-      const availableExtras = extras.filter(e => e.available);
+      const allAvailableExtras = extras.filter(e => e.available);
       let html = '';
 
-      if (availableExtras.length === 0) {
+      // Helper: get extras applicable to a specific menu item
+      function getExtrasForItem(menuId) {
+        return allAvailableExtras.filter(e =>
+          !e.menuItems || e.menuItems.length === 0 || e.menuItems.includes(menuId)
+        );
+      }
+
+      // Check if any item has any extras at all
+      const anyExtras = Object.keys(cart).some(key => getExtrasForItem(cart[key].menuId).length > 0);
+
+      if (!anyExtras) {
         html = `<p style="color:var(--ink-faint); text-align:center; padding: 1rem;">No customisation options available. Click Next to continue.</p>`;
         modList.innerHTML = html;
         return;
@@ -653,6 +663,7 @@
 
       Object.keys(cart).forEach(key => {
         const item = cart[key];
+        const itemExtras = getExtrasForItem(item.menuId);
         for (let i = 0; i < item.quantity; i++) {
           const uniqueId = `${key}-${i}`;
           const mods = pizzaModifications[uniqueId] || { mods: [], comments: '' };
@@ -663,14 +674,15 @@
               <div class="pizza-mod-title">${item.pizzaName} #${i + 1}</div>
               <div class="pizza-mod-slot">Pickup ${item.slotTime} &middot; £${totalPrice.toFixed(2)}</div>
             </div>
+            ${itemExtras.length > 0 ? `
             <div class="checkbox-group">
-              ${availableExtras.map(extra => `
+              ${itemExtras.map(extra => `
                 <label>
                   <input type="checkbox" value="${extra.name}" onchange="updateModification('${uniqueId}', this)" ${mods.mods.includes(extra.name) ? 'checked' : ''}>
                   <span>${extra.name} (+£${extra.price.toFixed(2)})</span>
                 </label>
               `).join('')}
-            </div>
+            </div>` : ''}
             <div class="form-group">
               <label>Special instructions for this item</label>
               <input type="text" id="comment-${uniqueId}" value="${mods.comments}" placeholder="e.g. Extra crispy, no sauce..." onchange="updatePizzaComment('${uniqueId}', this.value)">
