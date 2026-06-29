@@ -586,6 +586,15 @@
     let orders = [], menu = [], slots = [], settings = {}, extras = [];
     let capacityMode = 'total';
 
+    const colColours = [
+      { bg: '#EEF4FF', text: '#1e3a6e' },
+      { bg: '#FFF5E6', text: '#7a3d00' },
+      { bg: '#EDFAF3', text: '#1a5c38' },
+      { bg: '#FDF0F5', text: '#7a1a3d' },
+      { bg: '#F3EEFF', text: '#3d1a7a' },
+      { bg: '#FFF8E1', text: '#6b4a00' },
+    ];
+
     async function login(e) {
       e.preventDefault();
       const password = document.getElementById('password').value;
@@ -896,14 +905,6 @@
       const thead = table.querySelector('thead tr');
       const dateOrders = orders.filter(o => o.serviceDate === serviceDate && o.status !== 'completed' && o.status !== 'cancelled');
       const availableMenu = menu.filter(item => item.available);
-      const colColours = [
-        { bg: '#EEF4FF', text: '#1e3a6e' },
-        { bg: '#FFF5E6', text: '#7a3d00' },
-        { bg: '#EDFAF3', text: '#1a5c38' },
-        { bg: '#FDF0F5', text: '#7a1a3d' },
-        { bg: '#F3EEFF', text: '#3d1a7a' },
-        { bg: '#FFF8E1', text: '#6b4a00' },
-      ];
       thead.innerHTML = `<th style="width:50px;font-size:0.85em;">Time</th><th style="width:60px;font-size:0.85em;">Order</th><th style="width:100px;font-size:0.85em;">Customer</th>${availableMenu.map((pizza, i) => { const c = colColours[i % colColours.length]; return `<th style="min-width:100px;font-size:0.85em;background:${c.bg};color:${c.text};">${pizza.name}</th>`; }).join('')}<th style="width:60px;font-size:0.85em;">Items</th><th style="width:60px;font-size:0.85em;">Total</th><th style="width:80px;font-size:0.85em;">Pager</th>`;
       if (dateOrders.length === 0) { tbody.innerHTML = `<tr><td colspan="${3 + availableMenu.length + 2}" style="text-align:center;padding:30px;color:var(--ink-faint);">No orders for this date</td></tr>`; return; }
       renderOrdersTable(tbody, dateOrders, availableMenu);
@@ -1203,15 +1204,6 @@
 
         let orderItemTotal = 0;
       // Alternating column colours for readability
-      const colColours = [
-        { bg: '#EEF4FF', text: '#1e3a6e' },  // soft blue
-        { bg: '#FFF5E6', text: '#7a3d00' },  // soft amber
-        { bg: '#EDFAF3', text: '#1a5c38' },  // soft green
-        { bg: '#FDF0F5', text: '#7a1a3d' },  // soft rose
-        { bg: '#F3EEFF', text: '#3d1a7a' },  // soft purple
-        { bg: '#FFF8E1', text: '#6b4a00' },  // soft gold
-      ];
-
         const itemColumns = availableMenu.map((menuItem, colIndex) => {
           const col = colColours[colIndex % colColours.length];
           const orderedItems = itemCounts[menuItem.name];
