@@ -1197,39 +1197,68 @@
       let grandTotalRevenue = 0;
 
       const rows = sortedOrders.map(order => {
+        // Build item counts with per-mod tallies
         const itemCounts = {};
         order.items.forEach(item => {
-          if (!itemCounts[item.name]) itemCounts[item.name] = [];
-          itemCounts[item.name].push({ quantity: item.quantity, mods: item.modifications || [], comments: item.pizzaComments || '' });
+          if (!itemCounts[item.name]) itemCounts[item.name] = { total: 0, mods: {}, comments: [] };
+          itemCounts[item.name].total += item.quantity;
+          (item.modifications || []).forEach(mod => {
+            itemCounts[item.name].mods[mod] = (itemCounts[item.name].mods[mod] || 0) + 1;
+          });
+          if (item.pizzaComments) itemCounts[item.name].comments.push({ text: item.pizzaComments, qty: item.quantity });
         });
 
         let orderItemTotal = 0;
-      // Alternating column colours for readability
         const itemColumns = availableMenu.map((menuItem, colIndex) => {
           const col = colColours[colIndex % colColours.length];
-          const orderedItems = itemCounts[menuItem.name];
-          if (!orderedItems || orderedItems.length === 0) return `<td style="background:${col.bg};text-align:center;color:#bbb;font-size:0.9em;opacity:0.5;">—</td>`;
-          const totalQty = orderedItems.reduce((sum, p) => sum + p.quantity, 0);
-          columnTotals[menuItem.name] += totalQty;
-          orderItemTotal += totalQty;
-          const itemDetails = orderedItems.map(i => {
-            let details = [];
-            if (i.mods.length > 0) details.push(`<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:3px;">${i.mods.map(m => `<span style="display:inline-block;background:${col.text};color:#fff;font-size:0.7em;font-weight:600;padding:1px 6px;border-radius:10px;">${m}</span>`).join('')}</div>`);
-            if (i.comments) details.push(`<div style="margin-top:4px;padding:3px 6px;background:#fff8e1;border-left:2px solid #f59e0b;font-size:0.75em;color:#92400e;font-style:italic;">"${i.comments}"</div>`);
-            return details.join('');
+          const data = itemCounts[menuItem.name];
+          if (!data) return `<td style="background:${col.bg};text-align:center;color:#bbb;font-size:0.9em;opacity:0.5;">—</td>`;
+          columnTotals[menuItem.name] += data.total;
+          orderItemTotal += data.total;
+
+          // Mod pills with count if not all items have the mod
+          const modPills = Object.entries(data.mods).map(([mod, qty]) => {
+            const countLabel = qty < data.total ? ` <span style="opacity:0.7;font-size:0.85em;">${qty}x</span>` : '';
+            return `<span style="display:inline-flex;align-items:center;gap:2px;background:${col.text};color:#fff;font-size:0.7em;font-weight:600;padding:2px 7px;border-radius:10px;margin:2px 2px 0 0;">${mod}${countLabel}</span>`;
           }).join('');
-          return `<td style="vertical-align:top;padding:8px;background:${col.bg};"><div style="font-weight:bold;font-size:1.4em;color:${col.text};">${totalQty}</div>${itemDetails}</td>`;
+
+          const modHtml = modPills ? `<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:2px;">${modPills}</div>` : '';
+
+          // Item comments
+          const commentHtml = data.comments.map(c =>
+            `<div style="margin-top:4px;padding:3px 6px;background:#fff8e1;border-left:2px solid #f59e0b;font-size:0.75em;color:#92400e;font-style:italic;">"${c.text}"${c.qty < data.total ? ` <span style="opacity:0.7;">${c.qty}x</span>` : ''}</div>`
+          ).join('');
+
+          return `<td style="vertical-align:top;padding:8px;background:${col.bg};">
+            <div style="font-weight:bold;font-size:1.4em;color:${col.text};">${data.total}</div>
+            ${modHtml}${commentHtml}
+          </td>`;
         }).join('');
 
         grandTotalItems += orderItemTotal;
         grandTotalRevenue += order.total;
 
-        const generalComments = order.comments ? `<div style="margin-top:5px;padding:4px 7px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:0 3px 3px 0;font-size:0.75em;color:#92400e;font-weight:500;">📝 ${order.comments}</div>` : '';
+        // Split order badge
+        const linkedOrders = order.groupId
+          ? orders.filter(o => o.id !== order.id && o.groupId === order.groupId && o.status !== 'cancelled')
+          : [];
+        const splitBadge = linkedOrders.length > 0
+          ? `<div style="margin-top:4px;display:inline-block;font-size:0.7em;font-weight:700;padding:2px 7px;border-radius:10px;background:#fef3c7;color:#92400e;">Split → ${linkedOrders.map(o => o.slotTime).join(', ')}</div>`
+          : '';
+
+        const generalComments = order.comments
+          ? `<div style="margin-top:5px;padding:4px 7px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:0 3px 3px 0;font-size:0.75em;color:#92400e;font-weight:500;">📝 ${order.comments}</div>`
+          : '';
+
         const pagerNumber = order.pagerNumber || '';
         return `<tr>
           <td style="vertical-align:top;font-size:0.9em;padding:8px;"><strong>${order.slotTime}</strong></td>
           <td style="vertical-align:top;font-size:0.7em;padding:8px;color:var(--ink-faint);">#${order.id.slice(-6)}</td>
-          <td style="vertical-align:top;padding:8px;"><div style="font-weight:600;font-size:0.85em;">${order.customer.name}</div><div style="font-size:0.7em;color:var(--ink-faint);">${order.customer.phone || order.customer.email}</div>${generalComments}</td>
+          <td style="vertical-align:top;padding:8px;">
+            <div style="font-weight:600;font-size:0.85em;">${order.customer.name}</div>
+            <div style="font-size:0.7em;color:var(--ink-faint);">${order.customer.phone || order.customer.email}</div>
+            ${splitBadge}${generalComments}
+          </td>
           ${itemColumns}
           <td style="vertical-align:top;padding:8px;font-size:0.9em;text-align:center;"><strong>${orderItemTotal}</strong></td>
           <td style="vertical-align:top;padding:8px;font-size:0.9em;"><strong>£${order.total.toFixed(2)}</strong></td>
@@ -1634,13 +1663,14 @@
         return `<td style="background:${c.bg};color:${c.text};border:1px solid #ccc;padding:6px 10px;text-align:center;font-weight:bold;font-size:15px;">${colTotals[m.name] || '—'}</td>`;
       }).join('');
 
-      const html = `
-<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      const html = `<!DOCTYPE html>
+<html>
 <head><meta charset="UTF-8">
-<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
-<x:Name>${businessName}</x:Name>
-<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+<style>
+  body { font-family: Arial, sans-serif; font-size: 13px; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { border: 1px solid #ccc; padding: 6px 10px; vertical-align: top; }
+</style>
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;font-size:13px;">
@@ -1664,11 +1694,11 @@
 </table>
 </body></html>`;
 
-      const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+      const blob = new Blob(['\ufeff' + html], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${businessName.replace(/\s+/g, '-')}-${serviceDate}.xls`;
+      a.download = `${businessName.replace(/\s+/g, '-')}-${serviceDate}.htm`;
       a.click();
     }
 
