@@ -846,6 +846,7 @@
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
               <h2 style="margin:0;border:none;">${date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} Orders</h2>
               <button class="secondary" onclick="downloadKitchenTicketsForDate('${schedule.serviceDate}')">Download Kitchen Tickets</button>
+              <button class="secondary" onclick="downloadExcelForDate('${schedule.serviceDate}')">Download Excel</button>
             </div>
             <div style="overflow-x:auto;">
               <table id="orders-table-${schedule.serviceDate}" class="service-date-orders-table" style="min-width:600px;">
@@ -1213,8 +1214,8 @@
           orderItemTotal += totalQty;
           const itemDetails = orderedItems.map(i => {
             let details = [];
-            if (i.mods.length > 0) details.push(`<div style="font-size:0.75em;color:${col.text};opacity:0.8;margin-top:2px;">${i.mods.join(', ')}</div>`);
-            if (i.comments) details.push(`<div style="font-size:0.7em;color:${col.text};opacity:0.6;font-style:italic;margin-top:2px;">"${i.comments}"</div>`);
+            if (i.mods.length > 0) details.push(`<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:3px;">${i.mods.map(m => `<span style="display:inline-block;background:${col.text};color:#fff;font-size:0.7em;font-weight:600;padding:1px 6px;border-radius:10px;">${m}</span>`).join('')}</div>`);
+            if (i.comments) details.push(`<div style="margin-top:4px;padding:3px 6px;background:#fff8e1;border-left:2px solid #f59e0b;font-size:0.75em;color:#92400e;font-style:italic;">"${i.comments}"</div>`);
             return details.join('');
           }).join('');
           return `<td style="vertical-align:top;padding:8px;background:${col.bg};"><div style="font-weight:bold;font-size:1.4em;color:${col.text};">${totalQty}</div>${itemDetails}</td>`;
@@ -1223,7 +1224,7 @@
         grandTotalItems += orderItemTotal;
         grandTotalRevenue += order.total;
 
-        const generalComments = order.comments ? `<div style="margin-top:3px;font-size:0.7em;color:var(--terracotta);">${order.comments}</div>` : '';
+        const generalComments = order.comments ? `<div style="margin-top:5px;padding:4px 7px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:0 3px 3px 0;font-size:0.75em;color:#92400e;font-weight:500;">📝 ${order.comments}</div>` : '';
         const pagerNumber = order.pagerNumber || '';
         return `<tr>
           <td style="vertical-align:top;font-size:0.9em;padding:8px;"><strong>${order.slotTime}</strong></td>
@@ -1539,6 +1540,135 @@
       const a = document.createElement('a');
       a.href = url;
       a.download = serviceDate ? `kitchen-tickets-${serviceDate}.txt` : `kitchen-tickets-${new Date().toISOString().split('T')[0]}.txt`;
+      a.click();
+    }
+
+    function downloadExcelForDate(serviceDate) {
+      const ordersToExport = orders.filter(o =>
+        o.serviceDate === serviceDate && o.status !== 'cancelled'
+      ).sort((a, b) => {
+        const slotA = slots.find(s => s.id === a.slotId);
+        const slotB = slots.find(s => s.id === b.slotId);
+        return (slotA ? slotA.time : '').localeCompare(slotB ? slotB.time : '');
+      });
+
+      if (ordersToExport.length === 0) { alert('No orders to export'); return; }
+
+      const availableMenu = menu.filter(m => m.available);
+      const businessName = settings.businessName || 'Orders';
+      const dateStr = new Date(serviceDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+      const colDefs = [
+        { bg: '#D6E4FF', text: '#1e3a6e' },
+        { bg: '#FFE8C2', text: '#7a3d00' },
+        { bg: '#C8F5E0', text: '#1a5c38' },
+        { bg: '#FADADD', text: '#7a1a3d' },
+        { bg: '#E8D5FF', text: '#3d1a7a' },
+        { bg: '#FFF3C0', text: '#6b4a00' },
+      ];
+
+      // Column totals
+      const colTotals = {};
+      availableMenu.forEach(m => { colTotals[m.name] = 0; });
+      let grandItems = 0, grandRevenue = 0;
+
+      // Build header row
+      const menuHeaders = availableMenu.map((m, i) => {
+        const c = colDefs[i % colDefs.length];
+        return `<td style="background:${c.bg};color:${c.text};font-weight:bold;border:1px solid #ccc;padding:6px 10px;white-space:nowrap;">${m.name}</td>`;
+      }).join('');
+
+      // Build order rows
+      const orderRows = ordersToExport.map(order => {
+        const itemCounts = {};
+        order.items.forEach(item => {
+          if (!itemCounts[item.name]) itemCounts[item.name] = { total: 0, mods: {} };
+          itemCounts[item.name].total += item.quantity;
+          item.modifications && item.modifications.forEach(mod => {
+            itemCounts[item.name].mods[mod] = (itemCounts[item.name].mods[mod] || 0) + 1;
+          });
+        });
+
+        let orderItems = 0;
+        const itemCells = availableMenu.map((menuItem, i) => {
+          const c = colDefs[i % colDefs.length];
+          const data = itemCounts[menuItem.name];
+          if (!data) return `<td style="background:${c.bg};border:1px solid #ccc;padding:6px 10px;color:#ccc;text-align:center;">—</td>`;
+          colTotals[menuItem.name] += data.total;
+          orderItems += data.total;
+          const modLines = Object.entries(data.mods).map(([mod, qty]) =>
+            qty < data.total ? `${mod} (${qty}x)` : mod
+          ).join(', ');
+          const cell = `<strong>${data.total}</strong>${modLines ? `<br><span style="font-size:10px;color:${c.text};">${modLines}</span>` : ''}`;
+          return `<td style="background:${c.bg};color:${c.text};border:1px solid #ccc;padding:6px 10px;vertical-align:top;">${cell}</td>`;
+        }).join('');
+
+        grandItems += orderItems;
+        grandRevenue += order.total;
+
+        const linkedOrders = orders.filter(o =>
+          o.id !== order.id &&
+          o.customer.email === order.customer.email &&
+          o.customer.phone === order.customer.phone &&
+          o.groupId && o.groupId === order.groupId
+        );
+        const splitNote = linkedOrders.length > 0
+          ? `<br><span style="font-size:10px;background:#FEF3C7;color:#92400e;padding:1px 5px;border-radius:3px;">Split → ${linkedOrders.map(o => o.slotTime).join(', ')}</span>`
+          : '';
+        const orderNote = order.comments
+          ? `<br><span style="font-size:10px;background:#FEF3C7;color:#92400e;padding:2px 5px;">${order.comments}</span>` : '';
+
+        return `<tr>
+          <td style="border:1px solid #ccc;padding:6px 10px;white-space:nowrap;">${order.slotTime}</td>
+          <td style="border:1px solid #ccc;padding:6px 10px;color:#888;font-size:11px;">#${order.id.slice(-6)}</td>
+          <td style="border:1px solid #ccc;padding:6px 10px;"><strong>${order.customer.name}</strong><br><span style="font-size:11px;color:#666;">${order.customer.phone || order.customer.email}</span>${splitNote}${orderNote}</td>
+          ${itemCells}
+          <td style="border:1px solid #ccc;padding:6px 10px;text-align:center;font-weight:bold;">${orderItems}</td>
+          <td style="border:1px solid #ccc;padding:6px 10px;font-weight:bold;">£${order.total.toFixed(2)}</td>
+        </tr>`;
+      }).join('');
+
+      // Summary row
+      const summaryItemCells = availableMenu.map((m, i) => {
+        const c = colDefs[i % colDefs.length];
+        return `<td style="background:${c.bg};color:${c.text};border:1px solid #ccc;padding:6px 10px;text-align:center;font-weight:bold;font-size:15px;">${colTotals[m.name] || '—'}</td>`;
+      }).join('');
+
+      const html = `
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8">
+<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+<x:Name>${businessName}</x:Name>
+<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+</head>
+<body>
+<table border="0" cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;font-size:13px;">
+  <tr><td colspan="${4 + availableMenu.length}" style="font-size:18px;font-weight:bold;padding:8px 10px;border:none;">${businessName} — Run Sheet</td></tr>
+  <tr><td colspan="${4 + availableMenu.length}" style="font-size:12px;color:#666;padding:0 10px 12px;border:none;">${dateStr} &nbsp;·&nbsp; ${ordersToExport.length} orders &nbsp;·&nbsp; Printed ${new Date().toLocaleString('en-GB')}</td></tr>
+  <tr>
+    <td style="background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:6px 10px;">Time</td>
+    <td style="background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:6px 10px;">Order</td>
+    <td style="background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:6px 10px;">Customer</td>
+    ${menuHeaders}
+    <td style="background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:6px 10px;text-align:center;">Items</td>
+    <td style="background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:6px 10px;">Total</td>
+  </tr>
+  ${orderRows}
+  <tr>
+    <td colspan="3" style="background:#e8e8e8;font-weight:bold;border:1px solid #ccc;padding:6px 10px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Totals</td>
+    ${summaryItemCells}
+    <td style="background:#e8e8e8;font-weight:bold;border:1px solid #ccc;padding:6px 10px;text-align:center;font-size:15px;">${grandItems}</td>
+    <td style="background:#e8e8e8;font-weight:bold;border:1px solid #ccc;padding:6px 10px;">£${grandRevenue.toFixed(2)}</td>
+  </tr>
+</table>
+</body></html>`;
+
+      const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${businessName.replace(/\s+/g, '-')}-${serviceDate}.xls`;
       a.click();
     }
 
