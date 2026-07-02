@@ -846,7 +846,7 @@
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
               <h2 style="margin:0;border:none;">${date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} Orders</h2>
               <button class="secondary" onclick="downloadKitchenTicketsForDate('${schedule.serviceDate}')">Download Kitchen Tickets</button>
-              <button class="secondary" onclick="downloadExcelForDate('${schedule.serviceDate}')">Download Excel</button>
+              <button class="secondary" onclick="downloadExcelForDate('${schedule.serviceDate}')">Download CSV</button>
             </div>
             <div style="overflow-x:auto;">
               <table id="orders-table-${schedule.serviceDate}" class="service-date-orders-table" style="min-width:600px;">
@@ -1585,120 +1585,97 @@
 
       const availableMenu = menu.filter(m => m.available);
       const businessName = settings.businessName || 'Orders';
-      const dateStr = new Date(serviceDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-      const colDefs = [
-        { bg: '#D6E4FF', text: '#1e3a6e' },
-        { bg: '#FFE8C2', text: '#7a3d00' },
-        { bg: '#C8F5E0', text: '#1a5c38' },
-        { bg: '#FADADD', text: '#7a1a3d' },
-        { bg: '#E8D5FF', text: '#3d1a7a' },
-        { bg: '#FFF3C0', text: '#6b4a00' },
-      ];
+      // CSV escape helper
+      const esc = val => {
+        const str = (val === null || val === undefined) ? '' : String(val);
+        return str.includes(',') || str.includes('"') || str.includes('\n')
+          ? `"${str.replace(/"/g, '""')}"`
+          : str;
+      };
 
       // Column totals
       const colTotals = {};
       availableMenu.forEach(m => { colTotals[m.name] = 0; });
       let grandItems = 0, grandRevenue = 0;
 
-      // Build header row
-      const menuHeaders = availableMenu.map((m, i) => {
-        const c = colDefs[i % colDefs.length];
-        return `<td style="background:${c.bg};color:${c.text};font-weight:bold;border:1px solid #ccc;padding:6px 10px;white-space:nowrap;">${m.name}</td>`;
-      }).join('');
+      // Header row
+      const headers = ['Time', 'Order', 'Customer', 'Phone/Email', ...availableMenu.map(m => m.name), 'Modifications', 'Notes', 'Items', 'Total', 'Split Order'];
+      const rows = [headers.map(esc).join(',')];
 
-      // Build order rows
-      const orderRows = ordersToExport.map(order => {
+      // Order rows
+      ordersToExport.forEach(order => {
         const itemCounts = {};
         order.items.forEach(item => {
-          if (!itemCounts[item.name]) itemCounts[item.name] = { total: 0, mods: {} };
+          if (!itemCounts[item.name]) itemCounts[item.name] = { total: 0, mods: {}, comments: [] };
           itemCounts[item.name].total += item.quantity;
-          item.modifications && item.modifications.forEach(mod => {
+          (item.modifications || []).forEach(mod => {
             itemCounts[item.name].mods[mod] = (itemCounts[item.name].mods[mod] || 0) + 1;
           });
+          if (item.pizzaComments) itemCounts[item.name].comments.push(`${item.pizzaComments}`);
         });
 
         let orderItems = 0;
-        const itemCells = availableMenu.map((menuItem, i) => {
-          const c = colDefs[i % colDefs.length];
-          const data = itemCounts[menuItem.name];
-          if (!data) return `<td style="background:${c.bg};border:1px solid #ccc;padding:6px 10px;color:#ccc;text-align:center;">—</td>`;
-          colTotals[menuItem.name] += data.total;
+        const itemCols = availableMenu.map(m => {
+          const data = itemCounts[m.name];
+          if (!data) return '';
+          colTotals[m.name] += data.total;
           orderItems += data.total;
-          const modLines = Object.entries(data.mods).map(([mod, qty]) =>
-            qty < data.total ? `${mod} (${qty}x)` : mod
-          ).join(', ');
-          const cell = `<strong>${data.total}</strong>${modLines ? `<br><span style="font-size:10px;color:${c.text};">${modLines}</span>` : ''}`;
-          return `<td style="background:${c.bg};color:${c.text};border:1px solid #ccc;padding:6px 10px;vertical-align:top;">${cell}</td>`;
-        }).join('');
+          return data.total;
+        });
 
         grandItems += orderItems;
         grandRevenue += order.total;
 
-        const linkedOrders = orders.filter(o =>
-          o.id !== order.id &&
-          o.customer.email === order.customer.email &&
-          o.customer.phone === order.customer.phone &&
-          o.groupId && o.groupId === order.groupId
-        );
-        const splitNote = linkedOrders.length > 0
-          ? `<br><span style="font-size:10px;background:#FEF3C7;color:#92400e;padding:1px 5px;border-radius:3px;">Split → ${linkedOrders.map(o => o.slotTime).join(', ')}</span>`
-          : '';
-        const orderNote = order.comments
-          ? `<br><span style="font-size:10px;background:#FEF3C7;color:#92400e;padding:2px 5px;">${order.comments}</span>` : '';
+        // All modifications across all items
+        const allMods = order.items.flatMap(item =>
+          (item.modifications || []).map(mod => `${item.name}: ${mod}`)
+        ).join('; ');
 
-        return `<tr>
-          <td style="border:1px solid #ccc;padding:6px 10px;white-space:nowrap;">${order.slotTime}</td>
-          <td style="border:1px solid #ccc;padding:6px 10px;color:#888;font-size:11px;">#${order.id.slice(-6)}</td>
-          <td style="border:1px solid #ccc;padding:6px 10px;"><strong>${order.customer.name}</strong><br><span style="font-size:11px;color:#666;">${order.customer.phone || order.customer.email}</span>${splitNote}${orderNote}</td>
-          ${itemCells}
-          <td style="border:1px solid #ccc;padding:6px 10px;text-align:center;font-weight:bold;">${orderItems}</td>
-          <td style="border:1px solid #ccc;padding:6px 10px;font-weight:bold;">£${order.total.toFixed(2)}</td>
-        </tr>`;
-      }).join('');
+        // All item comments
+        const allComments = [
+          ...order.items.filter(i => i.pizzaComments).map(i => `${i.name}: ${i.pizzaComments}`),
+          ...(order.comments ? [order.comments] : [])
+        ].join('; ');
 
-      // Summary row
-      const summaryItemCells = availableMenu.map((m, i) => {
-        const c = colDefs[i % colDefs.length];
-        return `<td style="background:${c.bg};color:${c.text};border:1px solid #ccc;padding:6px 10px;text-align:center;font-weight:bold;font-size:15px;">${colTotals[m.name] || '—'}</td>`;
-      }).join('');
+        // Split order
+        const linkedOrders = order.groupId
+          ? orders.filter(o => o.id !== order.id && o.groupId === order.groupId && o.status !== 'cancelled')
+          : [];
+        const splitNote = linkedOrders.length > 0 ? `Split → ${linkedOrders.map(o => o.slotTime).join(', ')}` : '';
 
-      const html = `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8">
-<style>
-  body { font-family: Arial, sans-serif; font-size: 13px; }
-  table { border-collapse: collapse; width: 100%; }
-  td, th { border: 1px solid #ccc; padding: 6px 10px; vertical-align: top; }
-</style>
-</head>
-<body>
-<table border="0" cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;font-size:13px;">
-  <tr><td colspan="${4 + availableMenu.length}" style="font-size:18px;font-weight:bold;padding:8px 10px;border:none;">${businessName} — Run Sheet</td></tr>
-  <tr><td colspan="${4 + availableMenu.length}" style="font-size:12px;color:#666;padding:0 10px 12px;border:none;">${dateStr} &nbsp;·&nbsp; ${ordersToExport.length} orders &nbsp;·&nbsp; Printed ${new Date().toLocaleString('en-GB')}</td></tr>
-  <tr>
-    <td style="background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:6px 10px;">Time</td>
-    <td style="background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:6px 10px;">Order</td>
-    <td style="background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:6px 10px;">Customer</td>
-    ${menuHeaders}
-    <td style="background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:6px 10px;text-align:center;">Items</td>
-    <td style="background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:6px 10px;">Total</td>
-  </tr>
-  ${orderRows}
-  <tr>
-    <td colspan="3" style="background:#e8e8e8;font-weight:bold;border:1px solid #ccc;padding:6px 10px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Totals</td>
-    ${summaryItemCells}
-    <td style="background:#e8e8e8;font-weight:bold;border:1px solid #ccc;padding:6px 10px;text-align:center;font-size:15px;">${grandItems}</td>
-    <td style="background:#e8e8e8;font-weight:bold;border:1px solid #ccc;padding:6px 10px;">£${grandRevenue.toFixed(2)}</td>
-  </tr>
-</table>
-</body></html>`;
+        const row = [
+          order.slotTime,
+          `#${order.id.slice(-6)}`,
+          order.customer.name,
+          order.customer.phone || order.customer.email,
+          ...itemCols,
+          allMods,
+          allComments,
+          orderItems,
+          `£${order.total.toFixed(2)}`,
+          splitNote
+        ];
+        rows.push(row.map(esc).join(','));
+      });
 
-      const blob = new Blob(['\ufeff' + html], { type: 'text/html;charset=utf-8' });
+      // Totals row
+      const totalsRow = [
+        'TOTALS', '', '', '',
+        ...availableMenu.map(m => colTotals[m.name]),
+        '', '',
+        grandItems,
+        `£${grandRevenue.toFixed(2)}`,
+        ''
+      ];
+      rows.push(totalsRow.map(esc).join(','));
+
+      const csv = rows.join('\n');
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${businessName.replace(/\s+/g, '-')}-${serviceDate}.htm`;
+      a.download = `${businessName.replace(/\s+/g, '-')}-${serviceDate}.csv`;
       a.click();
     }
 
