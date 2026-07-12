@@ -473,6 +473,16 @@
                 </div>
               </div>
             </div>
+            <h3 style="margin-top:30px;margin-bottom:15px;border-bottom:1px solid var(--stone);padding-bottom:10px;">Google Sheets Integration</h3>
+            <div class="info-box">
+              <h4>About Google Sheets Sync</h4>
+              <p>Connect your own Google Sheet to sync orders with one click. Follow the setup instructions in your operator documentation to get your webhook URL, then paste it below.</p>
+            </div>
+            <div class="form-group">
+              <label>Webhook URL</label>
+              <input type="url" id="settings-webhook" placeholder="https://script.google.com/macros/s/...">
+              <small>Paste your Google Apps Script web app URL here</small>
+            </div>
             <div class="button-group">
               <button type="submit" class="primary">Save Settings</button>
               <button type="button" class="secondary" onclick="loadSettings()">Reset</button>
@@ -847,6 +857,7 @@
               <h2 style="margin:0;border:none;">${date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} Orders</h2>
               <button class="secondary" onclick="downloadKitchenTicketsForDate('${schedule.serviceDate}')">Download Kitchen Tickets</button>
               <button class="secondary" onclick="downloadExcelForDate('${schedule.serviceDate}')">Download CSV</button>
+              <button class="secondary" onclick="syncToSheets('${schedule.serviceDate}')" id="sync-btn-${schedule.serviceDate}">Sync to Sheets</button>
             </div>
             <div style="overflow-x:auto;">
               <table id="orders-table-${schedule.serviceDate}" class="service-date-orders-table" style="min-width:600px;">
@@ -920,6 +931,7 @@
         document.getElementById('settings-tagline').value = settings.tagline || '';
         document.getElementById('settings-logo').value = settings.logo || '';
         document.getElementById('settings-password').value = '';
+        document.getElementById('settings-webhook').value = settings.webhookUrl || '';
         if (!settings.serviceSchedule) settings.serviceSchedule = [];
         setThemeRadio(settings.theme || 'classic');
         updateEarlyAccessCodeDisplay();
@@ -1092,7 +1104,7 @@
     async function saveSettings(e) {
       e.preventDefault();
       const selectedTheme = document.querySelector('input[name="settings-theme"]:checked');
-      const data = { businessName: document.getElementById('settings-name').value, tagline: document.getElementById('settings-tagline').value, logo: document.getElementById('settings-logo').value, serviceSchedule: settings.serviceSchedule, theme: selectedTheme ? selectedTheme.value : 'classic' };
+      const data = { businessName: document.getElementById('settings-name').value, tagline: document.getElementById('settings-tagline').value, logo: document.getElementById('settings-logo').value, serviceSchedule: settings.serviceSchedule, theme: selectedTheme ? selectedTheme.value : 'classic', webhookUrl: document.getElementById('settings-webhook').value || null };
       const password = document.getElementById('settings-password').value;
       if (password) data.chefPassword = password;
       try {
@@ -1835,7 +1847,52 @@
       </div>`;
     }
 
-    async function markCollected(orderId) {
+    async function syncToSheets(serviceDate) {
+      if (!settings.webhookUrl) {
+        alert('No Google Sheets webhook URL configured. Add it in Settings → Google Sheets Integration.');
+        return;
+      }
+      const btn = document.getElementById(`sync-btn-${serviceDate}`);
+      const originalText = btn.textContent;
+      btn.textContent = 'Syncing...';
+      btn.disabled = true;
+
+      const ordersToSync = orders.filter(o =>
+        o.serviceDate === serviceDate && o.status !== 'cancelled'
+      );
+
+      // Enrich orders with split note
+      const enriched = ordersToSync.map(order => {
+        const linkedOrders = order.groupId
+          ? orders.filter(o => o.id !== order.id && o.groupId === order.groupId && o.status !== 'cancelled')
+          : [];
+        return {
+          ...order,
+          splitNote: linkedOrders.length > 0 ? `Split → ${linkedOrders.map(o => o.slotTime).join(', ')}` : ''
+        };
+      });
+
+      try {
+        const response = await fetch(`${API_URL}/sync/sheets`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ serviceDate, orders: enriched })
+        });
+        const result = await response.json();
+        if (result.success) {
+          btn.textContent = `✓ Synced ${result.synced} orders`;
+          setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 3000);
+        } else {
+          alert('Sync failed: ' + (result.error || 'Unknown error'));
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+      } catch (error) {
+        alert('Sync failed: ' + error.message);
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    }
       try {
         await fetch(`${API_URL}/orders/${orderId}/status`, {
           method: 'PUT',
