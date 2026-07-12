@@ -245,6 +245,7 @@ initFile(SETTINGS_FILE, {
   capacityMode: "total",
   theme: "classic",
   earlyAccessCode: null,
+  webhookUrl: null,
   extras: [
     { id: "1", name: "Gluten Free Base", price: 2, available: true },
     { id: "2", name: "Vegan Cheese", price: 1, available: true },
@@ -557,7 +558,7 @@ app.get("/api/settings", (req, res) => {
 
 app.put("/api/settings", (req, res) => {
   const settings = readJSON(SETTINGS_FILE);
-  const updatableFields = ['businessName', 'tagline', 'logo', 'chefPassword', 'serviceSchedule', 'extras', 'capacityMode', 'theme', 'earlyAccessCode'];
+  const updatableFields = ['businessName', 'tagline', 'logo', 'chefPassword', 'serviceSchedule', 'extras', 'capacityMode', 'theme', 'earlyAccessCode', 'webhookUrl'];
   updatableFields.forEach(field => {
     if (req.body[field] !== undefined) settings[field] = req.body[field];
   });
@@ -783,6 +784,44 @@ app.post("/api/cancel/:orderId", (req, res) => {
   sendCancellationEmails(order, settings.businessName || "Pizza Truck no.1", slot);
 
   res.json({ success: true });
+});
+
+// ============= GOOGLE SHEETS SYNC =============
+app.post("/api/sync/sheets", async (req, res) => {
+  const settings = readJSON(SETTINGS_FILE);
+  if (!settings.webhookUrl) {
+    return res.status(400).json({ error: "No Google Sheets webhook URL configured. Add it in Settings." });
+  }
+
+  try {
+    const https = require("https");
+    const http = require("http");
+    const url = new URL(settings.webhookUrl);
+    const body = JSON.stringify(req.body);
+    const lib = url.protocol === "https:" ? https : http;
+
+    const response = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: url.hostname,
+        path: url.pathname + url.search,
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) }
+      };
+      const request = lib.request(options, r => {
+        let data = "";
+        r.on("data", chunk => { data += chunk; });
+        r.on("end", () => resolve({ status: r.statusCode, body: data }));
+      });
+      request.on("error", reject);
+      request.write(body);
+      request.end();
+    });
+
+    const result = JSON.parse(response.body);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to sync: " + error.message });
+  }
 });
 
 // ============= ARCHIVE =============
