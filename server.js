@@ -202,7 +202,61 @@ async function sendCancellationEmails(order, businessName, slot) {
   }).catch(err => console.error("Cancellation customer email failed:", err.message));
 }
 
-// ============= EXPRESS SETUP =============
+async function syncOrderToSheets(newOrder, settings, menu, orders) {
+  if (!settings.webhookUrl) return;
+  try {
+    // Build menu structure with colours
+    const colBgs = ['#D6E4FF','#FFE8C2','#C8F5E0','#FADADD','#E8D5FF','#FFF3C0'];
+    const colTexts = ['#1e3a6e','#7a3d00','#1a5c38','#7a1a3d','#3d1a7a','#6b4a00'];
+    const availableMenu = menu.filter(m => m.available).map((m, i) => ({
+      name: m.name,
+      colIndex: i,
+      bg: colBgs[i % 6],
+      text: colTexts[i % 6]
+    }));
+
+    // Get all orders for this service date
+    const serviceDateOrders = orders.filter(o =>
+      o.serviceDate === newOrder.serviceDate && o.status !== 'cancelled'
+    );
+
+    // Enrich with itemCounts and splitNote
+    const enriched = serviceDateOrders.map(order => {
+      const linkedOrders = order.groupId
+        ? orders.filter(o => o.id !== order.id && o.groupId === order.groupId && o.status !== 'cancelled')
+        : [];
+      const itemCounts = {};
+      order.items.forEach(item => {
+        if (!itemCounts[item.name]) itemCounts[item.name] = { total: 0, mods: {}, comments: [] };
+        itemCounts[item.name].total += item.quantity;
+        (item.modifications || []).forEach(mod => {
+          itemCounts[item.name].mods[mod] = (itemCounts[item.name].mods[mod] || 0) + 1;
+        });
+        if (item.pizzaComments) itemCounts[item.name].comments.push(item.pizzaComments);
+      });
+      return {
+        ...order,
+        itemCounts,
+        splitNote: linkedOrders.length > 0 ? `Split → ${linkedOrders.map(o => o.slotTime || '').join(', ')}` : ''
+      };
+    });
+
+    await fetch(settings.webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        serviceDate: newOrder.serviceDate,
+        orders: enriched,
+        menu: availableMenu
+      }),
+      redirect: 'follow'
+    });
+  } catch (err) {
+    console.error('Auto sheets sync failed:', err.message);
+  }
+}
+
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -534,6 +588,12 @@ app.post("/api/orders", (req, res) => {
   const settings = readJSON(SETTINGS_FILE);
   const baseUrl = `${req.protocol}://${req.get("host")}`;
   sendOrderEmails(newOrder, settings.businessName || "Pizza Truck no.1", slot, baseUrl);
+
+  // Auto-sync to Google Sheets — non-blocking, never affects order response
+  const allOrders = readJSON(ORDERS_FILE);
+  syncOrderToSheets(newOrder, settings, menu, allOrders).catch(err =>
+    console.error("Sheets auto-sync error:", err.message)
+  );
 
   res.json(newOrder);
 });
