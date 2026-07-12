@@ -817,7 +817,16 @@ app.post("/api/sync/sheets", async (req, res) => {
       request.end();
     });
 
-    const result = JSON.parse(response.body);
+    // Try to parse as JSON, fall back to plain text error
+    let result;
+    try {
+      result = JSON.parse(response.body);
+    } catch (e) {
+      return res.status(502).json({
+        error: `Google Apps Script returned an unexpected response (HTTP ${response.status}). Check that your script is deployed as a Web App with "Anyone" access and that authorisation has been granted.`
+      });
+    }
+
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: "Failed to sync: " + error.message });
