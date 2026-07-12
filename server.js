@@ -793,44 +793,24 @@ app.post("/api/sync/sheets", async (req, res) => {
     return res.status(400).json({ error: "No Google Sheets webhook URL configured. Add it in Settings." });
   }
 
-  const makeRequest = (targetUrl, body) => {
-    return new Promise((resolve, reject) => {
-      const https = require("https");
-      const url = new URL(targetUrl);
-      const options = {
-        hostname: url.hostname,
-        path: url.pathname + url.search,
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Content-Length": Buffer.byteLength(body)
-        }
-      };
-      const request = https.request(options, r => {
-        // Follow redirect
-        if ((r.statusCode === 301 || r.statusCode === 302 || r.statusCode === 307 || r.statusCode === 308) && r.headers.location) {
-          return makeRequest(r.headers.location, body).then(resolve).catch(reject);
-        }
-        let data = "";
-        r.on("data", chunk => { data += chunk; });
-        r.on("end", () => resolve({ status: r.statusCode, body: data }));
-      });
-      request.on("error", reject);
-      request.write(body);
-      request.end();
-    });
-  };
-
   try {
-    const body = JSON.stringify(req.body);
-    const response = await makeRequest(settings.webhookUrl, body);
+    // Use native fetch (Node 18+) which handles redirects correctly
+    const response = await fetch(settings.webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req.body),
+      redirect: "follow"
+    });
+
+    const text = await response.text();
 
     let result;
     try {
-      result = JSON.parse(response.body);
+      result = JSON.parse(text);
     } catch (e) {
       return res.status(502).json({
-        error: `Google Apps Script returned an unexpected response (HTTP ${response.status}). Check that your script is deployed as a Web App with "Anyone" access and that authorisation has been granted.`
+        error: `Google Apps Script returned an unexpected response (HTTP ${response.status}). Check that your script is deployed as a Web App with "Anyone" access and that authorisation has been granted.`,
+        raw: text.slice(0, 200)
       });
     }
 
