@@ -793,21 +793,24 @@ app.post("/api/sync/sheets", async (req, res) => {
     return res.status(400).json({ error: "No Google Sheets webhook URL configured. Add it in Settings." });
   }
 
-  try {
-    const https = require("https");
-    const http = require("http");
-    const url = new URL(settings.webhookUrl);
-    const body = JSON.stringify(req.body);
-    const lib = url.protocol === "https:" ? https : http;
-
-    const response = await new Promise((resolve, reject) => {
+  const makeRequest = (targetUrl, body) => {
+    return new Promise((resolve, reject) => {
+      const https = require("https");
+      const url = new URL(targetUrl);
       const options = {
         hostname: url.hostname,
         path: url.pathname + url.search,
         method: "POST",
-        headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) }
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body)
+        }
       };
-      const request = lib.request(options, r => {
+      const request = https.request(options, r => {
+        // Follow redirect
+        if ((r.statusCode === 301 || r.statusCode === 302 || r.statusCode === 307 || r.statusCode === 308) && r.headers.location) {
+          return makeRequest(r.headers.location, body).then(resolve).catch(reject);
+        }
         let data = "";
         r.on("data", chunk => { data += chunk; });
         r.on("end", () => resolve({ status: r.statusCode, body: data }));
@@ -816,8 +819,12 @@ app.post("/api/sync/sheets", async (req, res) => {
       request.write(body);
       request.end();
     });
+  };
 
-    // Try to parse as JSON, fall back to plain text error
+  try {
+    const body = JSON.stringify(req.body);
+    const response = await makeRequest(settings.webhookUrl, body);
+
     let result;
     try {
       result = JSON.parse(response.body);
