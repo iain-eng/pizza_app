@@ -1861,13 +1861,28 @@
         o.serviceDate === serviceDate && o.status !== 'cancelled'
       );
 
-      // Enrich orders with split note
+      const availableMenu = menu.filter(m => m.available);
+
+      // Enrich orders with per-item column data and split note
       const enriched = ordersToSync.map(order => {
         const linkedOrders = order.groupId
           ? orders.filter(o => o.id !== order.id && o.groupId === order.groupId && o.status !== 'cancelled')
           : [];
+
+        // Build per-item counts with mod tallies
+        const itemCounts = {};
+        order.items.forEach(item => {
+          if (!itemCounts[item.name]) itemCounts[item.name] = { total: 0, mods: {}, comments: [] };
+          itemCounts[item.name].total += item.quantity;
+          (item.modifications || []).forEach(mod => {
+            itemCounts[item.name].mods[mod] = (itemCounts[item.name].mods[mod] || 0) + 1;
+          });
+          if (item.pizzaComments) itemCounts[item.name].comments.push(item.pizzaComments);
+        });
+
         return {
           ...order,
+          itemCounts,
           splitNote: linkedOrders.length > 0 ? `Split → ${linkedOrders.map(o => o.slotTime).join(', ')}` : ''
         };
       });
@@ -1876,7 +1891,16 @@
         const response = await fetch(`${API_URL}/sync/sheets`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ serviceDate, orders: enriched })
+          body: JSON.stringify({
+            serviceDate,
+            orders: enriched,
+            menu: availableMenu.map((m, i) => ({
+              name: m.name,
+              colIndex: i,
+              bg: ['#D6E4FF','#FFE8C2','#C8F5E0','#FADADD','#E8D5FF','#FFF3C0'][i % 6],
+              text: ['#1e3a6e','#7a3d00','#1a5c38','#7a1a3d','#3d1a7a','#6b4a00'][i % 6]
+            }))
+          })
         });
         const result = await response.json();
         if (result.success) {
