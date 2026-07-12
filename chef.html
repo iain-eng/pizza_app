@@ -1893,6 +1893,8 @@
         btn.disabled = false;
       }
     }
+
+    async function markCollected(orderId) {
       try {
         await fetch(`${API_URL}/orders/${orderId}/status`, {
           method: 'PUT',
