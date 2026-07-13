@@ -390,6 +390,11 @@
               <input type="url" id="settings-logo" placeholder="https://example.com/logo.png" onchange="previewSettings()">
             </div>
             <div class="form-group">
+              <label>Menu Notice (Optional)</label>
+              <textarea id="settings-notice" rows="3" placeholder="e.g. Please note: our garlic bread contains gluten. All pizzas are made in a kitchen that handles nuts."></textarea>
+              <small>Shown to customers above the menu. Leave blank to hide. Use this for allergen info, service updates, or special instructions.</small>
+            </div>
+            <div class="form-group">
               <label>Chef Password</label>
               <input type="password" id="settings-password" placeholder="Leave blank to keep current password">
             </div>
@@ -932,6 +937,7 @@
         document.getElementById('settings-logo').value = settings.logo || '';
         document.getElementById('settings-password').value = '';
         document.getElementById('settings-webhook').value = settings.webhookUrl || '';
+        document.getElementById('settings-notice').value = settings.menuNotice || '';
         if (!settings.serviceSchedule) settings.serviceSchedule = [];
         setThemeRadio(settings.theme || 'classic');
         updateEarlyAccessCodeDisplay();
@@ -1104,7 +1110,7 @@
     async function saveSettings(e) {
       e.preventDefault();
       const selectedTheme = document.querySelector('input[name="settings-theme"]:checked');
-      const data = { businessName: document.getElementById('settings-name').value, tagline: document.getElementById('settings-tagline').value, logo: document.getElementById('settings-logo').value, serviceSchedule: settings.serviceSchedule, theme: selectedTheme ? selectedTheme.value : 'classic', webhookUrl: document.getElementById('settings-webhook').value || null };
+      const data = { businessName: document.getElementById('settings-name').value, tagline: document.getElementById('settings-tagline').value, logo: document.getElementById('settings-logo').value, serviceSchedule: settings.serviceSchedule, theme: selectedTheme ? selectedTheme.value : 'classic', webhookUrl: document.getElementById('settings-webhook').value || null, menuNotice: document.getElementById('settings-notice').value.trim() || null };
       const password = document.getElementById('settings-password').value;
       if (password) data.chefPassword = password;
       try {
