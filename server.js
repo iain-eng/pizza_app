@@ -218,10 +218,14 @@ async function syncOrderToSheets(newOrder, settings, menu, orders) {
     // Read slots to resolve slotTime from slotId
     const slots = readJSON(SLOTS_FILE);
 
-    // Get all orders for this service date
+    // Get all orders for this service date, sorted by slot time
     const serviceDateOrders = orders.filter(o =>
       o.serviceDate === newOrder.serviceDate && o.status !== 'cancelled'
-    );
+    ).sort((a, b) => {
+      const slotA = slots.find(s => s.id === a.slotId);
+      const slotB = slots.find(s => s.id === b.slotId);
+      return (slotA ? slotA.time : '99:99').localeCompare(slotB ? slotB.time : '99:99');
+    });
 
     // Enrich with slotTime, itemCounts and splitNote
     const enriched = serviceDateOrders.map(order => {
