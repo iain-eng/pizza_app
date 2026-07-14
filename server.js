@@ -215,16 +215,23 @@ async function syncOrderToSheets(newOrder, settings, menu, orders) {
       text: colTexts[i % 6]
     }));
 
+    // Read slots to resolve slotTime from slotId
+    const slots = readJSON(SLOTS_FILE);
+
     // Get all orders for this service date
     const serviceDateOrders = orders.filter(o =>
       o.serviceDate === newOrder.serviceDate && o.status !== 'cancelled'
     );
 
-    // Enrich with itemCounts and splitNote
+    // Enrich with slotTime, itemCounts and splitNote
     const enriched = serviceDateOrders.map(order => {
+      const slot = slots.find(s => s.id === order.slotId);
+      const slotTime = slot ? slot.time : (order.slotTime || '');
+
       const linkedOrders = order.groupId
         ? orders.filter(o => o.id !== order.id && o.groupId === order.groupId && o.status !== 'cancelled')
         : [];
+
       const itemCounts = {};
       order.items.forEach(item => {
         if (!itemCounts[item.name]) itemCounts[item.name] = { total: 0, mods: {}, comments: [] };
@@ -234,10 +241,17 @@ async function syncOrderToSheets(newOrder, settings, menu, orders) {
         });
         if (item.pizzaComments) itemCounts[item.name].comments.push(item.pizzaComments);
       });
+
+      const linkedSlotTimes = linkedOrders.map(o => {
+        const s = slots.find(sl => sl.id === o.slotId);
+        return s ? s.time : (o.slotTime || '');
+      });
+
       return {
         ...order,
+        slotTime,
         itemCounts,
-        splitNote: linkedOrders.length > 0 ? `Split → ${linkedOrders.map(o => o.slotTime || '').join(', ')}` : ''
+        splitNote: linkedOrders.length > 0 ? `Split → ${linkedSlotTimes.join(', ')}` : ''
       };
     });
 
