@@ -142,6 +142,62 @@ function buildChefText(order, businessName, slot) {
   return `New order for ${businessName}\n\nOrder #${order.id.slice(-6)}\n${serviceDate ? `Service date: ${serviceDate}\n` : ""}Pickup slot: ${slot ? slot.time : "Unknown"}\n\nCustomer: ${order.customer.name}\nEmail: ${order.customer.email}\nPhone: ${order.customer.phone || "Not provided"}\n\nItems:\n${itemLines}\n${order.comments ? `\nOrder note: ${order.comments}` : ""}\n\nTotal: £${order.total.toFixed(2)}\n`;
 }
 
+async function sendMoveNotificationEmail(originalOrder, newOrder, newSlot, businessName, baseUrl) {
+  if (!resend) return;
+  const itemLines = newOrder.items.map(i =>
+    `${i.name} × ${i.quantity}${i.modifications && i.modifications.length > 0 ? ` (${i.modifications.join(', ')})` : ''}`
+  ).join(', ');
+  const cancelUrl = `${baseUrl}/cancel/${newOrder.id}`;
+  const contactSubject = encodeURIComponent(`Order #${newOrder.id.slice(-6)} — query`);
+
+  resend.emails.send({
+    from: `${businessName} <${FROM_EMAIL}>`,
+    to: originalOrder.customer.email,
+    subject: `Your order has been updated — ${businessName}`,
+    html: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Order Updated</title></head>
+<body style="margin:0;padding:0;background:#faf8f4;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf8f4;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+        <tr>
+          <td style="background:#ffffff;border:1px solid #e8e2d9;border-bottom:none;border-radius:4px 4px 0 0;padding:32px 32px 24px;text-align:center;">
+            <h1 style="margin:0 0 6px;font-family:Georgia,serif;font-size:26px;font-weight:700;color:#1c1917;">${businessName}</h1>
+            <p style="margin:0;color:#a8a29e;font-size:14px;">Order Update</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#ffffff;border:1px solid #e8e2d9;border-top:none;border-bottom:none;padding:0 32px 32px;">
+            <p style="margin:24px 0;font-size:16px;color:#1c1917;">Hi <strong>${originalOrder.customer.name}</strong>, your order has been updated by our team.</p>
+            <div style="background:#faf8f4;border:1px solid #e8e2d9;border-radius:4px;padding:16px 20px;margin-bottom:24px;">
+              <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#a8a29e;font-weight:600;">New Collection Details</p>
+              <p style="margin:0;color:#57534e;font-size:15px;"><strong>Pick up at:</strong> ${newSlot ? newSlot.time : 'See below'}</p>
+              <p style="margin:6px 0 0;color:#57534e;font-size:14px;">${itemLines}</p>
+            </div>
+            <p style="font-size:13px;color:#a8a29e;line-height:1.6;">If you have any questions or need to cancel, please use the options below.</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
+              <tr>
+                <td style="padding-right:6px;"><a href="${cancelUrl}" style="display:block;text-align:center;padding:10px;background:#1c1917;color:#ffffff;text-decoration:none;border-radius:3px;font-size:13px;font-weight:600;">Cancel Order</a></td>
+                <td style="padding-left:6px;"><a href="mailto:${CHEF_EMAIL}?subject=${contactSubject}" style="display:block;text-align:center;padding:10px;background:#ffffff;color:#1c1917;text-decoration:none;border-radius:3px;font-size:13px;font-weight:600;border:1px solid #e8e2d9;">Contact Us</a></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#faf8f4;border:1px solid #e8e2d9;border-top:none;border-radius:0 0 4px 4px;padding:16px 32px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#a8a29e;">Order #${newOrder.id.slice(-6)}</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+  }).catch(err => console.error("Move notification email failed:", err.message));
+}
+
+
 async function sendOrderEmails(order, businessName, slot, baseUrl) {
   if (!resend) { console.log("Email skipped — Resend not configured"); return; }
   const subject = `Order confirmed — #${order.id.slice(-6)} — ${businessName}`;
@@ -615,6 +671,104 @@ app.post("/api/orders", (req, res) => {
   );
 
   res.json(newOrder);
+});
+
+app.post("/api/orders/:id/move", (req, res) => {
+  const { targetSlotId, itemsToMove } = req.body;
+  if (!targetSlotId || !itemsToMove || itemsToMove.length === 0) {
+    return res.status(400).json({ error: "targetSlotId and itemsToMove are required" });
+  }
+
+  const orders = readJSON(ORDERS_FILE);
+  const slots = readJSON(SLOTS_FILE);
+  const menu = readJSON(MENU_FILE);
+  const settings = readJSON(SETTINGS_FILE);
+
+  const orderIndex = orders.findIndex(o => o.id === req.params.id);
+  if (orderIndex === -1) return res.status(404).json({ error: "Order not found" });
+
+  const order = orders[orderIndex];
+  const targetSlot = slots.find(s => s.id === targetSlotId);
+  if (!targetSlot) return res.status(404).json({ error: "Target slot not found" });
+
+  // Check capacity on target slot
+  const totalToMove = itemsToMove.reduce((sum, i) => sum + i.quantity, 0);
+  const currentInTarget = orders
+    .filter(o => o.slotId === targetSlotId && o.status !== 'cancelled' && o.id !== order.id)
+    .reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0);
+  if (currentInTarget + totalToMove > targetSlot.capacity) {
+    return res.status(400).json({ error: `Not enough capacity in ${targetSlot.time} slot. Only ${targetSlot.capacity - currentInTarget} spaces available.` });
+  }
+
+  // Calculate prices for moved items
+  const extras = settings.extras || [];
+  const enrichedItemsToMove = itemsToMove.map(item => {
+    const menuItem = menu.find(m => m.id === item.menuId);
+    if (!menuItem) throw new Error(`Menu item not found: ${item.menuId}`);
+    const modPrice = (item.modifications || []).reduce((sum, modName) => {
+      const extra = extras.find(e => e.name === modName);
+      return sum + (extra ? extra.price : 0);
+    }, 0);
+    const price = menuItem.price + modPrice;
+    return {
+      menuId: item.menuId,
+      name: menuItem.name,
+      quantity: item.quantity,
+      basePrice: menuItem.price,
+      modPrice,
+      price,
+      modifications: item.modifications || [],
+      pizzaComments: item.pizzaComments || ''
+    };
+  });
+
+  const movedTotal = enrichedItemsToMove.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+  // Reduce quantities on original order
+  const remainingItems = [];
+  order.items.forEach(origItem => {
+    const moveItem = itemsToMove.find(m => m.menuId === origItem.menuId);
+    const moveQty = moveItem ? moveItem.quantity : 0;
+    const remainQty = origItem.quantity - moveQty;
+    if (remainQty > 0) {
+      remainingItems.push({ ...origItem, quantity: remainQty });
+    }
+  });
+
+  // Update or cancel original order
+  if (remainingItems.length === 0) {
+    orders[orderIndex].status = 'cancelled';
+    orders[orderIndex].items = [];
+    orders[orderIndex].total = 0;
+  } else {
+    orders[orderIndex].items = remainingItems;
+    orders[orderIndex].total = remainingItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  }
+
+  // Create new order in target slot
+  const newOrder = {
+    id: Date.now().toString(),
+    groupId: order.groupId || null,
+    slotId: targetSlotId,
+    items: enrichedItemsToMove,
+    customer: order.customer,
+    comments: order.comments || '',
+    total: movedTotal,
+    status: 'confirmed',
+    serviceDate: order.serviceDate || null,
+    createdAt: new Date().toISOString(),
+    movedFrom: order.id
+  };
+
+  orders.push(newOrder);
+  writeJSON(ORDERS_FILE, orders);
+
+  // Send notification email to customer
+  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  const targetSlotObj = slots.find(s => s.id === targetSlotId);
+  sendMoveNotificationEmail(order, newOrder, targetSlotObj, settings.businessName || "Pizza Truck", baseUrl);
+
+  res.json({ success: true, newOrderId: newOrder.id });
 });
 
 app.put("/api/orders/:id/status", (req, res) => {
