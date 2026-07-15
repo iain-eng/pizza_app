@@ -1953,16 +1953,66 @@
       const order = orders.find(o => o.id === orderId);
       if (!order) return;
 
+      // Check if this is part of a split order
+      const splitParts = order.groupId
+        ? orders.filter(o => o.groupId === order.groupId && o.status !== 'cancelled')
+            .sort((a, b) => (a.slotTime || '').localeCompare(b.slotTime || ''))
+        : [order];
+
+      // If split order with multiple parts, show part selector first
+      if (splitParts.length > 1) {
+        manageOrderState = { order: null, targetSlotId: null, itemMoves: {}, action: null };
+
+        const partOptions = splitParts.map(o => {
+          const slot = slots.find(s => s.id === o.slotId);
+          const time = slot ? slot.time : (o.slotTime || '?');
+          const itemSummary = o.items.map(i => `${i.name} ×${i.quantity}`).join(', ');
+          return `<div onclick="selectSplitPart('${o.id}')" style="cursor:pointer;padding:0.875rem 1rem;border:2px solid var(--stone);border-radius:4px;margin-bottom:0.5rem;transition:border-color 0.15s;" id="split-part-${o.id}">
+            <div style="font-weight:600;font-size:0.95rem;color:var(--ink);">${time}</div>
+            <div style="font-size:0.8rem;color:var(--ink-faint);margin-top:2px;">${itemSummary}</div>
+          </div>`;
+        }).join('');
+
+        document.getElementById('manage-order-content').innerHTML = `
+          <div style="background:var(--cream);border:1px solid var(--stone);border-radius:4px;padding:1rem;margin-bottom:1.25rem;">
+            <div style="font-weight:600;color:var(--ink);">${order.customer.name}</div>
+            <div style="font-size:0.8rem;color:var(--ink-faint);">Split order — select which part to manage</div>
+          </div>
+          ${partOptions}
+          <p style="font-size:0.8rem;color:var(--ink-faint);margin-top:0.5rem;">Click a slot to manage that part of the order.</p>`;
+
+        openModal('manage-order-modal');
+        return;
+      }
+
+      // Single order — go straight to manage UI
+      renderManageOrderUI(order);
+      openModal('manage-order-modal');
+    }
+
+    function selectSplitPart(orderId) {
+      // Highlight selected
+      document.querySelectorAll('[id^="split-part-"]').forEach(el => {
+        el.style.borderColor = 'var(--stone)';
+      });
+      document.getElementById(`split-part-${orderId}`).style.borderColor = 'var(--ink)';
+
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      setTimeout(() => renderManageOrderUI(order), 200);
+    }
+
+    function renderManageOrderUI(order) {
       const availableSlots = slots.filter(s => {
-        if (s.id === order.slotId) return true; // always show current slot
+        if (s.id === order.slotId) return true;
         const currentOrders = orders.filter(o => o.slotId === s.id && o.status !== 'cancelled' && o.id !== order.id)
           .reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0);
         return currentOrders < s.capacity;
       }).sort((a, b) => a.time.localeCompare(b.time));
 
       const currentSlot = slots.find(s => s.id === order.slotId);
-
-      manageOrderState = { order, targetSlotId: order.slotId, itemMoves: {} };
+      manageOrderState = { order, targetSlotId: order.slotId, itemMoves: {}, action: null };
 
       const itemsHtml = order.items.map((item, idx) => {
         const maxQty = item.quantity;
@@ -2000,7 +2050,7 @@
         <div style="margin-bottom:1.25rem;">
           <div style="font-weight:600;font-size:0.875rem;margin-bottom:0.5rem;">Action</div>
           <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
-            <button class="small secondary" onclick="setManageAction('cancel')" id="action-cancel">Cancel whole order</button>
+            <button class="small secondary" onclick="setManageAction('cancel')" id="action-cancel">Cancel this order</button>
             <button class="small primary" onclick="setManageAction('move')" id="action-move">Move items to another slot</button>
           </div>
         </div>
@@ -2017,12 +2067,9 @@
 
         <div id="manage-cancel-section" style="display:none;">
           <div style="background:#fef2f2;border:1px solid #fecaca;border-left:3px solid #ef4444;border-radius:3px;padding:0.875rem;font-size:0.875rem;color:#991b1b;">
-            This will cancel the entire order and notify the customer by email.
+            This will cancel this slot's order and notify the customer by email.
           </div>
         </div>`;
-
-      manageOrderState.action = null;
-      openModal('manage-order-modal');
     }
 
     function setManageAction(action) {
