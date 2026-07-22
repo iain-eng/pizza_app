@@ -142,6 +142,69 @@ function buildChefText(order, businessName, slot) {
   return `New order for ${businessName}\n\nOrder #${order.id.slice(-6)}\n${serviceDate ? `Service date: ${serviceDate}\n` : ""}Pickup slot: ${slot ? slot.time : "Unknown"}\n\nCustomer: ${order.customer.name}\nEmail: ${order.customer.email}\nPhone: ${order.customer.phone || "Not provided"}\n\nItems:\n${itemLines}\n${order.comments ? `\nOrder note: ${order.comments}` : ""}\n\nTotal: £${order.total.toFixed(2)}\n`;
 }
 
+async function sendEditNotificationEmail(order, updatedItems, slot, businessName, baseUrl) {
+  if (!resend) return;
+  const cancelUrl = `${baseUrl}/cancel/${order.id}`;
+  const contactSubject = encodeURIComponent(`Order #${order.id.slice(-6)} — query`);
+  const cancelled = updatedItems.length === 0;
+  const itemLines = updatedItems.map(i =>
+    `${i.name} × ${i.quantity}${i.modifications && i.modifications.length > 0 ? ` (${i.modifications.join(', ')})` : ''}`
+  ).join(', ');
+  const newTotal = updatedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+  resend.emails.send({
+    from: `${businessName} <${FROM_EMAIL}>`,
+    to: order.customer.email,
+    subject: cancelled
+      ? `Your order has been cancelled — ${businessName}`
+      : `Your order has been updated — ${businessName}`,
+    html: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#faf8f4;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf8f4;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+        <tr>
+          <td style="background:#ffffff;border:1px solid #e8e2d9;border-bottom:none;border-radius:4px 4px 0 0;padding:32px 32px 24px;text-align:center;">
+            <h1 style="margin:0 0 6px;font-family:Georgia,serif;font-size:26px;font-weight:700;color:#1c1917;">${businessName}</h1>
+            <p style="margin:0;color:#a8a29e;font-size:14px;">${cancelled ? 'Order Cancelled' : 'Order Updated'}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#ffffff;border:1px solid #e8e2d9;border-top:none;border-bottom:none;padding:0 32px 32px;">
+            <p style="margin:24px 0;font-size:16px;color:#1c1917;">Hi <strong>${order.customer.name}</strong>,</p>
+            ${cancelled
+              ? `<p style="color:#57534e;">Your order has been cancelled by our team. If you have any questions please get in touch.</p>`
+              : `<p style="color:#57534e;">Your order has been updated by our team. Here are your revised details:</p>
+                 <div style="background:#faf8f4;border:1px solid #e8e2d9;border-radius:4px;padding:16px 20px;margin:16px 0;">
+                   <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#a8a29e;font-weight:600;">Updated Order</p>
+                   <p style="margin:0;color:#57534e;font-size:14px;">${itemLines}</p>
+                   <p style="margin:8px 0 0;font-size:15px;font-weight:600;color:#1c1917;">Total: £${newTotal.toFixed(2)}</p>
+                   ${slot ? `<p style="margin:6px 0 0;font-size:13px;color:#a8a29e;">Pickup at ${slot.time}</p>` : ''}
+                 </div>`
+            }
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
+              <tr>
+                ${!cancelled ? `<td style="padding-right:6px;"><a href="${cancelUrl}" style="display:block;text-align:center;padding:10px;background:#1c1917;color:#ffffff;text-decoration:none;border-radius:3px;font-size:13px;font-weight:600;">Cancel Order</a></td>` : ''}
+                <td ${!cancelled ? 'style="padding-left:6px;"' : ''}><a href="mailto:${CHEF_EMAIL}?subject=${contactSubject}" style="display:block;text-align:center;padding:10px;background:#ffffff;color:#1c1917;text-decoration:none;border-radius:3px;font-size:13px;font-weight:600;border:1px solid #e8e2d9;">Contact Us</a></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#faf8f4;border:1px solid #e8e2d9;border-top:none;border-radius:0 0 4px 4px;padding:16px 32px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#a8a29e;">Order #${order.id.slice(-6)}</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+  }).catch(err => console.error("Edit notification email failed:", err.message));
+}
+
 async function sendMoveNotificationEmail(originalOrder, newOrder, newSlot, businessName, baseUrl) {
   if (!resend) return;
   const itemLines = newOrder.items.map(i =>
@@ -196,7 +259,6 @@ async function sendMoveNotificationEmail(originalOrder, newOrder, newSlot, busin
 </html>`
   }).catch(err => console.error("Move notification email failed:", err.message));
 }
-
 
 async function sendOrderEmails(order, businessName, slot, baseUrl) {
   if (!resend) { console.log("Email skipped — Resend not configured"); return; }
@@ -671,6 +733,64 @@ app.post("/api/orders", (req, res) => {
   );
 
   res.json(newOrder);
+});
+
+app.post("/api/orders/:id/edit", (req, res) => {
+  const { items } = req.body;
+  if (!items) return res.status(400).json({ error: "items required" });
+
+  const orders = readJSON(ORDERS_FILE);
+  const menu = readJSON(MENU_FILE);
+  const settings = readJSON(SETTINGS_FILE);
+  const slots = readJSON(SLOTS_FILE);
+  const extras = settings.extras || [];
+
+  const orderIndex = orders.findIndex(o => o.id === req.params.id);
+  if (orderIndex === -1) return res.status(404).json({ error: "Order not found" });
+
+  const order = orders[orderIndex];
+  const slot = slots.find(s => s.id === order.slotId);
+
+  // Filter to items with quantity > 0
+  const updatedItems = items.filter(i => i.quantity > 0).map(item => {
+    const menuItem = menu.find(m => m.id === item.menuId);
+    if (!menuItem) throw new Error(`Menu item not found: ${item.menuId}`);
+    const modPrice = (item.modifications || []).reduce((sum, modName) => {
+      const extra = extras.find(e => e.name === modName);
+      return sum + (extra ? extra.price : 0);
+    }, 0);
+    const price = menuItem.price + modPrice;
+    return {
+      menuId: item.menuId,
+      name: menuItem.name,
+      quantity: item.quantity,
+      basePrice: menuItem.price,
+      modPrice,
+      price,
+      modifications: item.modifications || [],
+      pizzaComments: item.pizzaComments || ''
+    };
+  });
+
+  const newTotal = updatedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+  if (updatedItems.length === 0) {
+    // Cancel the order
+    orders[orderIndex].status = 'cancelled';
+    orders[orderIndex].items = [];
+    orders[orderIndex].total = 0;
+  } else {
+    orders[orderIndex].items = updatedItems;
+    orders[orderIndex].total = newTotal;
+  }
+
+  writeJSON(ORDERS_FILE, orders);
+
+  // Notify customer
+  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  sendEditNotificationEmail(orders[orderIndex], updatedItems, slot, settings.businessName || "Pizza Truck", baseUrl);
+
+  res.json({ success: true, order: orders[orderIndex] });
 });
 
 app.post("/api/orders/:id/move", (req, res) => {
