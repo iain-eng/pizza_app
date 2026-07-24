@@ -947,6 +947,19 @@ app.get("/api/early-access/:code", (req, res) => {
   res.json({ valid: !!valid });
 });
 
+// Temporary — customer emails for a service date (remove after use)
+app.get("/api/orders/emails/:serviceDate", (req, res) => {
+  const orders = readJSON(ORDERS_FILE);
+  const emails = [...new Set(
+    orders
+      .filter(o => o.serviceDate === req.params.serviceDate && o.status !== 'cancelled')
+      .map(o => o.customer.email)
+      .filter(Boolean)
+  )];
+  res.setHeader('Content-Type', 'text/plain');
+  res.send(emails.join('\n'));
+});
+
 // ============= CANCEL ROUTES =============
 
 // Cancel page — served as HTML
